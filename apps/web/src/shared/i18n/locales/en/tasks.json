@@ -1,0 +1,54 @@
+{
+  "status": {
+    "backlog": "Backlog",
+    "queue": "Queue",
+    "in_progress": "In Progress",
+    "ai_review": "AI Review",
+    "human_review": "Review",
+    "done": "Done",
+    "pr_created": "PR Created",
+    "error": "Error"
+  },
+  "priority": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "urgent": "Urgent"
+  },
+  "category": {
+    "feature": "Feature",
+    "bug_fix": "Bug Fix",
+    "refactoring": "Refactoring",
+    "documentation": "Documentation",
+    "security": "Security",
+    "performance": "Performance",
+    "ui_ux": "UI/UX",
+    "infrastructure": "Infrastructure",
+    "testing": "Testing"
+  },
+  "kanban": {
+    "emptyBacklog": "No tasks in backlog",
+    "emptyQueue": "No tasks queued",
+    "emptyInProgress": "No tasks in progress",
+    "emptyReview": "No tasks in review",
+    "emptyDone": "No completed tasks",
+    "emptyError": "No errors",
+    "dragHint": "Drag tasks between columns to change status",
+    "newTask": "New Task",
+    "addTask": "Add Task"
+  },
+  "actions": {
+    "moveTo": "Move to"
+  },
+  "form": {
+    "title": "Title",
+    "titlePlaceholder": "Enter task title...",
+    "description": "Description",
+    "descriptionPlaceholder": "Describe what needs to be done...",
+    "product": "Product",
+    "selectProduct": "Select product...",
+    "priority": "Priority",
+    "category": "Category",
+    "createTask": "Create Task"
+  }
+}

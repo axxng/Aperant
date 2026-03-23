@@ -1,0 +1,14 @@
+{
+  "items": {
+    "allProducts": "All Products",
+    "kanban": "Kanban Board",
+    "issues": "GitHub Issues",
+    "prs": "Pull Requests",
+    "settings": "Settings"
+  },
+  "sidebar": {
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "addProduct": "Add product"
+  }
+}
