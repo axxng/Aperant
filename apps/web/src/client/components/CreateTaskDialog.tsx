@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import type { TaskPriority, TaskCategory } from '../../../shared/types/task';
+import type { TaskPriority, TaskCategory } from '@shared/types/task';
 
 interface CreateTaskDialogProps {
   open: boolean;

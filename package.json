@@ -9,7 +9,7 @@
     "libs/*"
   ],
   "scripts": {
-    "install:all": "cd apps/desktop && npm install",
+    "install:all": "cd apps/desktop && npm install && cd ../../apps/web && npm install",
     "start": "cd apps/desktop && npm run build && npm run start",
     "dev": "cd apps/desktop && npm run dev",
     "dev:debug": "cd apps/desktop && npm run dev:debug",
@@ -20,7 +20,11 @@
     "package": "cd apps/desktop && npm run package",
     "package:mac": "cd apps/desktop && npm run package:mac",
     "package:win": "cd apps/desktop && npm run package:win",
-    "package:linux": "cd apps/desktop && npm run package:linux"
+    "package:linux": "cd apps/desktop && npm run package:linux",
+    "dev:web": "cd apps/web && npm run dev",
+    "build:web": "cd apps/web && npm run build",
+    "lint:web": "cd apps/web && npm run lint",
+    "typecheck:web": "cd apps/web && npm run typecheck"
   },
   "engines": {
     "node": ">=24.0.0",

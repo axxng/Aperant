@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { TaskStatus } from '../../../shared/types/task';
+import type { TaskStatus } from '@shared/types/task';
 
 interface KanbanColumnPreference {
   width: number;

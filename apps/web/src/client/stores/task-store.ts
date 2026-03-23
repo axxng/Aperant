@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { api } from '../lib/api-client';
-import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatus, TaskOrderState } from '../../../shared/types/task';
+import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatus, TaskOrderState } from '@shared/types/task';
 
 interface TaskState {
   tasks: Task[];

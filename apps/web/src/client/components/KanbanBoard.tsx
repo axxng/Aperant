@@ -23,7 +23,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { cn } from '../lib/utils';
 import { Plus, RefreshCw, ChevronDown, ChevronRight } from 'lucide-react';
-import type { Task, TaskStatus } from '../../../shared/types/task';
+import type { Task, TaskStatus } from '@shared/types/task';
 
 interface KanbanBoardProps {
   tasks: Task[];

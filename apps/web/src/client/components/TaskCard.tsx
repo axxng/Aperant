@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { cn, formatRelativeTime } from '../lib/utils';
-import type { Task, TaskStatus, TaskCategory } from '../../../shared/types/task';
+import type { Task, TaskStatus, TaskCategory } from '@shared/types/task';
 
 /** All columns available for status changes */
 const TASK_STATUS_COLUMNS: TaskStatus[] = [

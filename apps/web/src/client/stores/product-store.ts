@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { api } from '../lib/api-client';
-import type { Product, CreateProductInput, UpdateProductInput } from '../../../shared/types/product';
-import type { SyncResult } from '../../../shared/types/github';
+import type { Product, CreateProductInput, UpdateProductInput } from '@shared/types/product';
+import type { SyncResult } from '@shared/types/github';
 
 interface ProductState {
   products: Product[];

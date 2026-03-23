@@ -1,6 +1,6 @@
-import type { Product, CreateProductInput, UpdateProductInput } from '../../../shared/types/product';
-import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatus, TaskOrderState } from '../../../shared/types/task';
-import type { SyncResult, PaginatedIssuesResult } from '../../../shared/types/github';
+import type { Product, CreateProductInput, UpdateProductInput } from '@shared/types/product';
+import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatus, TaskOrderState } from '@shared/types/task';
+import type { SyncResult, PaginatedIssuesResult } from '@shared/types/github';
 
 const API_BASE = '/api';
 

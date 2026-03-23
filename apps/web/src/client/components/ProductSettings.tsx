@@ -4,7 +4,7 @@ import { useProductStore } from '../stores/product-store';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { PRODUCT_COLORS } from '../../../shared/types/product';
+import { PRODUCT_COLORS } from '@shared/types/product';
 import { cn } from '../lib/utils';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 

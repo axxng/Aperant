@@ -1,0 +1,54 @@
+{
+  "status": {
+    "backlog": "Backlog",
+    "queue": "File d'attente",
+    "in_progress": "En cours",
+    "ai_review": "Revue IA",
+    "human_review": "Revue",
+    "done": "Terminé",
+    "pr_created": "PR créée",
+    "error": "Erreur"
+  },
+  "priority": {
+    "low": "Basse",
+    "medium": "Moyenne",
+    "high": "Haute",
+    "urgent": "Urgente"
+  },
+  "category": {
+    "feature": "Fonctionnalité",
+    "bug_fix": "Correction de bug",
+    "refactoring": "Refactoring",
+    "documentation": "Documentation",
+    "security": "Sécurité",
+    "performance": "Performance",
+    "ui_ux": "UI/UX",
+    "infrastructure": "Infrastructure",
+    "testing": "Tests"
+  },
+  "kanban": {
+    "emptyBacklog": "Aucune tâche dans le backlog",
+    "emptyQueue": "Aucune tâche en file d'attente",
+    "emptyInProgress": "Aucune tâche en cours",
+    "emptyReview": "Aucune tâche en revue",
+    "emptyDone": "Aucune tâche terminée",
+    "emptyError": "Aucune erreur",
+    "dragHint": "Glissez les tâches entre les colonnes pour changer leur statut",
+    "newTask": "Nouvelle tâche",
+    "addTask": "Ajouter une tâche"
+  },
+  "actions": {
+    "moveTo": "Déplacer vers"
+  },
+  "form": {
+    "title": "Titre",
+    "titlePlaceholder": "Saisir le titre de la tâche...",
+    "description": "Description",
+    "descriptionPlaceholder": "Décrivez ce qui doit être fait...",
+    "product": "Produit",
+    "selectProduct": "Sélectionner un produit...",
+    "priority": "Priorité",
+    "category": "Catégorie",
+    "createTask": "Créer la tâche"
+  }
+}

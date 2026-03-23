@@ -5,8 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { PRODUCT_COLORS } from '../../../shared/types/product';
-import type { ProductSource } from '../../../shared/types/product';
+import { PRODUCT_COLORS } from '@shared/types/product';
+import type { ProductSource } from '@shared/types/product';
 import { cn } from '../lib/utils';
 
 interface CreateProductDialogProps {
