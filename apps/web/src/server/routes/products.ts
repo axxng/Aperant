@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as productsDb from '../db/products.js';
 import { deleteSyncStatesForProduct } from '../db/sync-state.js';
+import { createProductSchema, updateProductSchema } from '../validation.js';
 
 export const productRoutes = Router();
 
@@ -19,17 +20,21 @@ productRoutes.get('/:id', (req, res) => {
 
 // POST /api/products — create product
 productRoutes.post('/', (req, res) => {
-  const { name, description, color, sources, statusMapping } = req.body;
-  if (!name || !sources || !Array.isArray(sources)) {
-    return res.status(400).json({ error: 'name and sources are required' });
+  const result = createProductSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });
   }
-  const product = productsDb.createProduct({ name, description, color, sources, statusMapping });
+  const product = productsDb.createProduct(result.data);
   res.status(201).json(product);
 });
 
 // PATCH /api/products/:id — update product
 productRoutes.patch('/:id', (req, res) => {
-  const product = productsDb.updateProduct(req.params.id, req.body);
+  const result = updateProductSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });
+  }
+  const product = productsDb.updateProduct(req.params.id, result.data);
   if (!product) return res.status(404).json({ error: 'Product not found' });
   res.json(product);
 });

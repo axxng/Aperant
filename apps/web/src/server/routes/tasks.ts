@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as tasksDb from '../db/tasks.js';
 import type { TaskStatus } from '../../shared/types/task.js';
+import { createTaskSchema, updateTaskSchema, updateTaskStatusSchema, setTaskOrderSchema } from '../validation.js';
 
 export const taskRoutes = Router();
 
@@ -20,11 +21,11 @@ taskRoutes.get('/order/:scope', (req, res) => {
 
 // PUT /api/tasks/order/:scope/:status — update task ordering for a column
 taskRoutes.put('/order/:scope/:status', (req, res) => {
-  const { taskIds } = req.body;
-  if (!Array.isArray(taskIds)) {
-    return res.status(400).json({ error: 'taskIds array is required' });
+  const result = setTaskOrderSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });
   }
-  tasksDb.setTaskOrder(req.params.scope, req.params.status as TaskStatus, taskIds);
+  tasksDb.setTaskOrder(req.params.scope, req.params.status as TaskStatus, result.data.taskIds);
   res.json({ success: true });
 });
 
@@ -37,26 +38,32 @@ taskRoutes.get('/:id', (req, res) => {
 
 // POST /api/tasks — create task
 taskRoutes.post('/', (req, res) => {
-  const { productId, title, description } = req.body;
-  if (!productId || !title) {
-    return res.status(400).json({ error: 'productId and title are required' });
+  const result = createTaskSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });
   }
-  const task = tasksDb.createTask({ ...req.body, description: description || '' });
+  const task = tasksDb.createTask(result.data);
   res.status(201).json(task);
 });
 
 // PATCH /api/tasks/:id — update task
 taskRoutes.patch('/:id', (req, res) => {
-  const task = tasksDb.updateTask(req.params.id, req.body);
+  const result = updateTaskSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });
+  }
+  const task = tasksDb.updateTask(req.params.id, result.data);
   if (!task) return res.status(404).json({ error: 'Task not found' });
   res.json(task);
 });
 
 // PATCH /api/tasks/:id/status — update task status (convenience for drag-and-drop)
 taskRoutes.patch('/:id/status', (req, res) => {
-  const { status } = req.body;
-  if (!status) return res.status(400).json({ error: 'status is required' });
-  const task = tasksDb.updateTask(req.params.id, { status });
+  const result = updateTaskStatusSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });
+  }
+  const task = tasksDb.updateTask(req.params.id, { status: result.data.status });
   if (!task) return res.status(404).json({ error: 'Task not found' });
   res.json(task);
 });

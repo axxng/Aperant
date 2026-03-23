@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getProductById } from '../db/products.js';
+import { githubIssueQuerySchema, githubCommentSchema, githubUpdateIssueSchema, githubOwnerRepoSchema } from '../validation.js';
 
 export const githubRoutes = Router();
 
@@ -45,9 +46,14 @@ async function githubGraphQL(query: string, variables: Record<string, any> = {})
 githubRoutes.get('/repos/:owner/:repo/issues', async (req, res) => {
   try {
     const { owner, repo } = req.params;
-    const { state = 'open', page = '1', per_page = '50' } = req.query as Record<string, string>;
+    const queryResult = githubIssueQuerySchema.safeParse(req.query);
+    if (!queryResult.success) {
+      return res.status(400).json({ error: 'Invalid query parameters' });
+    }
+    const { state, page, per_page } = queryResult.data;
+    const params = new URLSearchParams({ state, page, per_page, sort: 'updated', direction: 'desc' });
     const response = await githubFetch(
-      `${GITHUB_API}/repos/${owner}/${repo}/issues?state=${state}&page=${page}&per_page=${per_page}&sort=updated&direction=desc`
+      `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues?${params}`
     );
     if (!response.ok) {
       return res.status(response.status).json({ error: `GitHub API error: ${response.statusText}` });
@@ -60,7 +66,7 @@ githubRoutes.get('/repos/:owner/:repo/issues', async (req, res) => {
     const hasMore = linkHeader ? linkHeader.includes('rel="next"') : false;
     res.json({ issues: mapped, hasMore });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -101,7 +107,7 @@ githubRoutes.get('/projects/:owner/:number', async (req, res) => {
         statusOptions: statusField?.options?.map((o: any) => ({ id: o.id, name: o.name })) || [],
       });
     } catch (retryError: any) {
-      res.status(500).json({ error: retryError.message });
+      res.status(500).json({ error: 'Internal server error' });
     }
   }
 });
@@ -149,7 +155,7 @@ githubRoutes.get('/projects/:owner/:number/items', async (req, res) => {
       endCursor: data.items.pageInfo.endCursor,
     });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -157,19 +163,21 @@ githubRoutes.get('/projects/:owner/:number/items', async (req, res) => {
 githubRoutes.post('/repos/:owner/:repo/issues/:number/comment', async (req, res) => {
   try {
     const { owner, repo, number } = req.params;
-    const { body } = req.body;
-    if (!body) return res.status(400).json({ error: 'body is required' });
+    const bodyResult = githubCommentSchema.safeParse(req.body);
+    if (!bodyResult.success) {
+      return res.status(400).json({ error: 'Invalid input' });
+    }
 
     const response = await githubFetch(
-      `${GITHUB_API}/repos/${owner}/${repo}/issues/${number}/comments`,
-      { method: 'POST', body: JSON.stringify({ body }), headers: { 'Content-Type': 'application/json' } }
+      `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${encodeURIComponent(number)}/comments`,
+      { method: 'POST', body: JSON.stringify({ body: bodyResult.data.body }), headers: { 'Content-Type': 'application/json' } }
     );
     if (!response.ok) {
       return res.status(response.status).json({ error: `GitHub API error: ${response.statusText}` });
     }
     res.json(await response.json());
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -177,16 +185,20 @@ githubRoutes.post('/repos/:owner/:repo/issues/:number/comment', async (req, res)
 githubRoutes.patch('/repos/:owner/:repo/issues/:number', async (req, res) => {
   try {
     const { owner, repo, number } = req.params;
+    const bodyResult = githubUpdateIssueSchema.safeParse(req.body);
+    if (!bodyResult.success) {
+      return res.status(400).json({ error: 'Invalid input' });
+    }
     const response = await githubFetch(
-      `${GITHUB_API}/repos/${owner}/${repo}/issues/${number}`,
-      { method: 'PATCH', body: JSON.stringify(req.body), headers: { 'Content-Type': 'application/json' } }
+      `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${encodeURIComponent(number)}`,
+      { method: 'PATCH', body: JSON.stringify(bodyResult.data), headers: { 'Content-Type': 'application/json' } }
     );
     if (!response.ok) {
       return res.status(response.status).json({ error: `GitHub API error: ${response.statusText}` });
     }
     res.json(await response.json());
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

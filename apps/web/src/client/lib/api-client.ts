@@ -31,7 +31,7 @@ export const api = {
   },
   tasks: {
     list: (productId?: string) =>
-      request<Task[]>(productId ? `/tasks?productId=${productId}` : '/tasks'),
+      request<Task[]>(productId ? `/tasks?${new URLSearchParams({ productId })}` : '/tasks'),
     get: (id: string) => request<Task>(`/tasks/${id}`),
     create: (data: CreateTaskInput) =>
       request<Task>('/tasks', { method: 'POST', body: JSON.stringify(data) }),
@@ -41,9 +41,9 @@ export const api = {
       request<Task>(`/tasks/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
     delete: (id: string) =>
       request<{ success: boolean }>(`/tasks/${id}`, { method: 'DELETE' }),
-    getOrder: (scope: string) => request<TaskOrderState>(`/tasks/order/${scope}`),
+    getOrder: (scope: string) => request<TaskOrderState>(`/tasks/order/${encodeURIComponent(scope)}`),
     setOrder: (scope: string, status: TaskStatus, taskIds: string[]) =>
-      request<{ success: boolean }>(`/tasks/order/${scope}/${status}`, {
+      request<{ success: boolean }>(`/tasks/order/${encodeURIComponent(scope)}/${encodeURIComponent(status)}`, {
         method: 'PUT',
         body: JSON.stringify({ taskIds }),
       }),
@@ -59,7 +59,7 @@ export const api = {
       ),
     getProjectItems: (owner: string, number: number, cursor?: string) =>
       request<{ items: any[]; hasMore: boolean; endCursor: string }>(
-        `/github/projects/${owner}/${number}/items${cursor ? `?cursor=${cursor}` : ''}`
+        `/github/projects/${encodeURIComponent(owner)}/${number}/items${cursor ? `?${new URLSearchParams({ cursor })}` : ''}`
       ),
   },
   events: {

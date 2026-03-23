@@ -3,6 +3,15 @@ import { getDb } from './schema.js';
 import type { Product, CreateProductInput, UpdateProductInput, ProductSource, StatusMapping } from '../../shared/types/product.js';
 import { PRODUCT_COLORS } from '../../shared/types/product.js';
 
+function safeJsonParse<T>(value: string | null | undefined, fallback: T): T {
+  if (!value) return fallback;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
 export function getAllProducts(): Product[] {
   const db = getDb();
   const rows = db.prepare('SELECT * FROM products ORDER BY created_at ASC').all() as any[];
@@ -74,8 +83,8 @@ function rowToProduct(row: any): Product {
     name: row.name,
     description: row.description || undefined,
     color: row.color,
-    sources: JSON.parse(row.sources) as ProductSource[],
-    statusMapping: row.status_mapping ? JSON.parse(row.status_mapping) as StatusMapping : undefined,
+    sources: safeJsonParse(row.sources, []) as ProductSource[],
+    statusMapping: row.status_mapping ? safeJsonParse<StatusMapping | undefined>(row.status_mapping, undefined) : undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

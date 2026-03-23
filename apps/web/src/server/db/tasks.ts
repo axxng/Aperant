@@ -2,6 +2,15 @@ import { v4 as uuid } from 'uuid';
 import { getDb } from './schema.js';
 import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatus, TaskOrderState } from '../../shared/types/task.js';
 
+function safeJsonParse<T>(value: string | null | undefined, fallback: T): T {
+  if (!value) return fallback;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
 export function getTasksByProduct(productId: string): Task[] {
   const db = getDb();
   const rows = db.prepare('SELECT * FROM tasks WHERE product_id = ? ORDER BY created_at DESC').all(productId) as any[];
@@ -100,7 +109,7 @@ export function getTaskOrder(scope: string): TaskOrderState {
   const rows = db.prepare('SELECT status, task_ids FROM task_order WHERE scope = ?').all(scope) as any[];
   const order: Partial<TaskOrderState> = {};
   for (const row of rows) {
-    order[row.status as TaskStatus] = JSON.parse(row.task_ids);
+    order[row.status as TaskStatus] = safeJsonParse(row.task_ids, []);
   }
   // Fill missing statuses with empty arrays
   const statuses: TaskStatus[] = ['backlog', 'queue', 'in_progress', 'ai_review', 'human_review', 'done', 'pr_created', 'error'];
@@ -132,10 +141,10 @@ function rowToTask(row: any): Task {
     githubIssueUrl: row.github_issue_url || undefined,
     githubRepo: row.github_repo || undefined,
     githubProjectItemId: row.github_project_item_id || undefined,
-    labels: JSON.parse(row.labels || '[]'),
-    assignees: JSON.parse(row.assignees || '[]'),
-    milestone: row.milestone ? JSON.parse(row.milestone) : undefined,
-    metadata: JSON.parse(row.metadata || '{}'),
+    labels: safeJsonParse(row.labels, []),
+    assignees: safeJsonParse(row.assignees, []),
+    milestone: row.milestone ? safeJsonParse(row.milestone, undefined) : undefined,
+    metadata: safeJsonParse(row.metadata, {}),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
