@@ -37,6 +37,19 @@
     "newTask": "New Task",
     "addTask": "Add Task"
   },
+  "filters": {
+    "searchPlaceholder": "Search tasks...",
+    "priority": "Priority",
+    "category": "Category",
+    "sortBy": "Sort by",
+    "reset": "Reset filters",
+    "noResults": "No tasks match your filters",
+    "sort": {
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "priority": "Highest priority"
+    }
+  },
   "actions": {
     "moveTo": "Move to"
   },

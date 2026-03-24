@@ -37,6 +37,19 @@
     "newTask": "Nouvelle tâche",
     "addTask": "Ajouter une tâche"
   },
+  "filters": {
+    "searchPlaceholder": "Rechercher des tâches...",
+    "priority": "Priorité",
+    "category": "Catégorie",
+    "sortBy": "Trier par",
+    "reset": "Réinitialiser les filtres",
+    "noResults": "Aucune tâche ne correspond à vos filtres",
+    "sort": {
+      "newest": "Plus récentes",
+      "oldest": "Plus anciennes",
+      "priority": "Priorité la plus haute"
+    }
+  },
   "actions": {
     "moveTo": "Déplacer vers"
   },

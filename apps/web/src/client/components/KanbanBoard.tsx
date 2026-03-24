@@ -22,7 +22,9 @@ import { ScrollArea } from './ui/scroll-area';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { cn } from '../lib/utils';
-import { Plus, RefreshCw, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, RefreshCw, ChevronDown, ChevronRight, Search } from 'lucide-react';
+import { useKanbanFilters } from '../hooks/useKanbanFilters';
+import { KanbanFilterBar } from './KanbanFilterBar';
 import type { Task, TaskStatus } from '@shared/types/task';
 
 interface KanbanBoardProps {
@@ -55,13 +57,22 @@ export const KanbanBoard = memo(function KanbanBoard({
 
   const isConsolidated = activeProductId === null;
 
+  const {
+    searchQuery, setSearchQuery,
+    priorities, togglePriority,
+    categories, toggleCategory,
+    sortBy, setSortBy,
+    hasActiveFilters, resetFilters,
+    filteredTasks,
+  } = useKanbanFilters(tasks);
+
   // Build product lookup map
   const productMap = useMemo(
     () => new Map(products.map((p) => [p.id, p])),
     [products]
   );
 
-  // Group tasks by status
+  // Group filtered tasks by status
   const tasksByStatus = useMemo(() => {
     const grouped: Record<TaskStatus, Task[]> = {
       backlog: [],
@@ -73,13 +84,13 @@ export const KanbanBoard = memo(function KanbanBoard({
       pr_created: [],
       error: [],
     };
-    for (const task of tasks) {
+    for (const task of filteredTasks) {
       // Map agent-specific statuses to visible columns
       const displayStatus = mapToDisplayStatus(task.status);
       grouped[displayStatus].push(task);
     }
     return grouped;
-  }, [tasks]);
+  }, [filteredTasks]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -158,6 +169,31 @@ export const KanbanBoard = memo(function KanbanBoard({
           )}
         </div>
       </div>
+
+      {/* Filter bar */}
+      <KanbanFilterBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        priorities={priorities}
+        onTogglePriority={togglePriority}
+        categories={categories}
+        onToggleCategory={toggleCategory}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        hasActiveFilters={hasActiveFilters}
+        onResetFilters={resetFilters}
+      />
+
+      {/* No results state */}
+      {hasActiveFilters && filteredTasks.length === 0 && tasks.length > 0 && (
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <Search className="h-8 w-8 mb-2 opacity-50" />
+          <p className="text-sm">{t('filters.noResults')}</p>
+          <Button variant="ghost" size="sm" className="mt-2" onClick={resetFilters}>
+            {t('filters.reset')}
+          </Button>
+        </div>
+      )}
 
       {/* Kanban columns */}
       <DndContext
