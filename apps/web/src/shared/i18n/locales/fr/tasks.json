@@ -62,6 +62,11 @@
     "selectProduct": "Sélectionner un produit...",
     "priority": "Priorité",
     "category": "Catégorie",
-    "createTask": "Créer la tâche"
+    "createTask": "Créer la tâche",
+    "editTask": "Modifier la tâche",
+    "updateTask": "Mettre à jour",
+    "status": "Statut",
+    "confirmDelete": "Supprimer cette tâche ?",
+    "githubIssue": "Issue GitHub"
   }
 }

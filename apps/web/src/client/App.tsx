@@ -6,14 +6,23 @@ import { Sidebar } from './components/Sidebar';
 import { KanbanBoard } from './components/KanbanBoard';
 import { CreateProductDialog } from './components/CreateProductDialog';
 import { CreateTaskDialog } from './components/CreateTaskDialog';
+import { TaskEditDialog } from './components/TaskEditDialog';
 import { ProductSettings } from './components/ProductSettings';
 import { useProductStore } from './stores/product-store';
 import { useTaskStore } from './stores/task-store';
+import type { Task } from '@shared/types/task';
 
 export function App() {
-  const { loadProducts } = useProductStore();
+  const { loadProducts, products, activeProductId } = useProductStore();
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [showCreateTask, setShowCreateTask] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  const handleTaskClick = useCallback((task: Task) => {
+    setEditingTask(task);
+  }, []);
+
+  const editProduct = editingTask ? products.find(p => p.id === editingTask.productId) : null;
 
   useEffect(() => {
     loadProducts();
@@ -27,11 +36,11 @@ export function App() {
           <Routes>
             <Route
               path="/"
-              element={<ConsolidatedView onNewTask={() => setShowCreateTask(true)} />}
+              element={<ConsolidatedView onNewTask={() => setShowCreateTask(true)} onTaskClick={handleTaskClick} />}
             />
             <Route
               path="/products/:productId"
-              element={<ProductView onNewTask={() => setShowCreateTask(true)} />}
+              element={<ProductView onNewTask={() => setShowCreateTask(true)} onTaskClick={handleTaskClick} />}
             />
             <Route
               path="/products/:productId/settings"
@@ -43,12 +52,19 @@ export function App() {
 
       <CreateProductDialog open={showCreateProduct} onOpenChange={setShowCreateProduct} />
       <CreateTaskDialog open={showCreateTask} onOpenChange={setShowCreateTask} />
+      <TaskEditDialog
+        task={editingTask}
+        open={editingTask !== null}
+        onOpenChange={(open) => { if (!open) setEditingTask(null); }}
+        productName={editProduct?.name}
+        productColor={editProduct?.color}
+      />
     </TooltipProvider>
   );
 }
 
 /** Consolidated backlog — all tasks across all products */
-function ConsolidatedView({ onNewTask }: { onNewTask: () => void }) {
+function ConsolidatedView({ onNewTask, onTaskClick }: { onNewTask: () => void; onTaskClick: (task: Task) => void }) {
   const { tasks, loadTasks, isLoading } = useTaskStore();
   const { setActiveProduct } = useProductStore();
 
@@ -60,7 +76,7 @@ function ConsolidatedView({ onNewTask }: { onNewTask: () => void }) {
   return (
     <KanbanBoard
       tasks={tasks}
-      onTaskClick={() => {}}
+      onTaskClick={onTaskClick}
       onNewTaskClick={onNewTask}
       onRefresh={() => loadTasks()}
       isRefreshing={isLoading}
@@ -69,7 +85,7 @@ function ConsolidatedView({ onNewTask }: { onNewTask: () => void }) {
 }
 
 /** Per-product backlog — tasks for a single product */
-function ProductView({ onNewTask }: { onNewTask: () => void }) {
+function ProductView({ onNewTask, onTaskClick }: { onNewTask: () => void; onTaskClick: (task: Task) => void }) {
   const { productId } = useParams<{ productId: string }>();
   const { tasks, loadTasks, isLoading } = useTaskStore();
   const { setActiveProduct } = useProductStore();
@@ -84,7 +100,7 @@ function ProductView({ onNewTask }: { onNewTask: () => void }) {
   return (
     <KanbanBoard
       tasks={tasks}
-      onTaskClick={() => {}}
+      onTaskClick={onTaskClick}
       onNewTaskClick={onNewTask}
       onRefresh={() => productId && loadTasks(productId)}
       isRefreshing={isLoading}
