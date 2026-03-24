@@ -127,3 +127,12 @@ export const githubOwnerNumberSchema = z.object({
   owner: z.string().min(1).max(100).regex(/^[a-zA-Z0-9_.-]+$/),
   number: z.string().regex(/^\d+$/),
 });
+
+// GitHub PR creation
+export const githubCreatePRSchema = z.object({
+  title: z.string().min(1).max(500),
+  body: z.string().max(65536).optional(),
+  head: z.string().min(1).max(255),
+  base: z.string().min(1).max(255),
+  draft: z.boolean().optional(),
+});

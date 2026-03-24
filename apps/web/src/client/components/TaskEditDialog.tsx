@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
-import { Trash2 } from 'lucide-react';
+import { Trash2, GitPullRequest } from 'lucide-react';
 import type { Task, TaskStatus, TaskPriority, TaskCategory } from '@shared/types/task';
 
 const STATUSES: TaskStatus[] = ['backlog', 'queue', 'in_progress', 'human_review', 'done'];
@@ -22,9 +22,10 @@ interface TaskEditDialogProps {
   onOpenChange: (open: boolean) => void;
   productName?: string;
   productColor?: string;
+  onCreatePR?: (task: Task) => void;
 }
 
-export function TaskEditDialog({ task, open, onOpenChange, productName, productColor }: TaskEditDialogProps) {
+export function TaskEditDialog({ task, open, onOpenChange, productName, productColor, onCreatePR }: TaskEditDialogProps) {
   const { t } = useTranslation(['tasks', 'common']);
   const { updateTask, deleteTask } = useTaskStore();
   const [title, setTitle] = useState('');
@@ -172,10 +173,28 @@ export function TaskEditDialog({ task, open, onOpenChange, productName, productC
             </div>
           </div>
 
-          {/* GitHub info (read-only) */}
-          {task.githubIssueNumber && task.githubRepo && (
-            <div className="text-xs text-muted-foreground border-t pt-3">
-              {t('tasks:form.githubIssue')}: {task.githubRepo}#{task.githubIssueNumber}
+          {/* GitHub info + PR action */}
+          {task.githubRepo && (
+            <div className="border-t pt-3 space-y-2">
+              {task.githubIssueNumber && (
+                <div className="text-xs text-muted-foreground">
+                  {t('tasks:form.githubIssue')}: {task.githubRepo}#{task.githubIssueNumber}
+                </div>
+              )}
+              {onCreatePR && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => {
+                    onOpenChange(false);
+                    onCreatePR(task);
+                  }}
+                >
+                  <GitPullRequest className="h-4 w-4 mr-1.5" />
+                  {t('tasks:pr.create')}
+                </Button>
+              )}
             </div>
           )}
         </div>

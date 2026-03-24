@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getProductById } from '../db/products.js';
-import { githubIssueQuerySchema, githubCommentSchema, githubUpdateIssueSchema, githubOwnerRepoSchema } from '../validation.js';
+import { githubIssueQuerySchema, githubCommentSchema, githubUpdateIssueSchema, githubCreatePRSchema, githubOwnerRepoSchema } from '../validation.js';
 
 export const githubRoutes = Router();
 
@@ -197,6 +197,60 @@ githubRoutes.patch('/repos/:owner/:repo/issues/:number', async (req, res) => {
       return res.status(response.status).json({ error: `GitHub API error: ${response.statusText}` });
     }
     res.json(await response.json());
+  } catch (error: any) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/github/repos/:owner/:repo/pulls — create a pull request
+githubRoutes.post('/repos/:owner/:repo/pulls', async (req, res) => {
+  try {
+    const { owner, repo } = req.params;
+    const bodyResult = githubCreatePRSchema.safeParse(req.body);
+    if (!bodyResult.success) {
+      return res.status(400).json({ error: 'Invalid input', details: bodyResult.error.issues });
+    }
+
+    const response = await githubFetch(
+      `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`,
+      { method: 'POST', body: JSON.stringify(bodyResult.data), headers: { 'Content-Type': 'application/json' } }
+    );
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      return res.status(response.status).json({
+        error: `GitHub API error: ${response.statusText}`,
+        message: errorBody.message || response.statusText,
+      });
+    }
+    const pr = await response.json();
+    res.json({
+      number: pr.number,
+      title: pr.title,
+      htmlUrl: pr.html_url,
+      state: pr.state,
+      draft: pr.draft,
+      head: pr.head?.ref,
+      base: pr.base?.ref,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/github/repos/:owner/:repo/branches — list repo branches
+githubRoutes.get('/repos/:owner/:repo/branches', async (req, res) => {
+  try {
+    const { owner, repo } = req.params;
+    const page = req.query.page || '1';
+    const perPage = req.query.per_page || '100';
+    const response = await githubFetch(
+      `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches?per_page=${perPage}&page=${page}`
+    );
+    if (!response.ok) {
+      return res.status(response.status).json({ error: `GitHub API error: ${response.statusText}` });
+    }
+    const branches = await response.json();
+    res.json(branches.map((b: any) => ({ name: b.name, protected: b.protected })));
   } catch (error: any) {
     res.status(500).json({ error: 'Internal server error' });
   }

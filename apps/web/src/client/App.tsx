@@ -7,6 +7,7 @@ import { KanbanBoard } from './components/KanbanBoard';
 import { CreateProductDialog } from './components/CreateProductDialog';
 import { CreateTaskDialog } from './components/CreateTaskDialog';
 import { TaskEditDialog } from './components/TaskEditDialog';
+import { CreatePRDialog } from './components/CreatePRDialog';
 import { ProductSettings } from './components/ProductSettings';
 import { useProductStore } from './stores/product-store';
 import { useTaskStore } from './stores/task-store';
@@ -17,9 +18,14 @@ export function App() {
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [prTask, setPrTask] = useState<Task | null>(null);
 
   const handleTaskClick = useCallback((task: Task) => {
     setEditingTask(task);
+  }, []);
+
+  const handleCreatePR = useCallback((task: Task) => {
+    setPrTask(task);
   }, []);
 
   const editProduct = editingTask ? products.find(p => p.id === editingTask.productId) : null;
@@ -58,6 +64,12 @@ export function App() {
         onOpenChange={(open) => { if (!open) setEditingTask(null); }}
         productName={editProduct?.name}
         productColor={editProduct?.color}
+        onCreatePR={handleCreatePR}
+      />
+      <CreatePRDialog
+        task={prTask}
+        open={prTask !== null}
+        onOpenChange={(open) => { if (!open) setPrTask(null); }}
       />
     </TooltipProvider>
   );

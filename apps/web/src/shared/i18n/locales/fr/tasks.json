@@ -68,5 +68,20 @@
     "status": "Statut",
     "confirmDelete": "Supprimer cette tâche ?",
     "githubIssue": "Issue GitHub"
+  },
+  "pr": {
+    "createTitle": "Créer une Pull Request",
+    "create": "Créer une PR",
+    "created": "Pull request créée !",
+    "draft": "Brouillon",
+    "viewOnGitHub": "Voir sur GitHub",
+    "prTitle": "Titre de la PR",
+    "titlePlaceholder": "Saisir le titre de la pull request...",
+    "body": "Description",
+    "bodyPlaceholder": "Décrivez les changements...",
+    "headBranch": "Depuis la branche",
+    "baseBranch": "Vers la branche",
+    "selectBranch": "Sélectionner une branche...",
+    "createAsDraft": "Créer comme brouillon"
   }
 }

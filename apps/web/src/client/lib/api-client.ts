@@ -1,6 +1,6 @@
 import type { Product, CreateProductInput, UpdateProductInput } from '@shared/types/product';
 import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatus, TaskOrderState } from '@shared/types/task';
-import type { SyncResult, PaginatedIssuesResult } from '@shared/types/github';
+import type { SyncResult, PaginatedIssuesResult, CreatePullRequestInput, GitHubPullRequestResult, GitHubBranch } from '@shared/types/github';
 
 const API_BASE = '/api';
 
@@ -61,6 +61,13 @@ export const api = {
       request<{ items: any[]; hasMore: boolean; endCursor: string }>(
         `/github/projects/${encodeURIComponent(owner)}/${number}/items${cursor ? `?${new URLSearchParams({ cursor })}` : ''}`
       ),
+    createPullRequest: (owner: string, repo: string, input: CreatePullRequestInput) =>
+      request<GitHubPullRequestResult>(`/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    getBranches: (owner: string, repo: string) =>
+      request<GitHubBranch[]>(`/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches`),
   },
   events: {
     subscribe: (): EventSource => new EventSource(`${API_BASE}/events`),

@@ -68,5 +68,20 @@
     "status": "Status",
     "confirmDelete": "Delete this task?",
     "githubIssue": "GitHub Issue"
+  },
+  "pr": {
+    "createTitle": "Create Pull Request",
+    "create": "Create PR",
+    "created": "Pull request created!",
+    "draft": "Draft",
+    "viewOnGitHub": "View on GitHub",
+    "prTitle": "PR Title",
+    "titlePlaceholder": "Enter pull request title...",
+    "body": "Description",
+    "bodyPlaceholder": "Describe the changes...",
+    "headBranch": "From branch",
+    "baseBranch": "Into branch",
+    "selectBranch": "Select branch...",
+    "createAsDraft": "Create as draft PR"
   }
 }

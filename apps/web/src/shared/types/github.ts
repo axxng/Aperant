@@ -67,3 +67,26 @@ export interface PaginatedIssuesResult {
   issues: GitHubIssue[];
   hasMore: boolean;
 }
+
+export interface CreatePullRequestInput {
+  title: string;
+  body?: string;
+  head: string;
+  base: string;
+  draft?: boolean;
+}
+
+export interface GitHubPullRequestResult {
+  number: number;
+  title: string;
+  htmlUrl: string;
+  state: string;
+  draft: boolean;
+  head: string;
+  base: string;
+}
+
+export interface GitHubBranch {
+  name: string;
+  protected: boolean;
+}
