@@ -55,6 +55,9 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub API
 | **Kanban filters & search** | Done | `client/hooks/useKanbanFilters.ts`, `client/components/KanbanFilterBar.tsx` |
 | **Task edit dialog** | Done | `client/components/TaskEditDialog.tsx` |
 | **GitHub PR creation dialog** | Done | `client/components/CreatePRDialog.tsx` |
+| **GitHub issues list (split-pane)** | Done | `client/components/GitHubIssuesList.tsx`, `client/stores/github-issues-store.ts` |
+| **Issues sidebar sub-nav** | Done | `client/components/Sidebar.tsx` (sub-nav under active product) |
+| **Issues i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/issues.json` |
 
 ---
 
@@ -62,26 +65,21 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub API
 
 Features are grouped by domain. Each can be worked on independently.
 
-### 1. GitHub Issues List & Import
-**Desktop equivalent:** `components/github-issues/`, `stores/github/issues-store.ts`
+### ~~1. GitHub Issues List & Import~~ (DONE)
 
-**What to build:**
-- Issues list page showing GitHub issues for a product's repos
-- Issue detail view with body (markdown rendered)
-- Import single issue or bulk import → creates task from issue
-- Filtering by state (open/closed), labels, assignees
-- Search by title/body
+Completed. Split-pane layout with issue list (left) and detail panel (right). Includes:
+- State filtering (open/closed/all), text search, infinite scroll pagination
+- Issue detail with metadata, labels, assignees, milestone
+- Import-to-task action
+- Sidebar sub-navigation under active product
+- Route: `/products/:productId/issues`
 
-**Server work needed:**
-- Issues endpoint already exists (`GET /repos/:owner/:repo/issues`)
-- May need pagination support improvements
+Key files: `client/components/GitHubIssuesList.tsx`, `client/stores/github-issues-store.ts`
 
-**Client work:**
-- New route: `/products/:id/issues`
-- New components: `GitHubIssuesList.tsx`, `IssueDetailPanel.tsx`
-- New store: `client/stores/github-issues-store.ts`
-- Sidebar nav item for issues (per-product)
-- i18n keys in `en/github.json`, `fr/github.json` (new namespace)
+### ~~1b. GitHub Issues — Remaining Enhancements~~ (Optional)
+- Bulk import (select multiple issues)
+- Markdown rendering for issue body (currently plain text)
+- Label/assignee filtering dropdowns (currently only text search + state filter)
 
 **Key patterns from desktop:**
 - `apps/desktop/src/renderer/components/github-issues/GitHubIssueList.tsx`
