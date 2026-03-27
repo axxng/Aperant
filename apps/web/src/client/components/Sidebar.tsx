@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useProductStore } from '../stores/product-store';
 import { cn } from '../lib/utils';
-import { LayoutDashboard, Package, Plus, Settings, RefreshCw } from 'lucide-react';
+import { LayoutDashboard, Package, Plus, Settings, RefreshCw, CircleDot } from 'lucide-react';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from './ui/tooltip';
@@ -106,6 +106,21 @@ export const Sidebar = memo(function Sidebar({ onAddProduct }: SidebarProps) {
                 </>
               )}
             </NavLink>
+            {/* Sub-nav: Issues link (shown when product is active) */}
+            {!isCollapsed && activeProductId === product.id && (
+              <NavLink
+                to={`/products/${product.id}/issues`}
+                className={({ isActive }) =>
+                  cn(
+                    'flex items-center gap-2 pl-8 pr-3 py-1.5 text-xs transition-colors hover:bg-accent/50',
+                    isActive && 'bg-accent text-accent-foreground font-medium'
+                  )
+                }
+              >
+                <CircleDot className="h-3 w-3 shrink-0" />
+                <span>{t('navigation:items.issues')}</span>
+              </NavLink>
+            )}
           ))}
         </div>
       </ScrollArea>

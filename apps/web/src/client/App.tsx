@@ -8,6 +8,7 @@ import { CreateProductDialog } from './components/CreateProductDialog';
 import { CreateTaskDialog } from './components/CreateTaskDialog';
 import { TaskEditDialog } from './components/TaskEditDialog';
 import { CreatePRDialog } from './components/CreatePRDialog';
+import { GitHubIssuesList } from './components/GitHubIssuesList';
 import { ProductSettings } from './components/ProductSettings';
 import { useProductStore } from './stores/product-store';
 import { useTaskStore } from './stores/task-store';
@@ -51,6 +52,10 @@ export function App() {
             <Route
               path="/products/:productId/settings"
               element={<ProductSettings />}
+            />
+            <Route
+              path="/products/:productId/issues"
+              element={<GitHubIssuesList />}
             />
           </Routes>
         </main>
