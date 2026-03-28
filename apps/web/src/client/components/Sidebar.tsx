@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import React, { memo, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useProductStore } from '../stores/product-store';
@@ -76,51 +76,51 @@ export const Sidebar = memo(function Sidebar({ onAddProduct }: SidebarProps) {
             </div>
           )}
           {products.map((product) => (
-            <NavLink
-              key={product.id}
-              to={`/products/${product.id}`}
-              onClick={() => setActiveProduct(product.id)}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-accent/50 group',
-                  isActive && 'bg-accent text-accent-foreground font-medium'
-                )
-              }
-            >
-              <div
-                className="h-3 w-3 rounded-full shrink-0"
-                style={{ backgroundColor: product.color }}
-              />
-              {!isCollapsed && (
-                <>
-                  <span className="truncate flex-1">{product.name}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => handleSync(e, product.id)}
-                    disabled={syncingId === product.id}
-                  >
-                    <RefreshCw className={cn('h-3 w-3', syncingId === product.id && 'animate-spin')} />
-                  </Button>
-                </>
-              )}
-            </NavLink>
-            {/* Sub-nav: Issues link (shown when product is active) */}
-            {!isCollapsed && activeProductId === product.id && (
+            <React.Fragment key={product.id}>
               <NavLink
-                to={`/products/${product.id}/issues`}
+                to={`/products/${product.id}`}
+                onClick={() => setActiveProduct(product.id)}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-2 pl-8 pr-3 py-1.5 text-xs transition-colors hover:bg-accent/50',
+                    'flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-accent/50 group',
                     isActive && 'bg-accent text-accent-foreground font-medium'
                   )
                 }
               >
-                <CircleDot className="h-3 w-3 shrink-0" />
-                <span>{t('navigation:items.issues')}</span>
+                <div
+                  className="h-3 w-3 rounded-full shrink-0"
+                  style={{ backgroundColor: product.color }}
+                />
+                {!isCollapsed && (
+                  <>
+                    <span className="truncate flex-1">{product.name}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => handleSync(e, product.id)}
+                      disabled={syncingId === product.id}
+                    >
+                      <RefreshCw className={cn('h-3 w-3', syncingId === product.id && 'animate-spin')} />
+                    </Button>
+                  </>
+                )}
               </NavLink>
-            )}
+              {!isCollapsed && activeProductId === product.id && (
+                <NavLink
+                  to={`/products/${product.id}/issues`}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-2 pl-8 pr-3 py-1.5 text-xs transition-colors hover:bg-accent/50',
+                      isActive && 'bg-accent text-accent-foreground font-medium'
+                    )
+                  }
+                >
+                  <CircleDot className="h-3 w-3 shrink-0" />
+                  <span>{t('navigation:items.issues')}</span>
+                </NavLink>
+              )}
+            </React.Fragment>
           ))}
         </div>
       </ScrollArea>

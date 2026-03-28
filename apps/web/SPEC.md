@@ -59,6 +59,15 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub API
 | **Issues sidebar sub-nav** | Done | `client/components/Sidebar.tsx` (sub-nav under active product) |
 | **Issues i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/issues.json` |
 
+### AI Infrastructure (Server)
+| Component | Status | Files |
+|-----------|--------|-------|
+| AI provider factory (Anthropic, extensible) | Done | `server/ai/providers/factory.ts` |
+| Session runner (streamText + SSE events) | Done | `server/ai/session/runner.ts`, `server/ai/session/types.ts` |
+| Builtin tools (Read, Glob, Grep, WebFetch) | Done | `server/ai/tools/index.ts` |
+| Agent config registry (7 agent types) | Done | `server/ai/config/agent-configs.ts` |
+| AI routes (session, agents, health) | Done | `server/routes/ai.ts` |
+
 ---
 
 ## Remaining Features
@@ -276,33 +285,25 @@ Key files: `client/components/GitHubIssuesList.tsx`, `client/stores/github-issue
 
 ---
 
-### 8. AI Provider Infrastructure
-**Desktop equivalent:** `main/ai/providers/`, `main/ai/session/`, `main/ai/tools/`
+### ~~8. AI Provider Infrastructure~~ (DONE)
 
-**What to build (server-side):**
-- Provider factory using Vercel AI SDK v6 (`createProvider()`)
-- Multi-provider support: Anthropic, OpenAI, Google (at minimum)
-- `streamText()` / `generateText()` session runner
-- Builtin tools: Read, Glob, Grep, WebFetch (scoped to product repos)
-- SSE streaming wrapper for AI responses
-- Agent config registry (model selection, thinking budgets per agent type)
-- API key management via environment variables
+Completed. Server-side AI infrastructure using Vercel AI SDK v6. Includes:
+- Provider factory with Anthropic support, model shorthand resolution, thinking budget configs
+- Session runner wrapping `streamText()` with SSE event streaming
+- Builtin tools: Read, Glob, Grep, WebFetch (with path traversal protection)
+- Agent config registry (7 agent types: insights, reviewer, investigator, roadmap, ideation, changelog, analyzer)
+- Express routes: `POST /api/ai/session` (SSE stream), `GET /api/ai/agents`, `GET /api/ai/health`
 
-**Server files to create:**
-- `server/ai/providers/factory.ts` — provider registry
-- `server/ai/providers/transforms.ts` — thinking token normalization
-- `server/ai/session/runner.ts` — streamText wrapper with SSE output
-- `server/ai/tools/` — tool definitions (Read, Glob, Grep, etc.)
-- `server/ai/config/agent-configs.ts` — agent type registry
-- `server/routes/ai.ts` — shared AI route utilities
+Key files:
+- `server/ai/providers/factory.ts` — Provider factory, model resolution, thinking options
+- `server/ai/session/runner.ts` — `runAgentSession()` with streamText + event callbacks
+- `server/ai/session/types.ts` — SessionResult, StreamEvent types
+- `server/ai/tools/index.ts` — Builtin tool definitions (Read, Glob, Grep, WebFetch)
+- `server/ai/config/agent-configs.ts` — Agent type registry with tool groupings
+- `server/ai/index.ts` — Barrel export
+- `server/routes/ai.ts` — Express routes with SSE streaming
 
-**Key patterns from desktop:**
-- `apps/desktop/src/main/ai/providers/factory.ts`
-- `apps/desktop/src/main/ai/session/agent-session.ts`
-- `apps/desktop/src/main/ai/tools/`
-- `apps/desktop/src/main/ai/config/agent-configs.ts`
-
-**No dependency — this is a foundation for Features 2, 3, 4, 5, 6, 7**
+**This is a foundation for Features 2, 3, 4, 5, 6, 7 — all now unblocked.**
 
 ---
 
