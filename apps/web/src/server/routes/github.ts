@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getProductById } from '../db/products.js';
-import { githubIssueQuerySchema, githubCommentSchema, githubUpdateIssueSchema, githubCreatePRSchema, githubOwnerRepoSchema } from '../validation.js';
+import { githubIssueQuerySchema, githubCommentSchema, githubUpdateIssueSchema, githubCreatePRSchema, githubOwnerRepoSchema, githubPRQuerySchema } from '../validation.js';
+import type { GitHubPR, PRFile } from '../../shared/types/pr.js';
 
 export const githubRoutes = Router();
 
@@ -255,6 +256,95 @@ githubRoutes.get('/repos/:owner/:repo/branches', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// GET /api/github/repos/:owner/:repo/pulls — list pull requests
+githubRoutes.get('/repos/:owner/:repo/pulls', async (req, res) => {
+  try {
+    const { owner, repo } = req.params;
+    const queryResult = githubPRQuerySchema.safeParse(req.query);
+    if (!queryResult.success) {
+      return res.status(400).json({ error: 'Invalid query parameters' });
+    }
+    const { state, page, per_page } = queryResult.data;
+    const params = new URLSearchParams({ state, page, per_page, sort: 'updated', direction: 'desc' });
+    const response = await githubFetch(
+      `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls?${params}`
+    );
+    if (!response.ok) {
+      return res.status(response.status).json({ error: `GitHub API error: ${response.statusText}` });
+    }
+    const pulls = await response.json();
+    const mapped: GitHubPR[] = pulls.map((pr: any) => mapGitHubPR(pr));
+    const linkHeader = response.headers.get('Link');
+    const hasMore = linkHeader ? linkHeader.includes('rel="next"') : false;
+    res.json({ pullRequests: mapped, hasMore, page: parseInt(page, 10) });
+  } catch (error: any) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/github/repos/:owner/:repo/pulls/:number — get a single PR
+githubRoutes.get('/repos/:owner/:repo/pulls/:number', async (req, res) => {
+  try {
+    const { owner, repo, number } = req.params;
+    const response = await githubFetch(
+      `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${encodeURIComponent(number)}`
+    );
+    if (!response.ok) {
+      return res.status(response.status).json({ error: `GitHub API error: ${response.statusText}` });
+    }
+    const pr = await response.json();
+    res.json(mapGitHubPR(pr));
+  } catch (error: any) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/github/repos/:owner/:repo/pulls/:number/files — get PR files/diff
+githubRoutes.get('/repos/:owner/:repo/pulls/:number/files', async (req, res) => {
+  try {
+    const { owner, repo, number } = req.params;
+    const response = await githubFetch(
+      `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${encodeURIComponent(number)}/files?per_page=100`
+    );
+    if (!response.ok) {
+      return res.status(response.status).json({ error: `GitHub API error: ${response.statusText}` });
+    }
+    const files = await response.json();
+    const mapped: PRFile[] = files.map((f: any) => ({
+      path: f.filename,
+      additions: f.additions,
+      deletions: f.deletions,
+      status: f.status as PRFile['status'],
+      patch: f.patch,
+    }));
+    res.json(mapped);
+  } catch (error: any) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Helper: map raw GitHub API PR to our GitHubPR type
+function mapGitHubPR(pr: any): GitHubPR {
+  return {
+    number: pr.number,
+    title: pr.title,
+    body: pr.body || '',
+    state: pr.merged_at ? 'merged' : pr.state,
+    author: { login: pr.user?.login, avatarUrl: pr.user?.avatar_url },
+    headRefName: pr.head?.ref,
+    baseRefName: pr.base?.ref,
+    additions: pr.additions ?? 0,
+    deletions: pr.deletions ?? 0,
+    changedFiles: pr.changed_files ?? 0,
+    labels: pr.labels?.map((l: any) => ({ name: l.name, color: l.color })) || [],
+    assignees: pr.assignees?.map((a: any) => ({ login: a.login })) || [],
+    createdAt: pr.created_at,
+    updatedAt: pr.updated_at,
+    htmlUrl: pr.html_url,
+    draft: pr.draft || false,
+  };
+}
 
 // Helper: map raw GitHub API issue to our GitHubIssue type
 function mapGitHubIssue(owner: string, repo: string) {

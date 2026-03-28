@@ -1,0 +1,26 @@
+{
+  "title": "Pull Requests",
+  "searchPlaceholder": "Rechercher des pull requests...",
+  "empty": "Aucune pull request trouvée",
+  "noRepos": "Aucun dépôt configuré pour ce produit",
+  "selectPR": "Sélectionnez une pull request pour voir les détails",
+  "state": {
+    "open": "Ouvertes",
+    "closed": "Fermées",
+    "all": "Toutes"
+  },
+  "draft": "Brouillon",
+  "additions": "ajouts",
+  "deletions": "suppressions",
+  "changedFiles": "fichiers modifiés",
+  "branch": "Branche",
+  "files": "Fichiers",
+  "noFiles": "Aucun fichier modifié",
+  "review": "Revue IA",
+  "reviewing": "Revue en cours...",
+  "reviewComplete": "Revue terminée",
+  "reviewError": "La revue a échoué",
+  "reviewAnalysis": "Revue IA",
+  "closeReview": "Fermer",
+  "viewOnGitHub": "Voir sur GitHub"
+}

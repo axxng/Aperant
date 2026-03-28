@@ -136,3 +136,10 @@ export const githubCreatePRSchema = z.object({
   base: z.string().min(1).max(255),
   draft: z.boolean().optional(),
 });
+
+// GitHub PR list query
+export const githubPRQuerySchema = z.object({
+  state: z.enum(['open', 'closed', 'all']).default('open'),
+  page: z.string().regex(/^\d+$/).default('1'),
+  per_page: z.string().regex(/^\d+$/).default('30'),
+});

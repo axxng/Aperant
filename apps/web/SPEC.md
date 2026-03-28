@@ -68,6 +68,15 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub API
 | Agent config registry (7 agent types) | Done | `server/ai/config/agent-configs.ts` |
 | AI routes (session, agents, health) | Done | `server/routes/ai.ts` |
 | **Issue investigation (AI-powered SSE)** | Done | `server/routes/investigation.ts`, `client/stores/investigation-store.ts` |
+| **PR list, detail, files endpoints** | Done | `server/routes/github.ts`, `shared/types/pr.ts` |
+| **PR AI review (SSE streaming)** | Done | `server/routes/pr-review.ts` |
+
+### UI Components (continued)
+| Component | Status | Files |
+|-----------|--------|-------|
+| **GitHub PR list (split-pane + AI review)** | Done | `client/components/GitHubPRList.tsx`, `client/stores/pr-review-store.ts` |
+| **PR sidebar sub-nav** | Done | `client/components/Sidebar.tsx` |
+| **PR i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/prs.json` |
 
 ---
 
@@ -115,37 +124,23 @@ Key files:
 
 ---
 
-### 3. GitHub PR Review (AI-Powered)
-**Desktop equivalent:** `components/github-prs/`, `stores/github/pr-review-store.ts`
+### ~~3. GitHub PR Review (AI-Powered)~~ (DONE)
 
-**What to build:**
-- PR list page with filtering (status, author, label, sort)
-- PR detail view with commit diffs
-- AI-powered review pipeline with specialist agents:
-  - Logic specialist — correctness and logic flaws
-  - Quality specialist — code quality issues
-  - Security specialist — vulnerability detection
-  - Codebase fit specialist — architectural alignment
-- Findings tree grouped by severity
-- Bulk PR review operations
+Completed. PR list with split-pane detail view and AI-powered review. Includes:
+- PR list page with search, state filter (open/closed/all), infinite scroll
+- PR detail view with branch info, diff stats, file list, labels
+- AI review button triggers streaming analysis via SSE
+- Review panel with progress bar, streamed markdown output, error/complete states
+- Sidebar sub-nav link for PRs under active product
+- Route: `/products/:productId/prs`
 
-**Server work needed:**
-- New routes: `GET /api/github/repos/:owner/:repo/pulls`, `GET .../pulls/:number`
-- New route: `POST /api/products/:id/github/prs/:number/review` (SSE stream)
-- PR review orchestration (parallel specialist agents)
-
-**Client work:**
-- New route: `/products/:id/prs`
-- Components: `GitHubPRList.tsx`, `PRDetailView.tsx`, `PRFindingsTree.tsx`, `PRFilterBar.tsx`
-- Store: `client/stores/pr-review-store.ts`
-- i18n keys for PR review
-
-**Key patterns from desktop:**
-- `apps/desktop/src/renderer/components/github-prs/` — full PR review UI
-- `apps/desktop/src/main/ai/config/agent-configs.ts` — PR review agent configs
-- `apps/desktop/src/renderer/stores/github/pr-review-store.ts`
-
-**Dependency:** Requires AI provider infrastructure (Feature 8)
+Key files:
+- `shared/types/pr.ts` — GitHubPR, PRFile, PRReviewFinding, PRReviewResult types
+- `server/routes/github.ts` — PR list, detail, files endpoints
+- `server/routes/pr-review.ts` — AI review route with SSE streaming
+- `client/components/GitHubPRList.tsx` — Split-pane PR list + detail + review
+- `client/stores/pr-review-store.ts` — Zustand store for PR list and review state
+- `shared/i18n/locales/{en,fr}/prs.json` — i18n translations
 
 ---
 

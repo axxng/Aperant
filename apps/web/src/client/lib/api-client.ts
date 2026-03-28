@@ -1,6 +1,7 @@
 import type { Product, CreateProductInput, UpdateProductInput } from '@shared/types/product';
 import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatus, TaskOrderState } from '@shared/types/task';
 import type { SyncResult, PaginatedIssuesResult, CreatePullRequestInput, GitHubPullRequestResult, GitHubBranch } from '@shared/types/github';
+import type { GitHubPR, PRFile, PaginatedPRsResult } from '@shared/types/pr';
 
 const API_BASE = '/api';
 
@@ -68,6 +69,14 @@ export const api = {
       }),
     getBranches: (owner: string, repo: string) =>
       request<GitHubBranch[]>(`/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches`),
+    getPullRequests: (owner: string, repo: string, params?: { state?: string; page?: string }) => {
+      const searchParams = new URLSearchParams(params as Record<string, string>);
+      return request<PaginatedPRsResult>(`/github/repos/${owner}/${repo}/pulls?${searchParams}`);
+    },
+    getPullRequest: (owner: string, repo: string, number: number) =>
+      request<GitHubPR>(`/github/repos/${owner}/${repo}/pulls/${number}`),
+    getPullRequestFiles: (owner: string, repo: string, number: number) =>
+      request<PRFile[]>(`/github/repos/${owner}/${repo}/pulls/${number}/files`),
   },
   investigate: {
     /**

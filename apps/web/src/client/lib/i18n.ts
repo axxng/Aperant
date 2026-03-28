@@ -6,12 +6,14 @@ import commonEn from '../../shared/i18n/locales/en/common.json';
 import navigationEn from '../../shared/i18n/locales/en/navigation.json';
 import tasksEn from '../../shared/i18n/locales/en/tasks.json';
 import issuesEn from '../../shared/i18n/locales/en/issues.json';
+import prsEn from '../../shared/i18n/locales/en/prs.json';
 
 // Import French translation resources
 import commonFr from '../../shared/i18n/locales/fr/common.json';
 import navigationFr from '../../shared/i18n/locales/fr/navigation.json';
 import tasksFr from '../../shared/i18n/locales/fr/tasks.json';
 import issuesFr from '../../shared/i18n/locales/fr/issues.json';
+import prsFr from '../../shared/i18n/locales/fr/prs.json';
 
 export const defaultNS = 'common';
 
@@ -21,12 +23,14 @@ export const resources = {
     navigation: navigationEn,
     tasks: tasksEn,
     issues: issuesEn,
+    prs: prsEn,
   },
   fr: {
     common: commonFr,
     navigation: navigationFr,
     tasks: tasksFr,
     issues: issuesFr,
+    prs: prsFr,
   },
 } as const;
 
@@ -35,7 +39,7 @@ i18n.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
   defaultNS,
-  ns: ['common', 'navigation', 'tasks', 'issues'],
+  ns: ['common', 'navigation', 'tasks', 'issues', 'prs'],
   interpolation: { escapeValue: false },
 });
 
