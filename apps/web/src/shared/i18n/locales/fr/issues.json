@@ -12,5 +12,12 @@
     "open": "Ouvertes",
     "closed": "Fermées",
     "all": "Toutes"
-  }
+  },
+  "investigate": "Enquêter",
+  "investigating": "Analyse en cours...",
+  "investigationComplete": "Enquête terminée",
+  "investigationError": "L'enquête a échoué",
+  "investigationAnalysis": "Analyse IA",
+  "closeInvestigation": "Fermer",
+  "noApiKey": "Fournisseur IA non configuré"
 }

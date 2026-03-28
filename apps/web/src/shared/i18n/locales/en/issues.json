@@ -12,5 +12,12 @@
     "open": "Open",
     "closed": "Closed",
     "all": "All"
-  }
+  },
+  "investigate": "Investigate",
+  "investigating": "Investigating...",
+  "investigationComplete": "Investigation Complete",
+  "investigationError": "Investigation failed",
+  "investigationAnalysis": "AI Analysis",
+  "closeInvestigation": "Close",
+  "noApiKey": "AI provider not configured"
 }

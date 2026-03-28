@@ -67,6 +67,7 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub API
 | Builtin tools (Read, Glob, Grep, WebFetch) | Done | `server/ai/tools/index.ts` |
 | Agent config registry (7 agent types) | Done | `server/ai/config/agent-configs.ts` |
 | AI routes (session, agents, health) | Done | `server/routes/ai.ts` |
+| **Issue investigation (AI-powered SSE)** | Done | `server/routes/investigation.ts`, `client/stores/investigation-store.ts` |
 
 ---
 
@@ -96,34 +97,21 @@ Key files: `client/components/GitHubIssuesList.tsx`, `client/stores/github-issue
 
 ---
 
-### 2. GitHub Issue Investigation (AI-Powered)
-**Desktop equivalent:** `main/ai/runners/`, `stores/github/investigation-store.ts`
+### ~~2. GitHub Issue Investigation (AI-Powered)~~ (DONE)
 
-**What to build:**
-- "Investigate" button on issue detail that triggers AI analysis
-- AI reads the issue, analyzes codebase context, identifies affected files and root cause
-- Streaming progress shown to user (SSE)
-- Investigation results stored and displayed
+Completed. AI-powered issue investigation with streaming SSE results. Includes:
+- "Investigate" button on issue detail panel, alongside "Import as Task"
+- Server route (`POST /api/investigate`) runs AI agent session with investigator config
+- SSE streaming of progress events and text deltas to the client
+- Investigation panel with progress bar, streamed markdown output, error/complete states
+- Zustand store for investigation state management
+- i18n keys (en + fr) for all investigation UI text
 
-**Server work needed:**
-- New route: `POST /api/products/:id/github/issues/:number/investigate`
-- AI provider setup (Vercel AI SDK integration in server)
-- SSE streaming for progress updates
-- Provider factory: port `apps/desktop/src/main/ai/providers/factory.ts`
-- Session runner: port `apps/desktop/src/main/ai/session/`
-
-**Client work:**
-- Investigation panel in issue detail
-- Progress indicator with streaming updates
-- Store: `client/stores/investigation-store.ts`
-- SSE subscription for progress events
-
-**Key patterns from desktop:**
-- `apps/desktop/src/main/ai/runners/` — runner pattern
-- `apps/desktop/src/main/ipc-handlers/github/investigation-handlers.ts`
-- `apps/desktop/src/renderer/stores/github/investigation-store.ts`
-
-**Dependency:** Requires AI provider infrastructure (Feature 8)
+Key files:
+- `server/routes/investigation.ts` — Express route with SSE streaming AI session
+- `client/stores/investigation-store.ts` — Zustand store (status, streamedText, result)
+- `client/components/GitHubIssuesList.tsx` — Updated IssueDetail with investigate button + panel
+- `client/lib/api-client.ts` — `api.investigate.startInvestigation()` method
 
 ---
 

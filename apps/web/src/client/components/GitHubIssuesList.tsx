@@ -12,6 +12,8 @@ import {
   Search, X, RefreshCw, ExternalLink, Tag, MessageSquare,
   User, Calendar, Import, ChevronDown, CircleDot, CircleCheck, Loader2,
 } from 'lucide-react';
+import { api } from '../lib/api-client';
+import { useInvestigationStore } from '../stores/investigation-store';
 import type { GitHubIssue } from '@shared/types/github';
 import type { Product, RepoSource, MultiRepoSource } from '@shared/types/product';
 
@@ -216,6 +218,7 @@ export function GitHubIssuesList() {
               issue={selectedIssue}
               onImport={() => handleImport(selectedIssue)}
               isImporting={importingIssue === selectedIssue.number}
+              repo={primaryRepo}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
@@ -286,12 +289,79 @@ function IssueDetail({
   issue,
   onImport,
   isImporting,
+  repo,
 }: {
   issue: GitHubIssue;
   onImport: () => void;
   isImporting: boolean;
+  repo: { owner: string; repo: string };
 }) {
   const { t } = useTranslation(['issues', 'common']);
+  const {
+    status, streamedText, isInvestigating,
+    startInvestigation, setStatus, appendText, setResult, reset,
+  } = useInvestigationStore();
+
+  const handleInvestigate = useCallback(async () => {
+    startInvestigation();
+    const { eventSource: controller, response: responsePromise } = api.investigate.startInvestigation({
+      owner: repo.owner,
+      repo: repo.repo,
+      issueNumber: issue.number,
+      issueTitle: issue.title,
+      issueBody: issue.body,
+      labels: issue.labels.map((l) => l.name),
+    });
+
+    try {
+      const response = await responsePromise;
+      if (!response.ok) {
+        setStatus({ phase: 'error', progress: 0, message: 'Request failed', error: `HTTP ${response.status}` });
+        return;
+      }
+      const reader = response.body?.getReader();
+      if (!reader) return;
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+
+        let eventType = '';
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            eventType = line.slice(7);
+          } else if (line.startsWith('data: ') && eventType) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (eventType === 'text-delta') {
+                appendText(data.text);
+              } else if (eventType === 'progress') {
+                setStatus({ phase: data.phase, progress: data.progress, message: data.message });
+              } else if (eventType === 'investigation-result') {
+                setResult(data);
+              } else if (eventType === 'error') {
+                setStatus({ phase: 'error', progress: 0, message: data.error, error: data.error });
+              }
+            } catch {
+              // skip malformed JSON
+            }
+            eventType = '';
+          }
+        }
+      }
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        setStatus({ phase: 'error', progress: 0, message: err.message, error: err.message });
+      }
+    }
+  }, [issue, repo, startInvestigation, setStatus, appendText, setResult]);
 
   return (
     <div className="p-4 space-y-4">
@@ -386,7 +456,70 @@ function IssueDetail({
           )}
           {t('issues:importAsTask')}
         </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleInvestigate}
+          disabled={isInvestigating}
+        >
+          {isInvestigating ? (
+            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+          ) : (
+            <Search className="h-4 w-4 mr-1" />
+          )}
+          {isInvestigating ? t('issues:investigating') : t('issues:investigate')}
+        </Button>
       </div>
+
+      {/* Investigation Panel */}
+      {(isInvestigating || streamedText || status.phase === 'error') && (
+        <div className="border border-border rounded-lg overflow-hidden">
+          {/* Investigation header */}
+          <div className="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
+            <span className="text-sm font-medium">{t('issues:investigationAnalysis')}</span>
+            <div className="flex items-center gap-2">
+              {isInvestigating && (
+                <span className="text-xs text-muted-foreground">{status.message}</span>
+              )}
+              {status.phase === 'complete' && (
+                <Badge variant="success" className="text-xs">{t('issues:investigationComplete')}</Badge>
+              )}
+              {status.phase === 'error' && (
+                <Badge variant="destructive" className="text-xs">{t('issues:investigationError')}</Badge>
+              )}
+              {!isInvestigating && (
+                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={reset}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
+          </div>
+          {/* Investigation progress bar */}
+          {isInvestigating && status.progress > 0 && (
+            <div className="h-1 bg-muted">
+              <div
+                className="h-full bg-primary transition-all duration-500"
+                style={{ width: `${status.progress}%` }}
+              />
+            </div>
+          )}
+          {/* Investigation content */}
+          <div className="p-3 max-h-96 overflow-auto">
+            {status.phase === 'error' ? (
+              <p className="text-sm text-destructive">{status.error}</p>
+            ) : streamedText ? (
+              <pre className="text-sm whitespace-pre-wrap font-sans leading-relaxed text-foreground/90">
+                {streamedText}
+              </pre>
+            ) : (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>{status.message}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Body */}
       {issue.body && (

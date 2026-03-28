@@ -69,6 +69,29 @@ export const api = {
     getBranches: (owner: string, repo: string) =>
       request<GitHubBranch[]>(`/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches`),
   },
+  investigate: {
+    /**
+     * Start an AI investigation of a GitHub issue.
+     * Returns an EventSource for SSE streaming of progress and results.
+     */
+    startInvestigation: (params: {
+      owner: string;
+      repo: string;
+      issueNumber: number;
+      issueTitle: string;
+      issueBody?: string;
+      labels?: string[];
+    }): { eventSource: AbortController; response: Promise<Response> } => {
+      const controller = new AbortController();
+      const response = fetch(`${API_BASE}/investigate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+        signal: controller.signal,
+      });
+      return { eventSource: controller, response };
+    },
+  },
   events: {
     subscribe: (): EventSource => new EventSource(`${API_BASE}/events`),
   },
