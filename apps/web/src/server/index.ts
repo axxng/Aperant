@@ -9,6 +9,7 @@ import { eventRoutes } from './routes/events.js';
 import { aiRoutes } from './routes/ai.js';
 import { investigationRoutes } from './routes/investigation.js';
 import { prReviewRoutes } from './routes/pr-review.js';
+import { insightsRoutes } from './routes/insights.js';
 import { startSyncScheduler, stopSyncScheduler, triggerSync } from './sync/scheduler.js';
 import { broadcastEvent } from './routes/events.js';
 
@@ -42,6 +43,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/investigate', investigationRoutes);
 app.use('/api/pr-review', prReviewRoutes);
+app.use('/api/insights', insightsRoutes);
 
 // Manual sync trigger for a product
 app.post('/api/products/:id/sync', async (req, res) => {

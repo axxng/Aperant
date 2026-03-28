@@ -115,4 +115,17 @@ const MIGRATIONS = [
       );
     `,
   },
+  {
+    name: '002_insights_sessions',
+    sql: `
+      CREATE TABLE insights_sessions (
+        id TEXT PRIMARY KEY,
+        title TEXT,
+        messages TEXT NOT NULL DEFAULT '[]',
+        model_config TEXT DEFAULT '{}',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `,
+  },
 ];

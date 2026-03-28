@@ -1,0 +1,15 @@
+{
+  "title": "Insights",
+  "newSession": "New Chat",
+  "sessions": "Sessions",
+  "noSessions": "No sessions yet",
+  "selectSession": "Select a session or start a new chat",
+  "inputPlaceholder": "Ask about the codebase...",
+  "send": "Send",
+  "thinking": "Thinking...",
+  "usingTool": "Using {{tool}}",
+  "deleteSession": "Delete",
+  "renameSession": "Rename",
+  "noMessages": "Start a conversation by typing a message below",
+  "toolsUsed": "Tools used"
+}

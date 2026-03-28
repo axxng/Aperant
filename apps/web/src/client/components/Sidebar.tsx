@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useProductStore } from '../stores/product-store';
 import { cn } from '../lib/utils';
-import { LayoutDashboard, Package, Plus, Settings, RefreshCw, CircleDot, GitPullRequest } from 'lucide-react';
+import { LayoutDashboard, Package, Plus, Settings, RefreshCw, CircleDot, GitPullRequest, Lightbulb } from 'lucide-react';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from './ui/tooltip';
@@ -65,6 +65,20 @@ export const Sidebar = memo(function Sidebar({ onAddProduct }: SidebarProps) {
       >
         <LayoutDashboard className="h-4 w-4 shrink-0" />
         {!isCollapsed && <span>{t('common:allProducts')}</span>}
+      </NavLink>
+
+      {/* Insights */}
+      <NavLink
+        to="/insights"
+        className={({ isActive }) =>
+          cn(
+            'flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-accent/50',
+            isActive && 'bg-accent text-accent-foreground font-medium'
+          )
+        }
+      >
+        <Lightbulb className="h-4 w-4 shrink-0" />
+        {!isCollapsed && <span>{t('navigation:items.insights')}</span>}
       </NavLink>
 
       {/* Product list */}

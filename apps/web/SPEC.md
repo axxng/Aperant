@@ -77,6 +77,10 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub API
 | **GitHub PR list (split-pane + AI review)** | Done | `client/components/GitHubPRList.tsx`, `client/stores/pr-review-store.ts` |
 | **PR sidebar sub-nav** | Done | `client/components/Sidebar.tsx` |
 | **PR i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/prs.json` |
+| **Insights chat (multi-session, streaming)** | Done | `client/components/Insights.tsx`, `client/stores/insights-store.ts` |
+| **Insights sidebar nav** | Done | `client/components/Sidebar.tsx` |
+| **Insights sessions DB + routes** | Done | `server/db/insights.ts`, `server/routes/insights.ts` |
+| **Insights i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/insights.json` |
 
 ---
 
@@ -144,33 +148,23 @@ Key files:
 
 ---
 
-### 4. Insights (AI Chat Interface)
-**Desktop equivalent:** `components/Insights.tsx`, `stores/insights-store.ts`
+### ~~4. Insights (AI Chat Interface)~~ (DONE)
 
-**What to build:**
-- Multi-session AI chat interface for exploring codebases
-- Session management (create, switch, delete, rename)
-- Per-session model configuration
-- Markdown rendering in chat messages
-- Streaming responses via SSE
+Completed. Multi-session AI chat for exploring codebases with streaming responses. Includes:
+- Two-pane layout: session sidebar (create, rename, delete) + chat area
+- Message bubbles with user/assistant roles, tool usage badges
+- Streaming text with cursor animation, tool indicator during execution
+- Session persistence in SQLite (insights_sessions table)
+- Auto-title from first message, full message history per session
+- Route: `/insights`, sidebar nav link with Lightbulb icon
 
-**Server work needed:**
-- New routes: `POST /api/insights/sessions`, `GET /api/insights/sessions`
-- New route: `POST /api/insights/sessions/:id/messages` (SSE stream)
-- Session persistence in SQLite (new table)
-- AI agent session with codebase tools (Read, Glob, Grep)
-
-**Client work:**
-- New route: `/insights`
-- Components: `Insights.tsx`, `InsightsSessionList.tsx`, `ChatMessage.tsx`
-- Store: `client/stores/insights-store.ts`
-- i18n namespace: `insights`
-
-**Key patterns from desktop:**
-- `apps/desktop/src/renderer/components/Insights.tsx`
-- `apps/desktop/src/main/ai/runners/insights.ts`
-
-**Dependency:** Requires AI provider infrastructure (Feature 8)
+Key files:
+- `server/db/insights.ts` — DB access (CRUD for sessions)
+- `server/db/schema.ts` — Migration 002 for insights_sessions table
+- `server/routes/insights.ts` — REST + SSE routes (list, create, get, update, delete, chat)
+- `client/components/Insights.tsx` — Full chat UI with streaming
+- `client/stores/insights-store.ts` — Zustand store for sessions and streaming state
+- `shared/i18n/locales/{en,fr}/insights.json` — i18n translations
 
 ---
 

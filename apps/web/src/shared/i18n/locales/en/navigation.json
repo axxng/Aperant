@@ -4,6 +4,7 @@
     "kanban": "Kanban Board",
     "issues": "GitHub Issues",
     "prs": "Pull Requests",
+    "insights": "Insights",
     "settings": "Settings"
   },
   "sidebar": {
