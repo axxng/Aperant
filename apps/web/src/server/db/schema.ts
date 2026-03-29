@@ -160,4 +160,19 @@ const MIGRATIONS = [
       CREATE INDEX idx_ideation_product ON ideation_sessions(product_id);
     `,
   },
+  {
+    name: '005_changelogs',
+    sql: `
+      CREATE TABLE changelogs (
+        id TEXT PRIMARY KEY,
+        product_id TEXT NOT NULL,
+        content TEXT NOT NULL DEFAULT '',
+        config TEXT NOT NULL DEFAULT '{}',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE INDEX idx_changelogs_product ON changelogs(product_id);
+    `,
+  },
 ];

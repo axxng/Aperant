@@ -4,3 +4,4 @@ export * from './github';
 export * from './pr';
 export * from './roadmap';
 export * from './ideation';
+export * from './changelog';

@@ -12,6 +12,7 @@ import { prReviewRoutes } from './routes/pr-review.js';
 import { insightsRoutes } from './routes/insights.js';
 import { roadmapRoutes } from './routes/roadmap.js';
 import { ideationRoutes } from './routes/ideation.js';
+import { changelogRoutes } from './routes/changelog.js';
 import { startSyncScheduler, stopSyncScheduler, triggerSync } from './sync/scheduler.js';
 import { broadcastEvent } from './routes/events.js';
 
@@ -48,6 +49,7 @@ app.use('/api/pr-review', prReviewRoutes);
 app.use('/api/insights', insightsRoutes);
 app.use('/api/roadmap', roadmapRoutes);
 app.use('/api/ideation', ideationRoutes);
+app.use('/api/changelog', changelogRoutes);
 
 // Manual sync trigger for a product
 app.post('/api/products/:id/sync', async (req, res) => {

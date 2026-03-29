@@ -91,6 +91,11 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub API
 | **Ideation DB + routes (CRUD, AI generation)** | Done | `server/db/ideation.ts`, `server/routes/ideation.ts` |
 | **Ideation i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/ideation.json` |
 | **Ideation types** | Done | `shared/types/ideation.ts` |
+| **Changelog UI (config, preview, generation)** | Done | `client/components/Changelog.tsx`, `client/stores/changelog-store.ts` |
+| **Changelog sidebar sub-nav** | Done | `client/components/Sidebar.tsx` |
+| **Changelog DB + routes (CRUD, AI generation)** | Done | `server/db/changelogs.ts`, `server/routes/changelog.ts` |
+| **Changelog i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/changelog.json` |
+| **Changelog types** | Done | `shared/types/changelog.ts` |
 
 ---
 
@@ -227,34 +232,29 @@ Key files:
 
 ---
 
-### 7. Changelog Generation
-**Desktop equivalent:** `components/changelog/`, `stores/changelog-store.ts`
+### ~~7. Changelog Generation~~ (DONE)
 
-**What to build:**
+Completed. AI-powered changelog generation with configurable format, audience, and source mode. Includes:
 - Three source modes: completed tasks, git history, branch diff
-- AI-generated release notes with configurable tone and format
-- Version suggestion from git tags
-- Preview panel with markdown rendering
-- GitHub release creation from changelog
-- Save/export to file
+- Three output formats: Keep a Changelog, Simple List, GitHub Release
+- Three audience modes: technical, user-facing, marketing
+- AI generation via SSE streaming with progress tracking
+- Two-column layout: config sidebar (source, version, date, format, audience) + preview panel
+- Edit/Preview toggle for generated content with copy-to-clipboard
+- Previous changelog history with click-to-load
+- Custom AI instructions support
+- SQLite storage (changelogs table)
+- Sidebar sub-nav link with FileText icon
+- Route: `/products/:productId/changelog`
 
-**Server work needed:**
-- Git operations: list tags, list commits between tags, branch diff
-- AI route for changelog generation (SSE)
-- GitHub release creation route
-
-**Client work:**
-- New route: `/products/:id/changelog`
-- Components: `Changelog.tsx`, `SourceSelector.tsx`, `ChangelogPreview.tsx`, `ConfigPanel.tsx`
-- Store: `client/stores/changelog-store.ts`
-- i18n namespace: `changelog`
-
-**Key patterns from desktop:**
-- `apps/desktop/src/renderer/components/changelog/`
-- `apps/desktop/src/main/ai/runners/changelog.ts`
-- `apps/desktop/src/main/changelog/`
-
-**Dependency:** Requires AI provider infrastructure (Feature 8)
+Key files:
+- `shared/types/changelog.ts` — ChangelogFormat, ChangelogAudience, ChangelogSourceMode, ChangelogSession types
+- `server/db/schema.ts` — Migration 005 for changelogs table
+- `server/db/changelogs.ts` — DB access (CRUD for changelogs)
+- `server/routes/changelog.ts` — REST + SSE routes (list, get, update, delete, generate)
+- `client/components/Changelog.tsx` — Full changelog UI with ConfigPanel, PreviewPanel, GenerationOverlay
+- `client/stores/changelog-store.ts` — Zustand store for config, generation, and entry management
+- `shared/i18n/locales/{en,fr}/changelog.json` — i18n translations
 
 ---
 

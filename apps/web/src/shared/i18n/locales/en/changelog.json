@@ -1,0 +1,58 @@
+{
+  "title": "Changelog",
+  "subtitle": "Generate release notes from completed work",
+  "generate": "Generate Changelog",
+  "generating": "Generating...",
+  "regenerate": "Regenerate",
+  "copy": "Copy",
+  "copied": "Copied!",
+  "save": "Save",
+  "saved": "Saved!",
+  "delete": "Delete",
+  "noEntries": "No Changelogs Yet",
+  "noEntriesDescription": "Generate AI-powered release notes from your completed tasks, git history, or branch diffs.",
+  "sourceMode": {
+    "label": "Source",
+    "tasks": "Completed Tasks",
+    "tasksDescription": "Generate from completed task specs",
+    "gitHistory": "Git History",
+    "gitHistoryDescription": "Generate from recent commits",
+    "branchDiff": "Branch Diff",
+    "branchDiffDescription": "Generate from branch comparison"
+  },
+  "config": {
+    "version": "Version",
+    "versionPlaceholder": "e.g. 1.2.0",
+    "date": "Release Date",
+    "format": "Format",
+    "audience": "Audience",
+    "customInstructions": "Custom Instructions",
+    "customInstructionsPlaceholder": "Additional instructions for the AI..."
+  },
+  "format": {
+    "keep-a-changelog": "Keep a Changelog",
+    "simple-list": "Simple List",
+    "github-release": "GitHub Release"
+  },
+  "audience": {
+    "technical": "Technical",
+    "user-facing": "User-Facing",
+    "marketing": "Marketing"
+  },
+  "phases": {
+    "idle": "Ready",
+    "loading": "Loading data...",
+    "generating": "Generating changelog...",
+    "complete": "Complete",
+    "error": "Error"
+  },
+  "preview": {
+    "edit": "Edit",
+    "preview": "Preview",
+    "empty": "Generated changelog will appear here"
+  },
+  "history": {
+    "title": "Previous Changelogs",
+    "empty": "No previous changelogs"
+  }
+}
