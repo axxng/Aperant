@@ -81,6 +81,11 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub API
 | **Insights sidebar nav** | Done | `client/components/Sidebar.tsx` |
 | **Insights sessions DB + routes** | Done | `server/db/insights.ts`, `server/routes/insights.ts` |
 | **Insights i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/insights.json` |
+| **Roadmap UI (phases, features, priorities)** | Done | `client/components/Roadmap.tsx`, `client/stores/roadmap-store.ts` |
+| **Roadmap sidebar sub-nav** | Done | `client/components/Sidebar.tsx` |
+| **Roadmap DB + routes (CRUD, AI generation)** | Done | `server/db/roadmaps.ts`, `server/routes/roadmap.ts` |
+| **Roadmap i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/roadmap.json` |
+| **Roadmap types** | Done | `shared/types/roadmap.ts` |
 
 ---
 
@@ -168,34 +173,26 @@ Key files:
 
 ---
 
-### 5. Roadmap & Strategic Planning
-**Desktop equivalent:** `components/roadmap/`, `stores/roadmap-store.ts`
+### ~~5. Roadmap & Strategic Planning~~ (DONE)
 
-**What to build:**
-- Vision statement and target audience definition per product
-- Phase-based delivery timeline (planned → in-progress → completed)
-- Feature cards with status, description, milestones
-- AI-generated roadmap from codebase analysis
-- Competitor analysis integration
-- Feature-to-task conversion
+Completed. AI-powered roadmap generation with phase-based planning and feature management. Includes:
+- Three view modes: Phases (timeline), Features (grid), Priority (grouped)
+- AI-generated roadmap from codebase analysis via SSE streaming
+- Feature cards with priority (critical/high/medium/low), status, category, milestones
+- Phase management (planned → in-progress → completed) with progress tracking
+- Feature detail panel with full metadata editing
+- SQLite storage (roadmaps table with JSON phases/features)
+- Sidebar sub-nav link with Map icon
+- Route: `/products/:productId/roadmap`
 
-**Server work needed:**
-- New SQLite tables: `roadmaps`, `roadmap_phases`, `roadmap_features`
-- CRUD routes for roadmap data
-- AI route for roadmap generation (SSE)
-
-**Client work:**
-- New route: `/products/:id/roadmap`
-- Components: `Roadmap.tsx`, `PhaseColumn.tsx`, `FeatureCard.tsx`, `CompetitorAnalysis.tsx`
-- Store: `client/stores/roadmap-store.ts`
-- i18n namespace: `roadmap`
-
-**Key patterns from desktop:**
-- `apps/desktop/src/renderer/components/roadmap/`
-- `apps/desktop/src/main/ai/runners/roadmap.ts`
-- `apps/desktop/src/renderer/stores/roadmap-store.ts`
-
-**Dependency:** Requires AI provider infrastructure (Feature 8)
+Key files:
+- `shared/types/roadmap.ts` — Roadmap, RoadmapPhase, RoadmapFeature, RoadmapMilestone types
+- `server/db/schema.ts` — Migration 003 for roadmaps table
+- `server/db/roadmaps.ts` — DB access (CRUD for roadmaps)
+- `server/routes/roadmap.ts` — REST + SSE routes (get, update, delete, generate)
+- `client/components/Roadmap.tsx` — Full roadmap UI with PhasesView, FeaturesGrid, PriorityView
+- `client/stores/roadmap-store.ts` — Zustand store for roadmap and generation state
+- `shared/i18n/locales/{en,fr}/roadmap.json` — i18n translations
 
 ---
 

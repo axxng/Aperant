@@ -11,6 +11,7 @@ import { CreatePRDialog } from './components/CreatePRDialog';
 import { GitHubIssuesList } from './components/GitHubIssuesList';
 import { GitHubPRList } from './components/GitHubPRList';
 import { Insights } from './components/Insights';
+import { Roadmap } from './components/Roadmap';
 import { ProductSettings } from './components/ProductSettings';
 import { useProductStore } from './stores/product-store';
 import { useTaskStore } from './stores/task-store';
@@ -62,6 +63,10 @@ export function App() {
             <Route
               path="/products/:productId/prs"
               element={<GitHubPRList />}
+            />
+            <Route
+              path="/products/:productId/roadmap"
+              element={<Roadmap />}
             />
             <Route
               path="/insights"

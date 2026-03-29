@@ -128,4 +128,21 @@ const MIGRATIONS = [
       );
     `,
   },
+  {
+    name: '003_roadmaps',
+    sql: `
+      CREATE TABLE roadmaps (
+        id TEXT PRIMARY KEY,
+        product_id TEXT NOT NULL,
+        vision TEXT NOT NULL DEFAULT '',
+        target_audience TEXT NOT NULL DEFAULT '',
+        phases TEXT NOT NULL DEFAULT '[]',
+        features TEXT NOT NULL DEFAULT '[]',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE INDEX idx_roadmaps_product ON roadmaps(product_id);
+    `,
+  },
 ];

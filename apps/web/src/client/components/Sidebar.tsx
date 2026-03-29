@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useProductStore } from '../stores/product-store';
 import { cn } from '../lib/utils';
-import { LayoutDashboard, Package, Plus, Settings, RefreshCw, CircleDot, GitPullRequest, Lightbulb } from 'lucide-react';
+import { LayoutDashboard, Package, Plus, Settings, RefreshCw, CircleDot, GitPullRequest, Lightbulb, Map } from 'lucide-react';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from './ui/tooltip';
@@ -145,6 +145,18 @@ export const Sidebar = memo(function Sidebar({ onAddProduct }: SidebarProps) {
                   >
                     <GitPullRequest className="h-3 w-3 shrink-0" />
                     <span>{t('navigation:items.prs')}</span>
+                  </NavLink>
+                  <NavLink
+                    to={`/products/${product.id}/roadmap`}
+                    className={({ isActive }) =>
+                      cn(
+                        'flex items-center gap-2 pl-8 pr-3 py-1.5 text-xs transition-colors hover:bg-accent/50',
+                        isActive && 'bg-accent text-accent-foreground font-medium'
+                      )
+                    }
+                  >
+                    <Map className="h-3 w-3 shrink-0" />
+                    <span>{t('navigation:items.roadmap')}</span>
                   </NavLink>
                 </>
               )}
