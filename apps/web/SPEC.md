@@ -86,6 +86,11 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub API
 | **Roadmap DB + routes (CRUD, AI generation)** | Done | `server/db/roadmaps.ts`, `server/routes/roadmap.ts` |
 | **Roadmap i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/roadmap.json` |
 | **Roadmap types** | Done | `shared/types/roadmap.ts` |
+| **Ideation UI (type tabs, cards, detail panel)** | Done | `client/components/Ideation.tsx`, `client/stores/ideation-store.ts` |
+| **Ideation sidebar sub-nav** | Done | `client/components/Sidebar.tsx` |
+| **Ideation DB + routes (CRUD, AI generation)** | Done | `server/db/ideation.ts`, `server/routes/ideation.ts` |
+| **Ideation i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/ideation.json` |
+| **Ideation types** | Done | `shared/types/ideation.ts` |
 
 ---
 
@@ -196,35 +201,29 @@ Key files:
 
 ---
 
-### 6. Ideation (AI Auto-Discovery)
-**Desktop equivalent:** `components/ideation/`, `stores/ideation-store.ts`
+### ~~6. Ideation (AI Auto-Discovery)~~ (DONE)
 
-**What to build:**
-- Three discovery types: improvements, performance issues, security vulnerabilities
-- AI-powered codebase scanning with streaming progress
-- Idea cards with status (new, dismissed, archived)
-- Idea detail panel with description and rationale
-- Convert idea → task
-- Bulk operations (dismiss all, delete multiple)
-- Filtering and searching
+Completed. AI-powered idea discovery across 6 categories with streaming generation. Includes:
+- Six discovery types: code improvements, UI/UX, documentation, security, performance, code quality
+- AI-generated ideas via SSE streaming with progress tracking
+- Type filter tabs with colored badges and Lucide icons
+- Idea cards with type/status badges, multi-select, dismiss/delete actions
+- Detail panel with rationale, category, severity, affected files, implementation approach
+- Convert idea to task, dismiss all, bulk delete
+- Config panel for enabling/disabling types and max ideas per type
+- Generation progress screen with streaming text and phase indicators
+- SQLite storage (ideation_sessions table)
+- Sidebar sub-nav link with Zap icon
+- Route: `/products/:productId/ideation`
 
-**Server work needed:**
-- New SQLite tables: `ideation_sessions`, `ideas`
-- CRUD routes for ideation data
-- AI route for idea generation (SSE, per type)
-
-**Client work:**
-- New route: `/products/:id/ideation`
-- Components: `Ideation.tsx`, `IdeaCard.tsx`, `IdeaDetailPanel.tsx`, `IdeationFilters.tsx`
-- Store: `client/stores/ideation-store.ts`
-- i18n namespace: `ideation`
-
-**Key patterns from desktop:**
-- `apps/desktop/src/renderer/components/ideation/`
-- `apps/desktop/src/main/ai/runners/ideation.ts`
-- `apps/desktop/src/renderer/stores/ideation-store.ts`
-
-**Dependency:** Requires AI provider infrastructure (Feature 8)
+Key files:
+- `shared/types/ideation.ts` — IdeationType, Idea, IdeationSession, IdeationConfig types
+- `server/db/schema.ts` — Migration 004 for ideation_sessions table
+- `server/db/ideation.ts` — DB access (CRUD for sessions)
+- `server/routes/ideation.ts` — REST + SSE routes (get, update, delete, generate)
+- `client/components/Ideation.tsx` — Full ideation UI with TypeTabs, IdeaCard, IdeaDetailPanel
+- `client/stores/ideation-store.ts` — Zustand store with filtering, selection, generation state
+- `shared/i18n/locales/{en,fr}/ideation.json` — i18n translations
 
 ---
 

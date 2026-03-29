@@ -145,4 +145,19 @@ const MIGRATIONS = [
       CREATE INDEX idx_roadmaps_product ON roadmaps(product_id);
     `,
   },
+  {
+    name: '004_ideation_sessions',
+    sql: `
+      CREATE TABLE ideation_sessions (
+        id TEXT PRIMARY KEY,
+        product_id TEXT NOT NULL,
+        ideas TEXT NOT NULL DEFAULT '[]',
+        config TEXT NOT NULL DEFAULT '{}',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE INDEX idx_ideation_product ON ideation_sessions(product_id);
+    `,
+  },
 ];

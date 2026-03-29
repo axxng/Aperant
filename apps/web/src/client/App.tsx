@@ -12,6 +12,7 @@ import { GitHubIssuesList } from './components/GitHubIssuesList';
 import { GitHubPRList } from './components/GitHubPRList';
 import { Insights } from './components/Insights';
 import { Roadmap } from './components/Roadmap';
+import { Ideation } from './components/Ideation';
 import { ProductSettings } from './components/ProductSettings';
 import { useProductStore } from './stores/product-store';
 import { useTaskStore } from './stores/task-store';
@@ -67,6 +68,10 @@ export function App() {
             <Route
               path="/products/:productId/roadmap"
               element={<Roadmap />}
+            />
+            <Route
+              path="/products/:productId/ideation"
+              element={<Ideation />}
             />
             <Route
               path="/insights"

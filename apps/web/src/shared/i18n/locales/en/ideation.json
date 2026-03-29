@@ -1,0 +1,71 @@
+{
+  "title": "Ideation",
+  "subtitle": "AI-powered discovery of improvements and opportunities",
+  "generate": "Generate Ideas",
+  "generating": "Generating ideas...",
+  "refresh": "Refresh",
+  "stop": "Stop",
+  "settings": "Settings",
+  "addMore": "Add More",
+  "dismissAll": "Dismiss All",
+  "deleteSelected": "Delete Selected",
+  "clearSelection": "Clear Selection",
+  "selectAll": "Select All",
+  "showDismissed": "Show Dismissed",
+  "hideDismissed": "Hide Dismissed",
+  "convertToTask": "Convert to Task",
+  "converting": "Converting...",
+  "goToTask": "Go to Task",
+  "dismiss": "Dismiss",
+  "noIdeas": "No Ideas Yet",
+  "noIdeasDescription": "Generate AI-powered ideas to discover improvements, security issues, and optimization opportunities in your codebase.",
+  "noFilteredIdeas": "No ideas match the current filter",
+  "ideaCount": "{{count}} idea",
+  "ideaCount_plural": "{{count}} ideas",
+  "phases": {
+    "idle": "Ready",
+    "analyzing": "Analyzing codebase...",
+    "discovering": "Discovering patterns...",
+    "generating": "Generating ideas...",
+    "finalizing": "Finalizing results...",
+    "complete": "Complete",
+    "error": "Error"
+  },
+  "types": {
+    "all": "All",
+    "code_improvements": "Code Improvements",
+    "ui_ux_improvements": "UI/UX",
+    "documentation_gaps": "Documentation",
+    "security_hardening": "Security",
+    "performance_optimizations": "Performance",
+    "code_quality": "Code Quality"
+  },
+  "typeDescriptions": {
+    "code_improvements": "Architecture improvements, better patterns, refactoring",
+    "ui_ux_improvements": "Usability, accessibility, and interaction improvements",
+    "documentation_gaps": "Missing docs, outdated comments, needed examples",
+    "security_hardening": "Vulnerabilities, input validation, data protection",
+    "performance_optimizations": "Bundle size, runtime, memory optimizations",
+    "code_quality": "Code smells, complexity, duplication issues"
+  },
+  "status": {
+    "draft": "Draft",
+    "selected": "Selected",
+    "converted": "Converted",
+    "dismissed": "Dismissed",
+    "archived": "Archived"
+  },
+  "config": {
+    "title": "Ideation Settings",
+    "enabledTypes": "Enabled Discovery Types",
+    "maxPerType": "Max Ideas Per Type"
+  },
+  "detail": {
+    "rationale": "Rationale",
+    "category": "Category",
+    "severity": "Severity",
+    "effort": "Estimated Effort",
+    "affectedFiles": "Affected Files",
+    "implementation": "Implementation Approach"
+  }
+}
