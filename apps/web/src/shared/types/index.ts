@@ -5,3 +5,4 @@ export * from './pr';
 export * from './roadmap';
 export * from './ideation';
 export * from './changelog';
+export * from './gitlab';

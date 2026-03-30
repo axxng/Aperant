@@ -14,6 +14,7 @@ import { roadmapRoutes } from './routes/roadmap.js';
 import { ideationRoutes } from './routes/ideation.js';
 import { changelogRoutes } from './routes/changelog.js';
 import { settingsRoutes } from './routes/settings.js';
+import { gitlabRoutes } from './routes/gitlab.js';
 import { startSyncScheduler, stopSyncScheduler, triggerSync } from './sync/scheduler.js';
 import { broadcastEvent } from './routes/events.js';
 
@@ -52,6 +53,7 @@ app.use('/api/roadmap', roadmapRoutes);
 app.use('/api/ideation', ideationRoutes);
 app.use('/api/changelog', changelogRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/gitlab', gitlabRoutes);
 
 // Manual sync trigger for a product
 app.post('/api/products/:id/sync', async (req, res) => {

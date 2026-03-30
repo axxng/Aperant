@@ -100,6 +100,13 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub API
 | **Settings server routes (CRUD with key whitelist)** | Done | `server/routes/settings.ts` |
 | **Settings sidebar nav** | Done | `client/components/Sidebar.tsx` |
 | **Settings i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/settings.json` |
+| **GitLab issues list (split-pane)** | Done | `client/components/GitLabIssuesList.tsx` |
+| **GitLab MR list (split-pane)** | Done | `client/components/GitLabMRList.tsx` |
+| **GitLab server routes (proxy to GitLab API)** | Done | `server/routes/gitlab.ts` |
+| **GitLab types** | Done | `shared/types/gitlab.ts` |
+| **GitLab store** | Done | `client/stores/gitlab-store.ts` |
+| **GitLab sidebar sub-nav** | Done | `client/components/Sidebar.tsx` |
+| **GitLab i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/gitlab.json` |
 
 ---
 
@@ -307,25 +314,29 @@ Key files:
 
 ---
 
-### 10. GitLab Integration
-**Desktop equivalent:** `main/ipc-handlers/gitlab-handlers.ts`, `stores/gitlab-store.ts`
+### ~~10. GitLab Integration~~ (DONE)
 
-**What to build:**
-- GitLab project connection (personal access token)
-- Issue listing and sync
-- Merge request listing
-- Import GitLab issues as tasks
-- Product source type: `gitlab_project`
+Completed. GitLab integration with issue and merge request listing via API proxy. Includes:
+- Server-side GitLab API proxy with PRIVATE-TOKEN auth (reads token from settings DB)
+- Self-hosted GitLab instance URL support (configurable via settings)
+- Connection check endpoint
+- Project listing (membership-based, searchable)
+- Issue listing with state filter (opened/closed/all), search, pagination
+- Issue detail with metadata, labels, assignees, milestone, description
+- Merge request listing with state filter (opened/closed/merged/all), search, pagination
+- MR detail with branch info, merge status, labels, assignees, description
+- Split-pane layout (list + detail) matching GitHub integration patterns
+- Sidebar sub-nav links (GitLab Issues, GitLab MRs) under each product
+- GitLab token + instance URL added to settings whitelist
+- Routes: `/products/:productId/gitlab-issues`, `/products/:productId/gitlab-mrs`
 
-**Server work needed:**
-- New routes: `server/routes/gitlab.ts`
-- GitLab API client (REST)
-- Sync support for GitLab projects
-
-**Client work:**
-- GitLab issues list page
-- Merge request list page
-- GitLab settings in product configuration
+Key files:
+- `shared/types/gitlab.ts` — GitLabProject, GitLabIssue, GitLabMergeRequest, GitLabNote types
+- `server/routes/gitlab.ts` — API proxy routes with snake_case→camelCase mapping
+- `client/components/GitLabIssuesList.tsx` — Split-pane issue list + detail
+- `client/components/GitLabMRList.tsx` — Split-pane MR list + detail
+- `client/stores/gitlab-store.ts` — Zustand store for connection, issues, MRs
+- `shared/i18n/locales/{en,fr}/gitlab.json` — i18n translations
 
 ---
 

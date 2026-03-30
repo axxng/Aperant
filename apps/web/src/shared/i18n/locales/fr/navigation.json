@@ -8,6 +8,8 @@
     "roadmap": "Feuille de route",
     "ideation": "Idéation",
     "changelog": "Journal des modifications",
+    "gitlabIssues": "Issues GitLab",
+    "gitlabMRs": "MRs GitLab",
     "settings": "Paramètres"
   },
   "sidebar": {

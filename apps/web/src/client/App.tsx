@@ -15,6 +15,8 @@ import { Roadmap } from './components/Roadmap';
 import { Ideation } from './components/Ideation';
 import { Changelog } from './components/Changelog';
 import { Settings } from './components/Settings';
+import { GitLabIssuesList } from './components/GitLabIssuesList';
+import { GitLabMRList } from './components/GitLabMRList';
 import { ProductSettings } from './components/ProductSettings';
 import { useProductStore } from './stores/product-store';
 import { useTaskStore } from './stores/task-store';
@@ -78,6 +80,14 @@ export function App() {
             <Route
               path="/products/:productId/changelog"
               element={<Changelog />}
+            />
+            <Route
+              path="/products/:productId/gitlab-issues"
+              element={<GitLabIssuesList />}
+            />
+            <Route
+              path="/products/:productId/gitlab-mrs"
+              element={<GitLabMRList />}
             />
             <Route
               path="/insights"

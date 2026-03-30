@@ -30,6 +30,8 @@ const VALID_KEYS = [
   'language',         // 'en' | 'fr'
   'anthropicApiKey',  // Anthropic API key
   'githubToken',      // GitHub PAT
+  'gitlabToken',      // GitLab PAT
+  'gitlabInstanceUrl', // GitLab instance URL (defaults to https://gitlab.com)
   'syncInterval',     // sync interval in seconds (string)
   'defaultModel',     // default AI model shorthand
 ] as const;
@@ -47,7 +49,7 @@ settingsRoutes.get('/', (_req: Request, res: Response) => {
   const settings: Record<string, string> = {};
   for (const row of rows) {
     // Mask sensitive keys
-    if (row.key === 'anthropicApiKey' || row.key === 'githubToken') {
+    if (row.key === 'anthropicApiKey' || row.key === 'githubToken' || row.key === 'gitlabToken') {
       settings[row.key] = row.value ? `${'*'.repeat(Math.max(0, row.value.length - 4))}${row.value.slice(-4)}` : '';
     } else {
       settings[row.key] = row.value;
@@ -65,7 +67,7 @@ settingsRoutes.get('/:key', (req: Request, res: Response) => {
     return;
   }
   // Mask sensitive values
-  if (key === 'anthropicApiKey' || key === 'githubToken') {
+  if (key === 'anthropicApiKey' || key === 'githubToken' || key === 'gitlabToken') {
     res.json({ key, value: value ? `${'*'.repeat(Math.max(0, value.length - 4))}${value.slice(-4)}` : '' });
     return;
   }
