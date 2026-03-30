@@ -1,4 +1,8 @@
 {
+  "views": {
+    "sort": "Tri",
+    "priority": "Priorité"
+  },
   "status": {
     "backlog": "Backlog",
     "queue": "File d'attente",

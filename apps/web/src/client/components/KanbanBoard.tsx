@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, memo } from 'react';
+import { useState, useMemo, useCallback, useEffect, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   DndContext,
@@ -22,7 +22,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { cn } from '../lib/utils';
-import { Plus, RefreshCw, ChevronDown, ChevronRight, Search } from 'lucide-react';
+import { Plus, RefreshCw, ChevronDown, ChevronRight, Search, SlidersHorizontal, GripVertical } from 'lucide-react';
 import { useKanbanFilters } from '../hooks/useKanbanFilters';
 import { KanbanFilterBar } from './KanbanFilterBar';
 import type { Task, TaskStatus } from '@shared/types/task';
@@ -51,9 +51,10 @@ export const KanbanBoard = memo(function KanbanBoard({
 }: KanbanBoardProps) {
   const { t } = useTranslation(['tasks', 'common']);
   const { products, activeProductId } = useProductStore();
-  const { updateTaskStatus, reorderTasks } = useTaskStore();
+  const { updateTaskStatus, reorderTasks, taskOrder, loadTaskOrder } = useTaskStore();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [collapsedColumns, setCollapsedColumns] = useState<Set<TaskStatus>>(new Set());
+  const [viewMode, setViewMode] = useState<'sort' | 'priority'>('sort');
 
   const isConsolidated = activeProductId === null;
 
@@ -66,13 +67,20 @@ export const KanbanBoard = memo(function KanbanBoard({
     filteredTasks,
   } = useKanbanFilters(tasks);
 
+  useEffect(() => {
+    if (viewMode === 'priority') {
+      const scope = activeProductId || 'consolidated';
+      loadTaskOrder(scope);
+    }
+  }, [viewMode, activeProductId, loadTaskOrder]);
+
   // Build product lookup map
   const productMap = useMemo(
     () => new Map(products.map((p) => [p.id, p])),
     [products]
   );
 
-  // Group filtered tasks by status
+  // Group tasks by status — in priority mode, use persisted order
   const tasksByStatus = useMemo(() => {
     const grouped: Record<TaskStatus, Task[]> = {
       backlog: [],
@@ -84,13 +92,27 @@ export const KanbanBoard = memo(function KanbanBoard({
       pr_created: [],
       error: [],
     };
-    for (const task of filteredTasks) {
-      // Map agent-specific statuses to visible columns
+    const source = viewMode === 'sort' ? filteredTasks : tasks;
+    for (const task of source) {
       const displayStatus = mapToDisplayStatus(task.status);
       grouped[displayStatus].push(task);
     }
+    // In priority mode, apply persisted order
+    if (viewMode === 'priority' && taskOrder) {
+      for (const status of Object.keys(grouped) as TaskStatus[]) {
+        const order = taskOrder[status];
+        if (order?.length) {
+          const orderMap = new Map(order.map((id, idx) => [id, idx]));
+          grouped[status].sort((a, b) => {
+            const aIdx = orderMap.get(a.id) ?? Number.MAX_SAFE_INTEGER;
+            const bIdx = orderMap.get(b.id) ?? Number.MAX_SAFE_INTEGER;
+            return aIdx - bIdx;
+          });
+        }
+      }
+    }
     return grouped;
-  }, [filteredTasks]);
+  }, [filteredTasks, tasks, viewMode, taskOrder]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -115,25 +137,37 @@ export const KanbanBoard = memo(function KanbanBoard({
       const task = tasks.find((t) => t.id === taskId);
       if (!task) return;
 
-      // Determine target status from the over element
       const overData = over.data?.current;
       let targetStatus: TaskStatus | null = null;
 
       if (overData?.type === 'column') {
         targetStatus = overData.status as TaskStatus;
       } else if (overData?.sortable) {
-        // Dropped on another task — find which column it belongs to
         const overTask = tasks.find((t) => t.id === over.id);
         if (overTask) {
           targetStatus = mapToDisplayStatus(overTask.status);
         }
       }
 
-      if (targetStatus && targetStatus !== mapToDisplayStatus(task.status)) {
+      const currentStatus = mapToDisplayStatus(task.status);
+
+      if (viewMode === 'priority' && targetStatus === currentStatus && overData?.sortable) {
+        // Reorder within column
+        const columnTasks = tasksByStatus[currentStatus];
+        const oldIndex = columnTasks.findIndex((t) => t.id === taskId);
+        const newIndex = columnTasks.findIndex((t) => t.id === over.id);
+        if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+          const reordered = [...columnTasks];
+          const [moved] = reordered.splice(oldIndex, 1);
+          reordered.splice(newIndex, 0, moved);
+          const scope = activeProductId || 'consolidated';
+          await reorderTasks(scope, currentStatus, reordered.map((t) => t.id));
+        }
+      } else if (targetStatus && targetStatus !== currentStatus) {
         await updateTaskStatus(taskId, targetStatus);
       }
     },
-    [tasks, updateTaskStatus]
+    [tasks, tasksByStatus, updateTaskStatus, reorderTasks, viewMode, activeProductId]
   );
 
   const toggleColumn = useCallback((status: TaskStatus) => {
@@ -155,6 +189,26 @@ export const KanbanBoard = memo(function KanbanBoard({
         <h2 className="text-lg font-semibold">
           {isConsolidated ? t('common:consolidatedBacklog') : t('common:board')}
         </h2>
+        <div className="flex items-center gap-1 bg-muted rounded-md p-0.5">
+          <Button
+            variant={viewMode === 'sort' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-7 px-2.5 text-xs"
+            onClick={() => setViewMode('sort')}
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5 mr-1" />
+            {t('tasks:views.sort')}
+          </Button>
+          <Button
+            variant={viewMode === 'priority' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-7 px-2.5 text-xs"
+            onClick={() => setViewMode('priority')}
+          >
+            <GripVertical className="h-3.5 w-3.5 mr-1" />
+            {t('tasks:views.priority')}
+          </Button>
+        </div>
         <div className="flex items-center gap-2">
           {onRefresh && (
             <Button variant="ghost" size="sm" onClick={onRefresh} disabled={isRefreshing}>
@@ -170,22 +224,24 @@ export const KanbanBoard = memo(function KanbanBoard({
         </div>
       </div>
 
-      {/* Filter bar */}
-      <KanbanFilterBar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        priorities={priorities}
-        onTogglePriority={togglePriority}
-        categories={categories}
-        onToggleCategory={toggleCategory}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-        hasActiveFilters={hasActiveFilters}
-        onResetFilters={resetFilters}
-      />
+      {/* Filter bar — only in sort mode */}
+      {viewMode === 'sort' && (
+        <KanbanFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          priorities={priorities}
+          onTogglePriority={togglePriority}
+          categories={categories}
+          onToggleCategory={toggleCategory}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          hasActiveFilters={hasActiveFilters}
+          onResetFilters={resetFilters}
+        />
+      )}
 
-      {/* No results state */}
-      {hasActiveFilters && filteredTasks.length === 0 && tasks.length > 0 && (
+      {/* No results state — only in sort mode */}
+      {viewMode === 'sort' && hasActiveFilters && filteredTasks.length === 0 && tasks.length > 0 && (
         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <Search className="h-8 w-8 mb-2 opacity-50" />
           <p className="text-sm">{t('filters.noResults')}</p>

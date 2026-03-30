@@ -1,4 +1,8 @@
 {
+  "views": {
+    "sort": "Sort",
+    "priority": "Priority"
+  },
   "status": {
     "backlog": "Backlog",
     "queue": "Queue",
