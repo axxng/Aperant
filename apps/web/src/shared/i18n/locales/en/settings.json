@@ -1,0 +1,58 @@
+{
+  "title": "Settings",
+  "subtitle": "Configure your Aperant workspace",
+  "saved": "Settings saved successfully",
+  "saveError": "Failed to save settings",
+  "sections": {
+    "appearance": "Appearance",
+    "apiKeys": "API Keys",
+    "sync": "Sync & Integration",
+    "language": "Language",
+    "model": "AI Model"
+  },
+  "theme": {
+    "label": "Theme Mode",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "colorTheme": {
+    "label": "Color Theme",
+    "default": "Default",
+    "ocean": "Ocean",
+    "forest": "Forest",
+    "dusk": "Dusk",
+    "lime": "Lime",
+    "retro": "Retro",
+    "neo": "Neo"
+  },
+  "apiKeys": {
+    "anthropic": "Anthropic API Key",
+    "anthropicPlaceholder": "sk-ant-...",
+    "anthropicDescription": "Required for AI features (insights, review, ideation, roadmap, changelog)",
+    "github": "GitHub Token",
+    "githubPlaceholder": "ghp_...",
+    "githubDescription": "Required for GitHub integration (issues, PRs, sync)"
+  },
+  "sync": {
+    "interval": "Sync Interval",
+    "intervalDescription": "How often to sync with GitHub (in seconds)",
+    "seconds": "seconds"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "fr": "Français"
+  },
+  "model": {
+    "label": "Default AI Model",
+    "opus": "Claude Opus (Most capable)",
+    "sonnet": "Claude Sonnet (Balanced)",
+    "haiku": "Claude Haiku (Fastest)"
+  },
+  "actions": {
+    "save": "Save Settings",
+    "saving": "Saving...",
+    "reset": "Reset to Defaults"
+  }
+}

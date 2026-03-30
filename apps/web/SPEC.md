@@ -96,6 +96,10 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub API
 | **Changelog DB + routes (CRUD, AI generation)** | Done | `server/db/changelogs.ts`, `server/routes/changelog.ts` |
 | **Changelog i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/changelog.json` |
 | **Changelog types** | Done | `shared/types/changelog.ts` |
+| **Settings page (appearance, API keys, sync, language)** | Done | `client/components/Settings.tsx`, `client/stores/settings-store.ts` |
+| **Settings server routes (CRUD with key whitelist)** | Done | `server/routes/settings.ts` |
+| **Settings sidebar nav** | Done | `client/components/Sidebar.tsx` |
+| **Settings i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/settings.json` |
 
 ---
 
@@ -280,22 +284,26 @@ Key files:
 
 ---
 
-### 9. Settings & Configuration
-**Desktop equivalent:** `components/settings/`, `stores/settings-store.ts`
+### ~~9. Settings & Configuration~~ (DONE)
 
-**What to build:**
-- Settings page accessible from sidebar
-- Theme selection (7 themes × light/dark)
-- AI provider configuration (API keys, default model)
-- Sync interval configuration
-- GitHub token management
-- Product-level settings (repos, sync, status mapping)
+Completed. Full settings page with appearance, API keys, sync, and language configuration. Includes:
+- Theme mode selector (Light, Dark, System) with icon buttons
+- Color theme grid (7 themes: Default, Ocean, Forest, Dusk, Lime, Retro, Neo) with preview dots
+- Language toggle (English, Français)
+- Default AI model selector (Opus, Sonnet, Haiku)
+- Anthropic API key management (masked display, show/hide toggle)
+- GitHub token management (masked display, show/hide toggle)
+- Sync interval configuration (10-3600 seconds)
+- Server-side key-value settings storage using existing SQLite `settings` table
+- Sensitive keys masked in API responses, only sent on edit
+- Sidebar nav link with Settings icon at bottom
+- Route: `/settings`
 
-**Client work:**
-- New route: `/settings`
-- Components: `SettingsPage.tsx`, `ThemeSelector.tsx`, `AIProviderConfig.tsx`
-- Store: `client/stores/settings-store.ts`
-- Settings persistence via server API (new `settings` table + routes)
+Key files:
+- `server/routes/settings.ts` — CRUD routes with Zod validation, key whitelist, sensitive value masking
+- `client/components/Settings.tsx` — Full settings UI with section layout
+- `client/stores/settings-store.ts` — Zustand store with bulk load from API
+- `shared/i18n/locales/{en,fr}/settings.json` — i18n translations
 
 ---
 

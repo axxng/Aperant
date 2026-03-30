@@ -14,6 +14,7 @@ import { Insights } from './components/Insights';
 import { Roadmap } from './components/Roadmap';
 import { Ideation } from './components/Ideation';
 import { Changelog } from './components/Changelog';
+import { Settings } from './components/Settings';
 import { ProductSettings } from './components/ProductSettings';
 import { useProductStore } from './stores/product-store';
 import { useTaskStore } from './stores/task-store';
@@ -81,6 +82,10 @@ export function App() {
             <Route
               path="/insights"
               element={<Insights />}
+            />
+            <Route
+              path="/settings"
+              element={<Settings />}
             />
           </Routes>
         </main>

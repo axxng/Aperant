@@ -189,8 +189,20 @@ export const Sidebar = memo(function Sidebar({ onAddProduct }: SidebarProps) {
         </div>
       </ScrollArea>
 
-      {/* Add Product button */}
-      <div className="border-t border-border p-2">
+      {/* Settings + Add Product */}
+      <div className="border-t border-border p-2 space-y-1">
+        <NavLink
+          to="/settings"
+          className={({ isActive }) =>
+            cn(
+              'flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-accent/50 rounded-md',
+              isActive && 'bg-accent text-accent-foreground font-medium'
+            )
+          }
+        >
+          <Settings className="h-4 w-4 shrink-0" />
+          {!isCollapsed && <span>{t('navigation:items.settings')}</span>}
+        </NavLink>
         <Button
           variant="outline"
           size={isCollapsed ? 'icon' : 'sm'}
