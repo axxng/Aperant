@@ -175,4 +175,20 @@ const MIGRATIONS = [
       CREATE INDEX idx_changelogs_product ON changelogs(product_id);
     `,
   },
+  {
+    name: '006_users',
+    sql: `
+      CREATE TABLE users (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'member',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE INDEX idx_users_email ON users(email);
+    `,
+  },
 ];

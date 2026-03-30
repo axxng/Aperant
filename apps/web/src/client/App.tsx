@@ -18,8 +18,10 @@ import { Settings } from './components/Settings';
 import { GitLabIssuesList } from './components/GitLabIssuesList';
 import { GitLabMRList } from './components/GitLabMRList';
 import { ProductSettings } from './components/ProductSettings';
+import { ToastContainer } from './components/ToastContainer';
 import { useProductStore } from './stores/product-store';
 import { useTaskStore } from './stores/task-store';
+import { useSyncEvents } from './hooks/useSyncEvents';
 import type { Task } from '@shared/types/task';
 
 export function App() {
@@ -38,6 +40,9 @@ export function App() {
   }, []);
 
   const editProduct = editingTask ? products.find(p => p.id === editingTask.productId) : null;
+
+  // Real-time sync events + toast notifications
+  useSyncEvents();
 
   useEffect(() => {
     loadProducts();
@@ -116,6 +121,7 @@ export function App() {
         open={prTask !== null}
         onOpenChange={(open) => { if (!open) setPrTask(null); }}
       />
+      <ToastContainer />
     </TooltipProvider>
   );
 }

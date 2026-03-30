@@ -27,5 +27,10 @@
   "taskUpdated": "Task updated",
   "taskDeleted": "Task deleted",
   "productCreated": "Product created",
-  "productDeleted": "Product deleted"
+  "productDeleted": "Product deleted",
+  "syncComplete": "Sync Complete",
+  "syncCompleteDescription": "Tasks have been updated from GitHub",
+  "syncError": "Sync Failed",
+  "syncErrorDescription": "Could not sync with GitHub",
+  "syncStarted": "Sync Started"
 }

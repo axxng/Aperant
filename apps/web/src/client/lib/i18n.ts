@@ -13,6 +13,7 @@ import ideationEn from '../../shared/i18n/locales/en/ideation.json';
 import changelogEn from '../../shared/i18n/locales/en/changelog.json';
 import settingsEn from '../../shared/i18n/locales/en/settings.json';
 import gitlabEn from '../../shared/i18n/locales/en/gitlab.json';
+import authEn from '../../shared/i18n/locales/en/auth.json';
 
 // Import French translation resources
 import commonFr from '../../shared/i18n/locales/fr/common.json';
@@ -26,6 +27,7 @@ import ideationFr from '../../shared/i18n/locales/fr/ideation.json';
 import changelogFr from '../../shared/i18n/locales/fr/changelog.json';
 import settingsFr from '../../shared/i18n/locales/fr/settings.json';
 import gitlabFr from '../../shared/i18n/locales/fr/gitlab.json';
+import authFr from '../../shared/i18n/locales/fr/auth.json';
 
 export const defaultNS = 'common';
 
@@ -42,6 +44,7 @@ export const resources = {
     changelog: changelogEn,
     settings: settingsEn,
     gitlab: gitlabEn,
+    auth: authEn,
   },
   fr: {
     common: commonFr,
@@ -55,6 +58,7 @@ export const resources = {
     changelog: changelogFr,
     settings: settingsFr,
     gitlab: gitlabFr,
+    auth: authFr,
   },
 } as const;
 
@@ -63,7 +67,7 @@ i18n.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
   defaultNS,
-  ns: ['common', 'navigation', 'tasks', 'issues', 'prs', 'insights', 'roadmap', 'ideation', 'changelog', 'settings', 'gitlab'],
+  ns: ['common', 'navigation', 'tasks', 'issues', 'prs', 'insights', 'roadmap', 'ideation', 'changelog', 'settings', 'gitlab', 'auth'],
   interpolation: { escapeValue: false },
 });
 

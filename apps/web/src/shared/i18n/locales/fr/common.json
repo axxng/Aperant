@@ -27,5 +27,10 @@
   "taskUpdated": "Tâche mise à jour",
   "taskDeleted": "Tâche supprimée",
   "productCreated": "Produit créé",
-  "productDeleted": "Produit supprimé"
+  "productDeleted": "Produit supprimé",
+  "syncComplete": "Synchronisation terminée",
+  "syncCompleteDescription": "Les tâches ont été mises à jour depuis GitHub",
+  "syncError": "Échec de la synchronisation",
+  "syncErrorDescription": "Impossible de synchroniser avec GitHub",
+  "syncStarted": "Synchronisation démarrée"
 }

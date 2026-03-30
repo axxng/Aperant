@@ -107,6 +107,12 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub API
 | **GitLab store** | Done | `client/stores/gitlab-store.ts` |
 | **GitLab sidebar sub-nav** | Done | `client/components/Sidebar.tsx` |
 | **GitLab i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/gitlab.json` |
+| **SSE event stream hook (auto-reconnect)** | Done | `client/hooks/useEventStream.ts` |
+| **Toast notification system** | Done | `client/hooks/useToast.ts`, `client/components/ToastContainer.tsx` |
+| **Sync event handler (auto-refresh + toasts)** | Done | `client/hooks/useSyncEvents.ts` |
+| **Multi-user auth (JWT, register, login)** | Done | `server/auth/jwt.ts`, `server/routes/auth.ts`, `server/db/users.ts` |
+| **Auth store (persisted)** | Done | `client/stores/auth-store.ts` |
+| **Auth i18n (en + fr)** | Done | `shared/i18n/locales/{en,fr}/auth.json` |
 
 ---
 
@@ -340,35 +346,41 @@ Key files:
 
 ---
 
-### 11. Real-Time Sync & Notifications
-**Desktop equivalent:** Agent events, SSE push
+### ~~11. Real-Time Sync & Notifications~~ (DONE)
 
-**What to build:**
-- SSE client that reconnects on disconnect
-- Real-time task updates when GitHub sync finds changes
-- Toast notifications for sync results, errors
-- Sync status indicator in sidebar (per product)
-- Manual sync trigger button
+Completed. SSE-based real-time sync with auto-reconnect and toast notifications. Includes:
+- EventSource hook with exponential backoff reconnection (1s → 30s max)
+- Toast notification system (success, error, info, warning) with auto-dismiss
+- Sync event handler that auto-refreshes tasks/products on changes
+- Toast notifications for sync complete, sync error, sync started events
+- ToastContainer component with colored icons and dismiss buttons
 
-**Client work:**
-- SSE subscription hook: `client/hooks/useEventStream.ts`
-- Toast notification system
-- Sync status store integration
-- Auto-refresh task list on sync events
+Key files:
+- `client/hooks/useEventStream.ts` — SSE hook with auto-reconnect
+- `client/hooks/useToast.ts` — Zustand-based toast store + convenience methods
+- `client/hooks/useSyncEvents.ts` — Bridges SSE events to store updates + toasts
+- `client/components/ToastContainer.tsx` — Toast rendering component
 
 ---
 
-### 12. Multi-User Authentication
-**Not in desktop — new for web**
+### ~~12. Multi-User Authentication~~ (DONE)
 
-**What to build:**
-- User authentication (JWT or session-based)
-- User accounts with roles
-- Per-user GitHub token storage
-- Activity log (who changed what)
-- Team management
+Completed. JWT-based multi-user auth with role-based access. Includes:
+- User registration and login with email/password
+- JWT token creation/verification (HMAC-SHA256, 7-day expiry)
+- Password hashing with scrypt + random salt
+- Role system: admin, member, viewer (first user auto-promoted to admin)
+- Admin-only user management (list, update role, delete)
+- Auth store with localStorage persistence
+- SQLite users table with email uniqueness constraint
+- Endpoints: POST /register, POST /login, GET /me, GET/PATCH/DELETE /users
 
-**This is lower priority and can be deferred.**
+Key files:
+- `server/auth/jwt.ts` — Token creation/verification, password hashing
+- `server/routes/auth.ts` — Auth routes with Zod validation
+- `server/db/users.ts` — User CRUD functions
+- `client/stores/auth-store.ts` — Zustand store with persist middleware
+- `shared/i18n/locales/{en,fr}/auth.json` — i18n translations
 
 ---
 
