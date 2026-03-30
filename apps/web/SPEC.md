@@ -348,6 +348,176 @@ SQLite with 6 migrations:
 
 ---
 
+## Setup & Installation
+
+### Prerequisites
+
+- Node.js 20+
+- npm 10+
+
+### Install
+
+```bash
+cd apps/web
+npm install
+```
+
+### Configure
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and set at minimum:
+
+| Variable | Required For | How to Get |
+|----------|-------------|------------|
+| `ANTHROPIC_API_KEY` | AI features (investigation, review, insights, roadmap, ideation, changelog) | [console.anthropic.com](https://console.anthropic.com/) |
+| `GITHUB_TOKEN` | GitHub issue sync, PR review, branch listing | GitHub Settings → Developer Settings → PATs |
+| `JWT_SECRET` | Token persistence across server restarts | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+
+Optional variables: `PORT` (default 3001), `ALLOWED_ORIGINS` (CORS), `DB_PATH` (default `./data/aperant.db`), `AI_MODEL` (default `claude-sonnet-4-20250514`).
+
+GitLab token and instance URL can be set via the Settings UI after launch.
+
+### Run
+
+```bash
+# Development (API server + Vite dev server with hot reload)
+npm run dev
+
+# Client: http://localhost:5173
+# API:    http://localhost:3001
+```
+
+On first launch, navigate to http://localhost:5173 and register an account. The first user is automatically made admin.
+
+### Build for Production
+
+```bash
+npm run build           # Type-check + Vite build
+npm run build:server    # Server TypeScript only
+npm run preview         # Run built server (serves client from dist/)
+```
+
+### Lint & Type-Check
+
+```bash
+npm run typecheck       # TypeScript strict mode check
+npm run lint            # Biome linter
+npm run lint:fix        # Auto-fix lint issues
+```
+
+---
+
+## Testing Guide
+
+### Manual Testing Checklist
+
+#### Auth & Account
+- [ ] Register a new account at http://localhost:5173 (first user becomes admin)
+- [ ] Log out via UI and log back in
+- [ ] Refresh the page — token persists, user stays logged in
+- [ ] Open a new incognito window — requires login (no shared state)
+
+#### Products
+- [ ] Create a product (name + color picker)
+- [ ] Edit product settings (name, color, GitHub owner/repo)
+- [ ] Switch between products in the sidebar
+
+#### Kanban Board & Tasks
+- [ ] Create tasks with different priorities (low/medium/high/urgent) and categories (feature/bug/etc.)
+- [ ] Edit a task inline (change title, description, status, priority, category)
+- [ ] Delete a task (confirm the two-step deletion dialog)
+- [ ] **Sort view:** Use search box to filter tasks by text. Use priority and category dropdowns. Change sort order (newest/oldest/priority).
+- [ ] **Priority view:** Toggle to Priority view via the header button. Drag a task above/below another task in the same column. Refresh the page — order is preserved.
+- [ ] **Cross-column drag:** Drag a task from Backlog to In Progress — status changes.
+- [ ] **Consolidated backlog:** Click "All Products" — see all tasks with colored product badges. Filters and priority ordering work across products.
+
+#### GitHub Integration (requires GITHUB_TOKEN)
+- [ ] Set GitHub owner/repo in product settings
+- [ ] **Issues page:** See split-pane list. Search by text, filter by state (open/closed/all). Scroll to load more (infinite scroll). Click an issue to see detail panel (labels, assignees, milestone, body). Click "Import as Task".
+- [ ] **AI Investigation:** Click "Investigate" on an issue. See streaming progress bar and markdown output. Verify it covers root cause, affected areas, and proposed solution.
+- [ ] **PRs page:** See PR list with state icons, diff stats. Click a PR for detail (branch info, files, labels). Click "AI Review" — see streaming code review output.
+- [ ] **Create PR:** Open a task, click "Create PR", select branches, submit.
+
+#### GitLab Integration (configure in Settings)
+- [ ] Enter GitLab token + instance URL in Settings → save
+- [ ] **GitLab Issues:** See split-pane list, filter by state, search, click for detail
+- [ ] **GitLab MRs:** See MR list, filter by state (includes "merged"), click for detail
+
+#### AI Features (requires ANTHROPIC_API_KEY)
+- [ ] **Insights:** Navigate to Insights. Create a session. Send a message asking about the codebase. See streaming response with tool badges (Read, Glob, Grep). Create a second session. Rename it. Delete it.
+- [ ] **Roadmap:** Navigate to product Roadmap. Click Generate. See SSE progress. View phases, features grid, and priority (MoSCoW) views. Click a feature to see detail panel.
+- [ ] **Ideation:** Navigate to product Ideation. Click Generate. See progress overlay. When done, browse ideas by type tab. Click an idea for detail (rationale, severity, files). Dismiss an idea. Convert an idea to task.
+- [ ] **Changelog:** Navigate to product Changelog. Select source mode, format, audience. Click Generate. See streaming output. Toggle edit/preview. Copy to clipboard. Save. See it in the history sidebar.
+
+#### Settings
+- [ ] **Theme:** Toggle Light/Dark/System. Verify UI updates.
+- [ ] **Color theme:** Click each of the 7 themes (Default, Ocean, Forest, Dusk, Lime, Retro, Neo). Verify color changes.
+- [ ] **Language:** Switch to French. Verify all nav, buttons, labels change. Switch back to English.
+- [ ] **API keys:** Enter/update Anthropic key and GitHub token. Verify they show as masked (`••••••••`) after save.
+- [ ] **Sync interval:** Change sync interval. Verify it accepts values 10-3600.
+
+#### Real-Time Sync
+- [ ] Trigger a manual sync (product page → sync button in header)
+- [ ] See toast notification on sync complete/error
+- [ ] Open two browser tabs. Create a task in one tab. Verify it appears in the other tab via SSE auto-refresh.
+
+#### Security
+- [ ] Try accessing `/api/products` without a token — should return 401
+- [ ] Try accessing `/api/products` with an invalid token — should return 401
+- [ ] Hit `/api/auth/login` rapidly — rate limiter kicks in after 20 attempts
+- [ ] Verify API responses for settings don't leak API key values (should show `••••••••`)
+
+### Automated Checks
+
+```bash
+npm run typecheck   # TypeScript type checking (strict mode)
+npm run lint        # Biome linting
+```
+
+### API Smoke Tests
+
+```bash
+# Health check (public, no auth needed)
+curl http://localhost:3001/api/health
+# → {"status":"ok","timestamp":"..."}
+
+# Register first user
+curl -s -X POST http://localhost:3001/api/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"test@example.com","name":"Test User","password":"testpass123"}' | jq .
+# → {"token":"...","user":{"id":"...","email":"test@example.com","name":"Test User","role":"admin"}}
+
+# Save the token, then:
+TOKEN="<paste token here>"
+
+# List products
+curl -s http://localhost:3001/api/products -H "Authorization: Bearer $TOKEN" | jq .
+
+# Create a product
+curl -s -X POST http://localhost:3001/api/products \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"My App","color":"#3b82f6"}' | jq .
+
+# Create a task
+curl -s -X POST http://localhost:3001/api/tasks \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"productId":"<product-id>","title":"First task","description":"Test","priority":"high","category":"feature"}' | jq .
+
+# List all tasks (consolidated)
+curl -s http://localhost:3001/api/tasks -H "Authorization: Bearer $TOKEN" | jq .
+
+# SSE event stream (hold open)
+curl -N http://localhost:3001/api/events
+# → data: {"type":"heartbeat"} (every 30s)
+```
+
+---
+
 ## Conventions
 
 - **i18n required** — All UI text uses `react-i18next`. Add keys to both `en/*.json` and `fr/*.json`.
