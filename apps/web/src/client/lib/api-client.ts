@@ -5,10 +5,28 @@ import type { GitHubPR, PRFile, PaginatedPRsResult } from '@shared/types/pr';
 
 const API_BASE = '/api';
 
+/** Retrieve the current auth token from persisted Zustand store */
+function getAuthToken(): string | null {
+  try {
+    const raw = localStorage.getItem('aperant-auth');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.state?.token ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...((options?.headers as Record<string, string>) ?? {}),
+  };
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
     ...options,
+    headers,
   });
   if (!res.ok) {
     const text = await res.text();
@@ -92,9 +110,13 @@ export const api = {
       labels?: string[];
     }): { eventSource: AbortController; response: Promise<Response> } => {
       const controller = new AbortController();
+      const token = getAuthToken();
       const response = fetch(`${API_BASE}/investigate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(params),
         signal: controller.signal,
       });

@@ -11,9 +11,14 @@ function getGitLabConfig(): { token: string; instanceUrl: string } | null {
   const tokenRow = db.prepare("SELECT value FROM settings WHERE key = 'gitlabToken'").get() as any;
   const urlRow = db.prepare("SELECT value FROM settings WHERE key = 'gitlabInstanceUrl'").get() as any;
   if (!tokenRow?.value) return null;
+  const instanceUrl = urlRow?.value || 'https://gitlab.com';
+  // SSRF protection: only allow HTTPS URLs to prevent internal network access
+  if (!instanceUrl.startsWith('https://')) {
+    throw new Error('GitLab instance URL must use HTTPS');
+  }
   return {
     token: tokenRow.value,
-    instanceUrl: urlRow?.value || 'https://gitlab.com',
+    instanceUrl,
   };
 }
 
@@ -155,6 +160,7 @@ gitlabRoutes.get('/:project/issues/:iid', async (req: Request, res: Response) =>
   if (!config) { res.status(401).json({ error: 'No GitLab token configured' }); return; }
   try {
     const { project, iid } = req.params;
+    if (!/^\d+$/.test(iid)) { res.status(400).json({ error: 'Invalid issue IID' }); return; }
     const { data } = await gitlabFetch(`/projects/${encodeProject(project)}/issues/${iid}`, config);
     res.json(mapIssue(data));
   } catch (error: any) {
@@ -184,6 +190,7 @@ gitlabRoutes.get('/:project/merge_requests/:iid', async (req: Request, res: Resp
   if (!config) { res.status(401).json({ error: 'No GitLab token configured' }); return; }
   try {
     const { project, iid } = req.params;
+    if (!/^\d+$/.test(iid)) { res.status(400).json({ error: 'Invalid MR IID' }); return; }
     const { data } = await gitlabFetch(`/projects/${encodeProject(project)}/merge_requests/${iid}`, config);
     res.json(mapMR(data));
   } catch (error: any) {

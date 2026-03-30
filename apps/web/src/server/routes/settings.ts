@@ -50,7 +50,7 @@ settingsRoutes.get('/', (_req: Request, res: Response) => {
   for (const row of rows) {
     // Mask sensitive keys
     if (row.key === 'anthropicApiKey' || row.key === 'githubToken' || row.key === 'gitlabToken') {
-      settings[row.key] = row.value ? `${'*'.repeat(Math.max(0, row.value.length - 4))}${row.value.slice(-4)}` : '';
+      settings[row.key] = row.value ? '••••••••' : '';
     } else {
       settings[row.key] = row.value;
     }
@@ -61,6 +61,10 @@ settingsRoutes.get('/', (_req: Request, res: Response) => {
 /** GET /:key — Get a specific setting */
 settingsRoutes.get('/:key', (req: Request, res: Response) => {
   const { key } = req.params;
+  if (!VALID_KEYS.includes(key as any)) {
+    res.status(400).json({ error: 'Invalid setting key' });
+    return;
+  }
   const value = getSetting(key);
   if (value === null) {
     res.status(404).json({ error: 'Setting not found' });
@@ -68,7 +72,7 @@ settingsRoutes.get('/:key', (req: Request, res: Response) => {
   }
   // Mask sensitive values
   if (key === 'anthropicApiKey' || key === 'githubToken' || key === 'gitlabToken') {
-    res.json({ key, value: value ? `${'*'.repeat(Math.max(0, value.length - 4))}${value.slice(-4)}` : '' });
+    res.json({ key, value: value ? '••••••••' : '' });
     return;
   }
   res.json({ key, value });
@@ -104,6 +108,11 @@ settingsRoutes.put('/', (req: Request, res: Response) => {
 
 /** DELETE /:key — Delete a setting */
 settingsRoutes.delete('/:key', (req: Request, res: Response) => {
-  deleteSetting(req.params.key);
+  const { key } = req.params;
+  if (!VALID_KEYS.includes(key as any)) {
+    res.status(400).json({ error: 'Invalid setting key' });
+    return;
+  }
+  deleteSetting(key);
   res.json({ success: true });
 });

@@ -16,8 +16,7 @@ export interface ToolContext {
  */
 function validatePath(filePath: string, cwd: string): string {
   const resolved = resolve(cwd, filePath);
-  const rel = relative(cwd, resolved);
-  if (rel.startsWith('..') || resolve(resolved) !== resolved && !resolved.startsWith(cwd)) {
+  if (!resolved.startsWith(cwd)) {
     throw new Error(`Path "${filePath}" is outside the allowed directory`);
   }
   return resolved;

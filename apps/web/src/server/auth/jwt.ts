@@ -36,7 +36,9 @@ export function verifyToken(token: string): TokenPayload | null {
       .update(`${header}.${body}`)
       .digest('base64url');
 
-    if (signature !== expectedSig) return null;
+    const sigBuf = Buffer.from(signature, 'base64url');
+    const expectedBuf = Buffer.from(expectedSig, 'base64url');
+    if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
 
     const payload = JSON.parse(Buffer.from(body, 'base64url').toString()) as TokenPayload;
     if (payload.exp < Math.floor(Date.now() / 1000)) return null;
@@ -57,5 +59,8 @@ export function verifyPassword(password: string, stored: string): boolean {
   const [salt, hash] = stored.split(':');
   if (!salt || !hash) return false;
   const computed = crypto.scryptSync(password, salt, 64).toString('hex');
-  return hash === computed;
+  const hashBuf = Buffer.from(hash, 'hex');
+  const computedBuf = Buffer.from(computed, 'hex');
+  if (hashBuf.length !== computedBuf.length) return false;
+  return crypto.timingSafeEqual(hashBuf, computedBuf);
 }

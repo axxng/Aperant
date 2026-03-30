@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { config } from 'dotenv';
 import { closeDb } from './db/schema.js';
+import { requireAuth } from './middleware/auth.js';
 import { productRoutes } from './routes/products.js';
 import { taskRoutes } from './routes/tasks.js';
 import { githubRoutes } from './routes/github.js';
@@ -27,7 +29,7 @@ const PORT = parseInt(process.env.PORT || '3001', 10);
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173', 'http://localhost:3001'],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json({ limit: '1mb' }));
 
@@ -41,24 +43,30 @@ app.use((_req, res, next) => {
   next();
 });
 
-// API routes
-app.use('/api/products', productRoutes);
-app.use('/api/tasks', taskRoutes);
-app.use('/api/github', githubRoutes);
-app.use('/api/events', eventRoutes);
-app.use('/api/ai', aiRoutes);
-app.use('/api/investigate', investigationRoutes);
-app.use('/api/pr-review', prReviewRoutes);
-app.use('/api/insights', insightsRoutes);
-app.use('/api/roadmap', roadmapRoutes);
-app.use('/api/ideation', ideationRoutes);
-app.use('/api/changelog', changelogRoutes);
-app.use('/api/settings', settingsRoutes);
-app.use('/api/gitlab', gitlabRoutes);
-app.use('/api/auth', authRoutes);
+// Rate limiters
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: 'Too many requests, try again later' } });
+const aiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 15, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: 'Too many AI requests, try again later' } });
 
-// Manual sync trigger for a product
-app.post('/api/products/:id/sync', async (req, res) => {
+// Public routes (no auth required)
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/events', eventRoutes); // SSE stream — auth via query token if needed
+
+// Protected routes (require valid JWT)
+app.use('/api/products', requireAuth, productRoutes);
+app.use('/api/tasks', requireAuth, taskRoutes);
+app.use('/api/github', requireAuth, githubRoutes);
+app.use('/api/ai', requireAuth, aiLimiter, aiRoutes);
+app.use('/api/investigate', requireAuth, aiLimiter, investigationRoutes);
+app.use('/api/pr-review', requireAuth, aiLimiter, prReviewRoutes);
+app.use('/api/insights', requireAuth, aiLimiter, insightsRoutes);
+app.use('/api/roadmap', requireAuth, aiLimiter, roadmapRoutes);
+app.use('/api/ideation', requireAuth, aiLimiter, ideationRoutes);
+app.use('/api/changelog', requireAuth, aiLimiter, changelogRoutes);
+app.use('/api/settings', requireAuth, settingsRoutes);
+app.use('/api/gitlab', requireAuth, gitlabRoutes);
+
+// Manual sync trigger for a product (protected)
+app.post('/api/products/:id/sync', requireAuth, async (req, res) => {
   try {
     const result = await triggerSync(req.params.id);
     // Broadcast sync complete event to all SSE clients
