@@ -1,7 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { readFileSync, statSync, readdirSync } from 'node:fs';
-import { resolve, relative, join } from 'node:path';
+import { resolve, relative, join, sep } from 'node:path';
 import { globSync } from 'glob';
 
 export interface ToolContext {
@@ -16,7 +16,8 @@ export interface ToolContext {
  */
 function validatePath(filePath: string, cwd: string): string {
   const resolved = resolve(cwd, filePath);
-  if (!resolved.startsWith(cwd)) {
+  const cwdPrefix = cwd.endsWith(sep) ? cwd : cwd + sep;
+  if (resolved !== cwd && !resolved.startsWith(cwdPrefix)) {
     throw new Error(`Path "${filePath}" is outside the allowed directory`);
   }
   return resolved;
