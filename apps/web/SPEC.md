@@ -49,7 +49,7 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub/GitLa
 | Prefix | Router | Auth | Rate Limit | Description |
 |--------|--------|------|------------|-------------|
 | `/api/auth` | `authRoutes` | Public | 20/15min | Register, login, user management |
-| `/api/events` | `eventRoutes` | Public | — | SSE event stream |
+| `/api/events` | `eventRoutes` | JWT (query param) | — | SSE event stream |
 | `/api/health` | inline | Public | — | Health check |
 | `/api/products` | `productRoutes` | JWT | — | Product CRUD |
 | `/api/tasks` | `taskRoutes` | JWT | — | Task CRUD + ordering |
@@ -227,14 +227,15 @@ Global app settings with immediate persistence.
 - **Appearance:** Light/Dark/System mode, 7 color themes (Default, Ocean, Forest, Dusk, Lime, Retro, Neo)
 - **Language:** English / Français toggle
 - **AI Model:** Opus, Sonnet, Haiku selector
-- **API Keys:** Anthropic API key + GitHub token (show/hide toggle, masked in API responses)
-- **Sync:** Interval configuration (10-3600 seconds)
+- **API Keys:** Anthropic API key + GitHub token (show/hide toggle, masked in API responses). Keys saved in settings DB are used by server routes with env var fallback via `config-resolver.ts`.
+- **Sync:** Interval configuration (10-3600 seconds, sent as string to match bulk settings schema)
 - Server-side key-value store with whitelist validation
 - Route: `/settings`
 
 Key files:
-- `client/components/Settings.tsx` — Full settings UI
+- `client/components/Settings.tsx` — Full settings UI (uses `authenticatedFetch`)
 - `server/routes/settings.ts` — CRUD with key whitelist, sensitive value masking
+- `server/config-resolver.ts` — Resolves config from DB settings then env var fallback
 - `client/stores/settings-store.ts`
 
 ### 10. GitLab Integration
@@ -243,26 +244,27 @@ GitLab API proxy with split-pane issue and MR views.
 
 - PRIVATE-TOKEN authentication (reads from settings DB)
 - Self-hosted instance URL support (HTTPS required)
-- **Issues:** state filter, search, pagination, detail with import-to-task
+- **Product source type:** `gitlab_project` with `path` field (e.g. `"group/project"`) in product sources array, validated by `gitlabProjectSourceSchema`
+- **Issues:** state filter, search, pagination, detail with import-to-task (labels include default color, metadata uses `sourceType: 'gitlab'`)
 - **Merge Requests:** state filter (opened/closed/merged/all), branch info, merge status
 - Connection check and project listing endpoints
 - Routes: `/products/:productId/gitlab-issues`, `/products/:productId/gitlab-mrs`
 
 Key files:
-- `client/components/GitLabIssuesList.tsx`, `GitLabMRList.tsx`
+- `client/components/GitLabIssuesList.tsx`, `GitLabMRList.tsx` — Use `authenticatedFetch`
 - `server/routes/gitlab.ts` — API proxy with data mapping
 - `client/stores/gitlab-store.ts`
-- `shared/types/gitlab.ts`
+- `shared/types/gitlab.ts`, `shared/types/product.ts` — `GitLabProjectSource` type
 
 ### 11. Real-Time Sync & Notifications
 
 SSE-based event stream with auto-reconnect and toast notifications.
 
-- EventSource hook with exponential backoff (1s → 30s max)
+- EventSource hook with exponential backoff (1s → 30s max), JWT token passed via `?token=` query param
 - Events: sync_complete, sync_error, sync_started, task_created/updated/deleted, product_updated
 - Auto-refresh: task and product stores update on relevant events
 - Toast system: success/error/info/warning with auto-dismiss (5s), colored icons, dismiss buttons
-- GitHub sync scheduler runs every 60s when GITHUB_TOKEN is set
+- GitHub sync scheduler runs every 60s when GitHub token is available (settings DB or `GITHUB_TOKEN` env var)
 
 Key files:
 - `client/hooks/useEventStream.ts` — SSE with reconnect
@@ -276,17 +278,17 @@ Key files:
 JWT-based auth with role-based access control.
 
 - **Register** — email, name, password (min 8 chars). First user auto-promoted to admin
-- **Login** — Returns JWT (HMAC-SHA256, 7-day expiry)
+- **Login** — Returns JWT (HMAC-SHA256, 7-day expiry). Warns at startup if `JWT_SECRET` not set (random fallback invalidates tokens on restart).
 - **Roles:** admin, member, viewer
 - **Admin endpoints:** List users, update role, delete user (cannot self-delete)
 - Password hashing: scrypt with random salt
 - Auth store persisted in localStorage via Zustand persist middleware
-- Client auto-attaches `Authorization: Bearer <token>` to all API requests
+- Client auto-attaches JWT to all API requests via `authenticatedFetch()` (SSE uses `?token=` query param)
 
 Key files:
-- `server/auth/jwt.ts` — Token creation/verification, password hashing
+- `server/auth/jwt.ts` — Token creation/verification, password hashing, startup warning
 - `server/routes/auth.ts` — Register, login, me, user management
-- `server/middleware/auth.ts` — `requireAuth` and `requireAdmin` middleware
+- `server/middleware/auth.ts` — `requireAuth` (Bearer header + query param) and `requireAdmin` middleware
 - `server/db/users.ts` — User CRUD
 - `client/stores/auth-store.ts`
 - `client/lib/api-client.ts` — Auto-attaches JWT token
@@ -317,7 +319,7 @@ Applied across the entire server and client:
 | Category | Implementation | Files |
 |----------|---------------|-------|
 | **JWT timing attacks** | `crypto.timingSafeEqual()` for signature and password hash comparison | `server/auth/jwt.ts` |
-| **Auth middleware** | `requireAuth` applied to all protected routes (13 route groups) | `server/middleware/auth.ts`, `server/index.ts` |
+| **Auth middleware** | `requireAuth` applied to all routes (14 groups incl. SSE); accepts Bearer header or `?token=` query param | `server/middleware/auth.ts`, `server/index.ts` |
 | **Rate limiting** | Auth: 20 req/15min, AI endpoints: 15 req/min | `server/index.ts` (express-rate-limit) |
 | **CORS** | Origin whitelist, Authorization header allowed | `server/index.ts` |
 | **Path traversal** | `resolved.startsWith(cwd + sep)` in AI tools | `server/ai/tools/index.ts` |
@@ -325,7 +327,10 @@ Applied across the entire server and client:
 | **Settings validation** | Key whitelist on GET/DELETE, fixed-length secret masking | `server/routes/settings.ts` |
 | **Input validation** | Zod schemas on all mutating endpoints, numeric IID validation | `server/validation.ts`, `server/routes/gitlab.ts` |
 | **Security headers** | X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Cache-Control | `server/index.ts` |
-| **Client auth** | JWT auto-attached to all API requests from persisted store | `client/lib/api-client.ts` |
+| **Client auth** | JWT auto-attached to all API requests via `authenticatedFetch()` and `request()` | `client/lib/api-client.ts` |
+| **Config resolution** | API keys resolved from settings DB first, then env var fallback | `server/config-resolver.ts` |
+| **SSE auth** | `/api/events` requires JWT via `?token=` query param (EventSource can't set headers) | `server/middleware/auth.ts`, `client/hooks/useEventStream.ts` |
+| **JWT secret warning** | Logs warning on startup if `JWT_SECRET` is unset (random fallback invalidates tokens on restart) | `server/auth/jwt.ts` |
 
 ---
 
@@ -372,13 +377,13 @@ Edit `.env` and set at minimum:
 
 | Variable | Required For | How to Get |
 |----------|-------------|------------|
-| `ANTHROPIC_API_KEY` | AI features (investigation, review, insights, roadmap, ideation, changelog) | [console.anthropic.com](https://console.anthropic.com/) |
-| `GITHUB_TOKEN` | GitHub issue sync, PR review, branch listing | GitHub Settings → Developer Settings → PATs |
-| `JWT_SECRET` | Token persistence across server restarts | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `ANTHROPIC_API_KEY` | AI features (investigation, review, insights, roadmap, ideation, changelog) | [console.anthropic.com](https://console.anthropic.com/) or Settings UI |
+| `GITHUB_TOKEN` | GitHub issue sync, PR review, branch listing | GitHub Settings → Developer Settings → PATs or Settings UI |
+| `JWT_SECRET` | Token persistence across server restarts (random fallback logs warning) | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 
 Optional variables: `PORT` (default 3001), `ALLOWED_ORIGINS` (CORS), `DB_PATH` (default `./data/aperant.db`), `AI_MODEL` (default `claude-sonnet-4-20250514`).
 
-GitLab token and instance URL can be set via the Settings UI after launch.
+API keys (`ANTHROPIC_API_KEY`, `GITHUB_TOKEN`) can alternatively be set via the Settings UI — the server checks the settings DB first, falling back to env vars. GitLab token and instance URL can also be set via Settings.
 
 ### Run
 
@@ -434,7 +439,7 @@ npm run lint:fix        # Auto-fix lint issues
 - [ ] **Cross-column drag:** Drag a task from Backlog to In Progress — status changes.
 - [ ] **Consolidated backlog:** Click "All Products" — see all tasks with colored product badges. Filters and priority ordering work across products.
 
-#### GitHub Integration (requires GITHUB_TOKEN)
+#### GitHub Integration (requires GITHUB_TOKEN env var or configured in Settings)
 - [ ] Set GitHub owner/repo in product settings
 - [ ] **Issues page:** See split-pane list. Search by text, filter by state (open/closed/all). Scroll to load more (infinite scroll). Click an issue to see detail panel (labels, assignees, milestone, body). Click "Import as Task".
 - [ ] **AI Investigation:** Click "Investigate" on an issue. See streaming progress bar and markdown output. Verify it covers root cause, affected areas, and proposed solution.
@@ -443,10 +448,11 @@ npm run lint:fix        # Auto-fix lint issues
 
 #### GitLab Integration (configure in Settings)
 - [ ] Enter GitLab token + instance URL in Settings → save
-- [ ] **GitLab Issues:** See split-pane list, filter by state, search, click for detail
+- [ ] Create a product with a `gitlab_project` source (path e.g. `group/project`)
+- [ ] **GitLab Issues:** See split-pane list, filter by state, search, click for detail. Import as task — verify labels have color and metadata has `sourceType: 'gitlab'`
 - [ ] **GitLab MRs:** See MR list, filter by state (includes "merged"), click for detail
 
-#### AI Features (requires ANTHROPIC_API_KEY)
+#### AI Features (requires ANTHROPIC_API_KEY env var or configured in Settings)
 - [ ] **Insights:** Navigate to Insights. Create a session. Send a message asking about the codebase. See streaming response with tool badges (Read, Glob, Grep). Create a second session. Rename it. Delete it.
 - [ ] **Roadmap:** Navigate to product Roadmap. Click Generate. See SSE progress. View phases, features grid, and priority (MoSCoW) views. Click a feature to see detail panel.
 - [ ] **Ideation:** Navigate to product Ideation. Click Generate. See progress overlay. When done, browse ideas by type tab. Click an idea for detail (rationale, severity, files). Dismiss an idea. Convert an idea to task.
@@ -456,8 +462,8 @@ npm run lint:fix        # Auto-fix lint issues
 - [ ] **Theme:** Toggle Light/Dark/System. Verify UI updates.
 - [ ] **Color theme:** Click each of the 7 themes (Default, Ocean, Forest, Dusk, Lime, Retro, Neo). Verify color changes.
 - [ ] **Language:** Switch to French. Verify all nav, buttons, labels change. Switch back to English.
-- [ ] **API keys:** Enter/update Anthropic key and GitHub token. Verify they show as masked (`••••••••`) after save.
-- [ ] **Sync interval:** Change sync interval. Verify it accepts values 10-3600.
+- [ ] **API keys:** Enter/update Anthropic key and GitHub token. Verify they show as masked (`••••••••`) after save. Verify AI features and GitHub sync work using keys from Settings (without env vars).
+- [ ] **Sync interval:** Change sync interval. Verify it accepts values 10-3600 and saves successfully (sent as string).
 
 #### Real-Time Sync
 - [ ] Trigger a manual sync (product page → sync button in header)
@@ -467,8 +473,10 @@ npm run lint:fix        # Auto-fix lint issues
 #### Security
 - [ ] Try accessing `/api/products` without a token — should return 401
 - [ ] Try accessing `/api/products` with an invalid token — should return 401
+- [ ] Try accessing `/api/events` without a token — should return 401
 - [ ] Hit `/api/auth/login` rapidly — rate limiter kicks in after 20 attempts
 - [ ] Verify API responses for settings don't leak API key values (should show `••••••••`)
+- [ ] Start server without `JWT_SECRET` — verify warning is logged about token invalidation on restart
 
 ### Automated Checks
 
@@ -511,9 +519,9 @@ curl -s -X POST http://localhost:3001/api/tasks \
 # List all tasks (consolidated)
 curl -s http://localhost:3001/api/tasks -H "Authorization: Bearer $TOKEN" | jq .
 
-# SSE event stream (hold open)
-curl -N http://localhost:3001/api/events
-# → data: {"type":"heartbeat"} (every 30s)
+# SSE event stream (hold open, requires auth token)
+curl -N "http://localhost:3001/api/events?token=$TOKEN"
+# → :heartbeat (every 30s)
 ```
 
 ---
@@ -522,9 +530,10 @@ curl -N http://localhost:3001/api/events
 
 - **i18n required** — All UI text uses `react-i18next`. Add keys to both `en/*.json` and `fr/*.json`.
 - **Zod validation** — All API inputs validated server-side via Zod schemas.
-- **Typed API client** — All endpoints in `client/lib/api-client.ts` with proper types.
+- **Typed API client** — All endpoints in `client/lib/api-client.ts` with proper types. Use `authenticatedFetch()` for raw responses (SSE streams) or `request()` via `api.*` for JSON. Never use raw `fetch()` for protected endpoints.
 - **SSE for streaming** — AI responses stream via SSE with `text-delta`, `progress`, `done` events.
-- **Auth required** — All protected routes use `requireAuth` middleware. Auth routes are public.
+- **Auth required** — All routes (including SSE) use `requireAuth` middleware. Auth routes are public. SSE uses `?token=` query param since `EventSource` can't set headers.
+- **Config resolution** — Server routes resolve API keys via `resolveConfig(settingsKey, envVar)` from `server/config-resolver.ts` (settings DB first, env var fallback). Never read `process.env` directly for user-configurable keys.
 - **Minimal changes** — Implement only what's specified. Don't add unrequested features.
 
 ---
