@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { v4 as uuid } from 'uuid';
 import { getIdeationSession, createIdeationSession, updateIdeationSession, deleteIdeationSession } from '../db/ideation.js';
 import { runAgentSession } from '../ai/session/runner.js';
+import { resolveConfig } from '../config-resolver.js';
 import type { CoreMessage } from 'ai';
 
 export const ideationRoutes = Router();
@@ -128,8 +129,8 @@ ideationRoutes.post('/:productId/generate', async (req: Request, res: Response) 
   const parsed = generateSchema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: 'Invalid request', details: parsed.error.flatten() }); return; }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    res.status(503).json({ error: 'AI provider not configured. Set ANTHROPIC_API_KEY.' });
+  if (!resolveConfig('anthropicApiKey', 'ANTHROPIC_API_KEY')) {
+    res.status(503).json({ error: 'AI provider not configured. Set ANTHROPIC_API_KEY or configure it in Settings.' });
     return;
   }
 

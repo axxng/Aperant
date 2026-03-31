@@ -5,6 +5,7 @@ import {
   Eye, EyeOff, Check, Loader2, Sun, Moon, Monitor,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { authenticatedFetch } from '../lib/api-client';
 import { useSettingsStore, type ThemeMode, type ColorTheme } from '../stores/settings-store';
 import { Button } from './ui/button';
 
@@ -45,7 +46,7 @@ export function Settings() {
       store.setIsLoading(true);
       store.setError(null);
       try {
-        const response = await fetch('/api/settings');
+        const response = await authenticatedFetch('/settings');
         if (response.ok) {
           const data = await response.json();
           if (!cancelled) {
@@ -75,11 +76,11 @@ export function Settings() {
     store.setError(null);
     setSaveSuccess(false);
 
-    const payload: Record<string, string | number> = {
+    const payload: Record<string, string> = {
       theme: store.theme,
       colorTheme: store.colorTheme,
       language: store.language,
-      syncInterval: store.syncInterval,
+      syncInterval: String(store.syncInterval),
       defaultModel: store.defaultModel,
     };
 
@@ -92,9 +93,8 @@ export function Settings() {
     }
 
     try {
-      const response = await fetch('/api/settings', {
+      const response = await authenticatedFetch('/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 

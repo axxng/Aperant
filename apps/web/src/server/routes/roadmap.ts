@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { getRoadmap, createRoadmap, updateRoadmap, deleteRoadmap } from '../db/roadmaps.js';
 import { runAgentSession } from '../ai/session/runner.js';
+import { resolveConfig } from '../config-resolver.js';
 import type { CoreMessage } from 'ai';
 
 export const roadmapRoutes = Router();
@@ -93,8 +94,8 @@ roadmapRoutes.delete('/:id', (req: Request, res: Response) => {
 
 /** POST /:productId/generate — AI-generate a roadmap via SSE */
 roadmapRoutes.post('/:productId/generate', async (req: Request, res: Response) => {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    res.status(503).json({ error: 'AI provider not configured.' });
+  if (!resolveConfig('anthropicApiKey', 'ANTHROPIC_API_KEY')) {
+    res.status(503).json({ error: 'AI provider not configured. Set ANTHROPIC_API_KEY or configure it in Settings.' });
     return;
   }
 

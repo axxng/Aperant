@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { authenticatedFetch } from '../lib/api-client';
 import type { Roadmap, RoadmapFeature, RoadmapPhase, FeatureStatus } from '@shared/types/roadmap';
 
 export type GenerationPhase = 'idle' | 'analyzing' | 'generating' | 'complete' | 'error';
@@ -45,7 +46,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => ({
   loadRoadmap: async (productId: string) => {
     set({ isLoading: true });
     try {
-      const res = await fetch(`/api/roadmap/${productId}`);
+      const res = await authenticatedFetch(`/roadmap/${productId}`);
       const data = await res.json();
       set({ roadmap: data, isLoading: false });
     } catch {
@@ -87,9 +88,8 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => ({
   saveRoadmap: async () => {
     const { roadmap } = get();
     if (!roadmap) return;
-    await fetch(`/api/roadmap/${roadmap.id}`, {
+    await authenticatedFetch(`/roadmap/${roadmap.id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         vision: roadmap.vision,
         targetAudience: roadmap.targetAudience,

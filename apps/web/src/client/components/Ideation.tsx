@@ -12,6 +12,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
 import type { Idea, IdeationType, IdeationConfig } from '@shared/types/ideation';
+import { authenticatedFetch } from '../lib/api-client';
 
 const TYPE_STYLES: Record<IdeationType, string> = {
   code_improvements: 'bg-emerald-500/10 text-emerald-500',
@@ -66,7 +67,7 @@ export function Ideation() {
 
     (async () => {
       try {
-        const response = await fetch(`/api/ideation/${productId}`);
+        const response = await authenticatedFetch(`/ideation/${productId}`);
         if (response.ok) {
           const data = await response.json();
           if (data && data.id) {
@@ -93,9 +94,8 @@ export function Ideation() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/ideation/${productId}/generate`, {
+      const response = await authenticatedFetch(`/ideation/${productId}/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           enabledTypes: localConfig.enabledTypes,
           maxIdeasPerType: localConfig.maxIdeasPerType,
@@ -168,9 +168,8 @@ export function Ideation() {
   const handleConvertToTask = useCallback(async (ideaId: string) => {
     if (!productId) return;
     try {
-      const response = await fetch(`/api/ideation/${productId}/convert`, {
+      const response = await authenticatedFetch(`/ideation/${productId}/convert`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ideaId }),
       });
       if (response.ok) {

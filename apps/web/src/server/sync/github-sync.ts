@@ -5,10 +5,12 @@ import type { Product, RepoSource, MultiRepoSource } from '../../shared/types/pr
 import type { TaskStatus, CreateTaskInput } from '../../shared/types/task.js';
 import type { SyncResult } from '../../shared/types/github.js';
 
+import { resolveConfig } from '../config-resolver.js';
+
 const GITHUB_API = 'https://api.github.com';
 
 function getGitHubToken(): string {
-  const token = process.env.GITHUB_TOKEN;
+  const token = resolveConfig('githubToken', 'GITHUB_TOKEN');
   if (!token) throw new Error('GITHUB_TOKEN not configured');
   return token;
 }

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import type { GitHubPR, PRFile } from '@shared/types/pr';
 import type { Product } from '@shared/types/product';
+import { authenticatedFetch } from '../lib/api-client';
 
 /** Extract all owner/repo pairs from a product's sources */
 function getRepos(product: Product): Array<{ owner: string; repo: string }> {
@@ -99,9 +100,8 @@ export function GitHubPRList() {
     startReview();
 
     try {
-      const response = await fetch('/api/pr-review', {
+      const response = await authenticatedFetch('/pr-review', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           owner: primaryRepo.owner,
           repo: primaryRepo.repo,

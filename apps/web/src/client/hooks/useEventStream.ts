@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { useAuthStore } from '../stores/auth-store';
 
 type EventHandler = (data: any) => void;
 
@@ -13,16 +14,17 @@ export function useEventStream({ onEvent, handlers, enabled = true }: UseEventSt
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const reconnectAttempts = useRef(0);
   const maxReconnectDelay = 30000;
+  const token = useAuthStore((s) => s.token);
 
   const connect = useCallback(() => {
-    if (!enabled) return;
+    if (!enabled || !token) return;
 
     // Close existing connection
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
 
-    const es = new EventSource('/api/events');
+    const es = new EventSource(`/api/events?token=${encodeURIComponent(token)}`);
     eventSourceRef.current = es;
 
     es.onopen = () => {
@@ -55,7 +57,7 @@ export function useEventStream({ onEvent, handlers, enabled = true }: UseEventSt
         }
       });
     }
-  }, [enabled, onEvent, handlers]);
+  }, [enabled, token, onEvent, handlers]);
 
   useEffect(() => {
     connect();

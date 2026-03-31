@@ -12,6 +12,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
 import type { GitLabIssue } from '@shared/types/gitlab';
+import { authenticatedFetch } from '../lib/api-client';
 
 /**
  * Extract the GitLab project path from a product's sources array.
@@ -19,8 +20,8 @@ import type { GitLabIssue } from '@shared/types/gitlab';
  */
 function getGitLabProjectPath(product: { sources: Array<{ type: string; [key: string]: any }> }): string | null {
   for (const source of product.sources) {
-    if (source.type === 'gitlab_project') {
-      return (source.path ?? source.repo ?? null) as string | null;
+    if (source.type === 'gitlab_project' && source.path) {
+      return source.path as string;
     }
   }
   return null;
@@ -53,8 +54,8 @@ export function GitLabIssuesList() {
           per_page: '30',
         });
         if (store.issuesSearch) params.set('search', store.issuesSearch);
-        const res = await fetch(
-          `/api/gitlab/${encodeURIComponent(projectPath)}/issues?${params}`
+        const res = await authenticatedFetch(
+          `/gitlab/${encodeURIComponent(projectPath)}/issues?${params}`
         );
         const data = await res.json();
         if (page === 1) {
@@ -109,14 +110,13 @@ export function GitLabIssuesList() {
       setImportingIssue(issue.iid);
       try {
         // POST to import the GitLab issue as a task
-        await fetch('/api/tasks', {
+        await authenticatedFetch('/tasks', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             productId,
             title: issue.title,
             description: issue.description || '',
-            labels: issue.labels.map((name) => ({ name })),
+            labels: issue.labels.map((name) => ({ name, color: '#6B7280' })),
             assignees: issue.assignees.map((a) => ({
               login: a.username,
               avatarUrl: a.avatarUrl,

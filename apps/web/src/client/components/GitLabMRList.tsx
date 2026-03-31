@@ -9,12 +9,13 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
 import type { GitLabMergeRequest } from '@shared/types/gitlab';
+import { authenticatedFetch } from '../lib/api-client';
 
 /** Extract the GitLab project path from a product's sources */
 function getGitLabProjectPath(product: { sources: Array<{ type: string; [k: string]: any }> }): string | null {
   for (const source of product.sources) {
-    if (source.type === 'gitlab_project' && source.projectPath) {
-      return source.projectPath as string;
+    if (source.type === 'gitlab_project' && (source.path || source.projectPath)) {
+      return (source.path ?? source.projectPath) as string;
     }
   }
   return null;
@@ -53,8 +54,8 @@ export function GitLabMRList() {
           per_page: '30',
         });
         if (store.mrsSearch) params.set('search', store.mrsSearch);
-        const res = await fetch(
-          `/api/gitlab/${encodeURIComponent(projectPath)}/merge_requests?${params}`
+        const res = await authenticatedFetch(
+          `/gitlab/${encodeURIComponent(projectPath)}/merge_requests?${params}`
         );
         const data = await res.json();
         if (page === 1) store.setMergeRequests(data.items, data.total);

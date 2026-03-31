@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { v4 as uuid } from 'uuid';
 import { getChangelogs, getChangelogById, createChangelog, updateChangelog, deleteChangelog } from '../db/changelogs.js';
 import { runAgentSession } from '../ai/session/runner.js';
+import { resolveConfig } from '../config-resolver.js';
 import type { CoreMessage } from 'ai';
 
 export const changelogRoutes = Router();
@@ -92,8 +93,8 @@ changelogRoutes.delete('/:id', (req: Request, res: Response) => {
 
 /** POST /:productId/generate — AI-generate a changelog via SSE */
 changelogRoutes.post('/:productId/generate', async (req: Request, res: Response) => {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    res.status(503).json({ error: 'AI provider not configured. Set ANTHROPIC_API_KEY.' });
+  if (!resolveConfig('anthropicApiKey', 'ANTHROPIC_API_KEY')) {
+    res.status(503).json({ error: 'AI provider not configured. Set ANTHROPIC_API_KEY or configure it in Settings.' });
     return;
   }
 

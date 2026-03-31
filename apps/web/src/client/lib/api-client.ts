@@ -35,6 +35,20 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
+/**
+ * Authenticated fetch — injects JWT and returns the raw Response.
+ * Use for SSE streams or any request where you need the raw response.
+ */
+export async function authenticatedFetch(path: string, options?: RequestInit): Promise<Response> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...((options?.headers as Record<string, string>) ?? {}),
+  };
+  return fetch(`${API_BASE}${path}`, { ...options, headers });
+}
+
 export const api = {
   products: {
     list: () => request<Product[]>('/products'),
@@ -124,6 +138,10 @@ export const api = {
     },
   },
   events: {
-    subscribe: (): EventSource => new EventSource(`${API_BASE}/events`),
+    subscribe: (): EventSource => {
+      const token = getAuthToken();
+      const url = token ? `${API_BASE}/events?token=${encodeURIComponent(token)}` : `${API_BASE}/events`;
+      return new EventSource(url);
+    },
   },
 };

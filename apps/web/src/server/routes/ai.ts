@@ -6,6 +6,8 @@ import { AGENT_CONFIGS } from '../ai/config/agent-configs.js';
 import type { AgentType } from '../ai/config/agent-configs.js';
 import type { CoreMessage } from 'ai';
 
+import { resolveConfig } from '../config-resolver.js';
+
 export const aiRoutes = Router();
 
 // ── Validation schemas ──────────────────────────────────────────────
@@ -62,9 +64,9 @@ aiRoutes.post('/session', async (req: Request, res: Response) => {
 
   const { agentType, messages, systemPrompt, modelId, cwd, maxSteps } = parsed.data;
 
-  // Validate API key is available
-  if (!process.env.ANTHROPIC_API_KEY) {
-    res.status(503).json({ error: 'AI provider not configured. Set ANTHROPIC_API_KEY environment variable.' });
+  // Validate API key is available (check DB settings first, then env var)
+  if (!resolveConfig('anthropicApiKey', 'ANTHROPIC_API_KEY')) {
+    res.status(503).json({ error: 'AI provider not configured. Set ANTHROPIC_API_KEY environment variable or configure it in Settings.' });
     return;
   }
 
@@ -121,7 +123,7 @@ aiRoutes.get('/agents', (_req: Request, res: Response) => {
  * GET /api/ai/health — Check if AI provider is configured.
  */
 aiRoutes.get('/health', (_req: Request, res: Response) => {
-  const hasKey = !!process.env.ANTHROPIC_API_KEY;
+  const hasKey = !!resolveConfig('anthropicApiKey', 'ANTHROPIC_API_KEY');
   res.json({
     configured: hasKey,
     provider: hasKey ? 'anthropic' : null,

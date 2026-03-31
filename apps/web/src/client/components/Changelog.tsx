@@ -13,6 +13,7 @@ import { ScrollArea } from './ui/scroll-area';
 import type {
   ChangelogSourceMode, ChangelogFormat, ChangelogAudience,
 } from '@shared/types/changelog';
+import { authenticatedFetch } from '../lib/api-client';
 
 const SOURCE_MODES: ChangelogSourceMode[] = ['tasks', 'git-history', 'branch-diff'];
 const FORMATS: ChangelogFormat[] = ['keep-a-changelog', 'simple-list', 'github-release'];
@@ -42,7 +43,7 @@ export function Changelog() {
     if (!productId) return;
     (async () => {
       try {
-        const response = await fetch(`/api/changelog/${productId}`);
+        const response = await authenticatedFetch(`/changelog/${productId}`);
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data)) {
@@ -65,9 +66,8 @@ export function Changelog() {
     abortControllerRef.current = controller;
 
     try {
-      const response = await fetch(`/api/changelog/${productId}/generate`, {
+      const response = await authenticatedFetch(`/changelog/${productId}/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sourceMode, version, date, format, audience, customInstructions,
         }),
@@ -162,7 +162,7 @@ export function Changelog() {
   const handleDeleteEntry = useCallback(async (entryId: string) => {
     if (!productId) return;
     try {
-      await fetch(`/api/changelog/${productId}/${entryId}`, { method: 'DELETE' });
+      await authenticatedFetch(`/changelog/${productId}/${entryId}`, { method: 'DELETE' });
     } catch {
       // ignore
     }
@@ -176,9 +176,8 @@ export function Changelog() {
   const handleSave = useCallback(async () => {
     if (!productId || !generatedContent) return;
     try {
-      const response = await fetch(`/api/changelog/${productId}`, {
+      const response = await authenticatedFetch(`/changelog/${productId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content: generatedContent,
           config: { sourceMode, version, date, format, audience },

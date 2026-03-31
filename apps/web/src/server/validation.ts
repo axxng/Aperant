@@ -27,7 +27,12 @@ const githubProjectSourceSchema = z.object({
   projectNumber: z.number().int().positive(),
 });
 
-const productSourceSchema = z.discriminatedUnion('type', [repoSourceSchema, multiRepoSourceSchema, githubProjectSourceSchema]);
+const gitlabProjectSourceSchema = z.object({
+  type: z.literal('gitlab_project'),
+  path: z.string().min(1).max(255),
+});
+
+const productSourceSchema = z.discriminatedUnion('type', [repoSourceSchema, multiRepoSourceSchema, githubProjectSourceSchema, gitlabProjectSourceSchema]);
 
 const statusMappingSchema = z.record(z.string().max(100), z.enum(taskStatuses));
 
@@ -53,7 +58,7 @@ const labelSchema = z.object({ name: z.string().max(100), color: z.string().max(
 const assigneeSchema = z.object({ login: z.string().max(100), avatarUrl: z.string().url().optional() });
 
 const taskMetadataSchema = z.object({
-  sourceType: z.enum(['github', 'manual']).optional(),
+  sourceType: z.enum(['github', 'gitlab', 'manual']).optional(),
   complexity: z.enum(['trivial', 'small', 'medium', 'large', 'complex']).optional(),
   impact: z.enum(['low', 'medium', 'high', 'critical']).optional(),
   rationale: z.string().max(5000).optional(),

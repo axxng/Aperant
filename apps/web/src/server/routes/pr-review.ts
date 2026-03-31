@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { runAgentSession } from '../ai/session/runner.js';
 import type { CoreMessage } from 'ai';
 
+import { resolveConfig } from '../config-resolver.js';
+
 export const prReviewRoutes = Router();
 
 const reviewSchema = z.object({
@@ -87,8 +89,8 @@ prReviewRoutes.post('/', async (req: Request, res: Response) => {
     return;
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    res.status(503).json({ error: 'AI provider not configured. Set ANTHROPIC_API_KEY.' });
+  if (!resolveConfig('anthropicApiKey', 'ANTHROPIC_API_KEY')) {
+    res.status(503).json({ error: 'AI provider not configured. Set ANTHROPIC_API_KEY or configure it in Settings.' });
     return;
   }
 

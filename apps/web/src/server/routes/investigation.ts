@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { runAgentSession } from '../ai/session/runner.js';
+import { resolveConfig } from '../config-resolver.js';
 import type { CoreMessage } from 'ai';
 
 export const investigationRoutes = Router();
@@ -62,8 +63,8 @@ investigationRoutes.post('/', async (req: Request, res: Response) => {
     return;
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    res.status(503).json({ error: 'AI provider not configured. Set ANTHROPIC_API_KEY.' });
+  if (!resolveConfig('anthropicApiKey', 'ANTHROPIC_API_KEY')) {
+    res.status(503).json({ error: 'AI provider not configured. Set ANTHROPIC_API_KEY or configure it in Settings.' });
     return;
   }
 

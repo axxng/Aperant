@@ -17,11 +17,12 @@ export interface Product {
   updatedAt: string;
 }
 
-/** A GitHub source that feeds issues into a product */
+/** A source that feeds issues into a product */
 export type ProductSource =
   | RepoSource
   | MultiRepoSource
-  | GitHubProjectSource;
+  | GitHubProjectSource
+  | GitLabProjectSource;
 
 export interface RepoSource {
   type: 'repo';
@@ -40,6 +41,12 @@ export interface GitHubProjectSource {
   owner: string;
   /** GitHub Project board number */
   projectNumber: number;
+}
+
+export interface GitLabProjectSource {
+  type: 'gitlab_project';
+  /** GitLab project path (e.g. "group/project") */
+  path: string;
 }
 
 /** Maps GitHub Project board column names to kanban statuses */

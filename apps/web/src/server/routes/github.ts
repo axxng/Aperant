@@ -3,12 +3,14 @@ import { getProductById } from '../db/products.js';
 import { githubIssueQuerySchema, githubCommentSchema, githubUpdateIssueSchema, githubCreatePRSchema, githubOwnerRepoSchema, githubPRQuerySchema } from '../validation.js';
 import type { GitHubPR, PRFile } from '../../shared/types/pr.js';
 
+import { resolveConfig } from '../config-resolver.js';
+
 export const githubRoutes = Router();
 
 const GITHUB_API = 'https://api.github.com';
 
 function getGitHubToken(): string {
-  const token = process.env.GITHUB_TOKEN;
+  const token = resolveConfig('githubToken', 'GITHUB_TOKEN');
   if (!token) throw new Error('GITHUB_TOKEN not configured');
   return token;
 }

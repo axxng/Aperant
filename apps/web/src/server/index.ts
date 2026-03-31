@@ -20,6 +20,7 @@ import { gitlabRoutes } from './routes/gitlab.js';
 import { authRoutes } from './routes/auth.js';
 import { startSyncScheduler, stopSyncScheduler, triggerSync } from './sync/scheduler.js';
 import { broadcastEvent } from './routes/events.js';
+import { resolveConfig } from './config-resolver.js';
 
 config();
 
@@ -49,7 +50,7 @@ const aiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 15, standardHeaders: '
 
 // Public routes (no auth required)
 app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/events', eventRoutes); // SSE stream — auth via query token if needed
+app.use('/api/events', requireAuth, eventRoutes);
 
 // Protected routes (require valid JWT)
 app.use('/api/products', requireAuth, productRoutes);
@@ -85,10 +86,10 @@ app.get('/api/health', (_req, res) => {
 app.listen(PORT, () => {
   console.log(`Aperant API server running on port ${PORT}`);
   // Start periodic GitHub sync (every 60s)
-  if (process.env.GITHUB_TOKEN) {
+  if (resolveConfig('githubToken', 'GITHUB_TOKEN')) {
     startSyncScheduler();
   } else {
-    console.log('GITHUB_TOKEN not set — GitHub sync disabled');
+    console.log('GitHub token not configured — GitHub sync disabled. Set GITHUB_TOKEN or configure it in Settings.');
   }
 });
 
