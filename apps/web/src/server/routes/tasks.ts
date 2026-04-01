@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as tasksDb from '../db/tasks.js';
 import type { TaskStatus } from '../../shared/types/task.js';
 import { createTaskSchema, updateTaskSchema, updateTaskStatusSchema, setTaskOrderSchema } from '../validation.js';
+import { broadcastEvent } from './events.js';
 
 export const taskRoutes = Router();
 
@@ -26,6 +27,7 @@ taskRoutes.put('/order/:scope/:status', (req, res) => {
     return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });
   }
   tasksDb.setTaskOrder(req.params.scope, req.params.status as TaskStatus, result.data.taskIds);
+  broadcastEvent('tasks_reordered', { scope: req.params.scope, status: req.params.status });
   res.json({ success: true });
 });
 
@@ -43,6 +45,7 @@ taskRoutes.post('/', (req, res) => {
     return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });
   }
   const task = tasksDb.createTask(result.data);
+  broadcastEvent('task_created', task);
   res.status(201).json(task);
 });
 
@@ -54,6 +57,7 @@ taskRoutes.patch('/:id', (req, res) => {
   }
   const task = tasksDb.updateTask(req.params.id, result.data);
   if (!task) return res.status(404).json({ error: 'Task not found' });
+  broadcastEvent('task_updated', task);
   res.json(task);
 });
 
@@ -65,6 +69,7 @@ taskRoutes.patch('/:id/status', (req, res) => {
   }
   const task = tasksDb.updateTask(req.params.id, { status: result.data.status });
   if (!task) return res.status(404).json({ error: 'Task not found' });
+  broadcastEvent('task_updated', task);
   res.json(task);
 });
 
@@ -72,5 +77,6 @@ taskRoutes.patch('/:id/status', (req, res) => {
 taskRoutes.delete('/:id', (req, res) => {
   const deleted = tasksDb.deleteTask(req.params.id);
   if (!deleted) return res.status(404).json({ error: 'Task not found' });
+  broadcastEvent('task_deleted', { id: req.params.id });
   res.json({ success: true });
 });
