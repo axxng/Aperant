@@ -191,4 +191,35 @@ const MIGRATIONS = [
       CREATE INDEX idx_users_email ON users(email);
     `,
   },
+  {
+    name: '007_otp_auth',
+    sql: `
+      CREATE TABLE otp_codes (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL,
+        code_hash TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        used INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE INDEX idx_otp_email ON otp_codes(email);
+
+      -- Make password_hash nullable since we're moving to OTP-only auth
+      -- SQLite doesn't support ALTER COLUMN, so we recreate the table
+      CREATE TABLE users_new (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL DEFAULT '',
+        password_hash TEXT,
+        role TEXT NOT NULL DEFAULT 'member',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO users_new SELECT * FROM users;
+      DROP TABLE users;
+      ALTER TABLE users_new RENAME TO users;
+      CREATE INDEX idx_users_email ON users(email);
+    `,
+  },
 ];

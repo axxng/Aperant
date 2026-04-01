@@ -42,3 +42,14 @@ export function updateUser(id: string, updates: { name?: string; role?: string }
 export function deleteUser(id: string): void {
   getDb().prepare('DELETE FROM users WHERE id = ?').run(id);
 }
+
+export function createUserWithoutPassword(id: string, email: string, name: string, role = 'member'): void {
+  getDb().prepare(
+    'INSERT INTO users (id, email, name, role) VALUES (?, ?, ?, ?)'
+  ).run(id, email, name, role);
+}
+
+export function userCount(): number {
+  const row = getDb().prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
+  return row.count;
+}
