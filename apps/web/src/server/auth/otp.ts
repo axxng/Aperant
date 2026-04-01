@@ -39,13 +39,15 @@ export function verifyOtp(email: string, code: string): boolean {
   const db = getDb();
   const hash = crypto.createHash('sha256').update(code).digest('hex');
 
-  const row = db.prepare(
-    "SELECT id FROM otp_codes WHERE email = ? AND code_hash = ? AND used = 0 AND expires_at > datetime('now') ORDER BY created_at DESC LIMIT 1"
-  ).get(email, hash) as { id: string } | undefined;
+  return db.transaction(() => {
+    const row = db.prepare(
+      "SELECT id FROM otp_codes WHERE email = ? AND code_hash = ? AND used = 0 AND expires_at > datetime('now') ORDER BY created_at DESC LIMIT 1"
+    ).get(email, hash) as { id: string } | undefined;
 
-  if (!row) return false;
+    if (!row) return false;
 
-  // Mark as used
-  db.prepare('UPDATE otp_codes SET used = 1 WHERE id = ?').run(row.id);
-  return true;
+    // Mark as used
+    db.prepare('UPDATE otp_codes SET used = 1 WHERE id = ?').run(row.id);
+    return true;
+  })();
 }

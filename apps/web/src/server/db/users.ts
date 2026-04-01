@@ -4,7 +4,7 @@ export interface UserRow {
   id: string;
   email: string;
   name: string;
-  password_hash: string;
+  password_hash: string | null;
   role: string;
   created_at: string;
   updated_at: string;
