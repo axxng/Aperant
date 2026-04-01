@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Routes, Route, useParams, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { Routes, Route, useParams } from 'react-router-dom';
 import { TooltipProvider } from './components/ui/tooltip';
 import { Sidebar } from './components/Sidebar';
 import { KanbanBoard } from './components/KanbanBoard';
@@ -19,12 +18,37 @@ import { GitLabIssuesList } from './components/GitLabIssuesList';
 import { GitLabMRList } from './components/GitLabMRList';
 import { ProductSettings } from './components/ProductSettings';
 import { ToastContainer } from './components/ToastContainer';
+import { LoginPage } from './components/LoginPage';
 import { useProductStore } from './stores/product-store';
 import { useTaskStore } from './stores/task-store';
+import { useAuthStore } from './stores/auth-store';
 import { useSyncEvents } from './hooks/useSyncEvents';
 import type { Task } from '@shared/types/task';
 
 export function App() {
+  const { token, user, checkSession } = useAuthStore();
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    if (token) {
+      checkSession().finally(() => setAuthChecked(true));
+    } else {
+      setAuthChecked(true);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!authChecked) {
+    return <div className="flex items-center justify-center min-h-screen bg-background"><p className="text-muted-foreground">...</p></div>;
+  }
+
+  if (!token || !user) {
+    return <LoginPage />;
+  }
+
+  return <AuthenticatedApp />;
+}
+
+function AuthenticatedApp() {
   const { loadProducts, products, activeProductId } = useProductStore();
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [showCreateTask, setShowCreateTask] = useState(false);
