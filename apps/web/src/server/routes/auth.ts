@@ -157,7 +157,7 @@ authRoutes.patch('/users/:id', (req: Request, res: Response) => {
     return;
   }
 
-  updateUser(req.params.id, parsed.data);
+  updateUser(req.params.id as string, parsed.data);
   res.json({ success: true });
 });
 
@@ -169,11 +169,12 @@ authRoutes.delete('/users/:id', (req: Request, res: Response) => {
     return;
   }
 
-  if (user.userId === req.params.id) {
+  const targetId = req.params.id as string;
+  if (user.userId === targetId) {
     res.status(400).json({ error: 'Cannot delete yourself' });
     return;
   }
 
-  deleteUser(req.params.id);
+  deleteUser(targetId);
   res.json({ success: true });
 });
