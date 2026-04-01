@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTaskStore } from '../stores/task-store';
 import { useProductStore } from '../stores/product-store';
@@ -24,6 +24,12 @@ export function CreateTaskDialog({ open, onOpenChange, defaultProductId }: Creat
   const [priority, setPriority] = useState<TaskPriority | ''>('');
   const [category, setCategory] = useState<TaskCategory | ''>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (activeProductId) {
+      setProductId(activeProductId);
+    }
+  }, [activeProductId]);
 
   const reset = () => {
     setTitle('');
