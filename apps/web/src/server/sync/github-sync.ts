@@ -175,7 +175,7 @@ async function syncGitHubProject(
   const mapping = statusMapping || defaultStatusMapping;
 
   try {
-    let cursor = syncState?.cursor || null;
+    let cursor: string | null = null; // Always start from the beginning to catch updates
     let hasMore = true;
 
     while (hasMore) {
