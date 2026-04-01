@@ -3,7 +3,8 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useProductStore } from '../stores/product-store';
 import { cn } from '../lib/utils';
-import { LayoutDashboard, Package, Plus, Settings, RefreshCw, CircleDot, GitPullRequest, Lightbulb, Map, Zap, FileText, GitMerge, CircleAlert } from 'lucide-react';
+import { LayoutDashboard, Package, Plus, Settings, RefreshCw, CircleDot, GitPullRequest, Lightbulb, Map, Zap, FileText, GitMerge, CircleAlert, LogOut } from 'lucide-react';
+import { useAuthStore } from '../stores/auth-store';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from './ui/tooltip';
@@ -13,8 +14,9 @@ interface SidebarProps {
 }
 
 export const Sidebar = memo(function Sidebar({ onAddProduct }: SidebarProps) {
-  const { t } = useTranslation(['navigation', 'common']);
+  const { t } = useTranslation(['navigation', 'common', 'auth']);
   const { products, activeProductId, setActiveProduct, syncProduct } = useProductStore();
+  const { user, logout } = useAuthStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -212,6 +214,16 @@ export const Sidebar = memo(function Sidebar({ onAddProduct }: SidebarProps) {
           ))}
         </div>
       </ScrollArea>
+
+      {/* User info */}
+      <div className="border-t border-border p-3">
+        <div className="flex items-center justify-between">
+          <div className="truncate text-xs text-muted-foreground">{!isCollapsed && user?.email}</div>
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={logout} title={t('auth:logout')}>
+            <LogOut className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
 
       {/* Settings + Add Product */}
       <div className="border-t border-border p-2 space-y-1">
