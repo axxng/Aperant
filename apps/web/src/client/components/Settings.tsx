@@ -7,7 +7,9 @@ import {
 import { cn } from '../lib/utils';
 import { authenticatedFetch } from '../lib/api-client';
 import { useSettingsStore, type ThemeMode, type ColorTheme } from '../stores/settings-store';
+import { useAuthStore } from '../stores/auth-store';
 import { Button } from './ui/button';
+import { UserManagement } from './UserManagement';
 
 const THEME_MODES: Array<{ value: ThemeMode; icon: typeof Sun }> = [
   { value: 'light', icon: Sun },
@@ -32,6 +34,7 @@ const LANGUAGES = ['en', 'fr'] as const;
 export function Settings() {
   const { t } = useTranslation(['settings', 'common']);
   const store = useSettingsStore();
+  const { user } = useAuthStore();
 
   const [editedFields, setEditedFields] = useState<Set<string>>(new Set());
   const [showAnthropicKey, setShowAnthropicKey] = useState(false);
@@ -334,6 +337,13 @@ export function Settings() {
             </p>
           </div>
         </SettingsSection>
+
+        {/* User Management (admin only) */}
+        {user?.role === 'admin' && (
+          <div className="border-t pt-6 mt-6">
+            <UserManagement />
+          </div>
+        )}
 
         {/* Bottom save button */}
         <div className="flex justify-end pt-4 border-t border-border">
