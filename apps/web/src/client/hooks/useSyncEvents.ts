@@ -35,6 +35,7 @@ export function useSyncEvents() {
       case 'task_created':
       case 'task_updated':
       case 'task_deleted':
+      case 'tasks_reordered':
         // Refresh task list on any task change
         if (activeProductId) {
           loadTasks(activeProductId);

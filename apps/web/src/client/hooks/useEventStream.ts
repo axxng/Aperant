@@ -42,7 +42,7 @@ export function useEventStream({ onEvent, handlers, enabled = true }: UseEventSt
     // Listen for specific event types
     const eventTypes = [
       'sync_complete', 'sync_error', 'sync_started',
-      'task_created', 'task_updated', 'task_deleted',
+      'task_created', 'task_updated', 'task_deleted', 'tasks_reordered',
       'product_updated',
     ];
 
