@@ -29,14 +29,18 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
 }
 
 /**
- * Express middleware that requires the authenticated user to have the 'admin' role.
+ * Express middleware factory that requires the authenticated user to have one of the specified roles.
  * Must be used after requireAuth.
  */
-export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
-  const user = (req as any).user;
-  if (!user || user.role !== 'admin') {
-    res.status(403).json({ error: 'Admin access required' });
-    return;
-  }
-  next();
+export function requireRole(...roles: string[]) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const user = (req as any).user;
+    if (!user || !roles.includes(user.role)) {
+      res.status(403).json({ error: 'Insufficient permissions' });
+      return;
+    }
+    next();
+  };
 }
+
+export const requireAdmin = requireRole('admin');

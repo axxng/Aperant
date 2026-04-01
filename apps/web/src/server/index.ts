@@ -3,7 +3,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { config } from 'dotenv';
 import { closeDb } from './db/schema.js';
-import { requireAuth } from './middleware/auth.js';
+import { requireAuth, requireRole } from './middleware/auth.js';
 import { userCount, createUserWithoutPassword } from './db/users.js';
 import { v4 as uuid } from 'uuid';
 import { productRoutes } from './routes/products.js';
@@ -60,27 +60,31 @@ app.use((_req, res, next) => {
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: 'Too many requests, try again later' } });
 const aiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 15, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: 'Too many AI requests, try again later' } });
 
-// Public routes (no auth required)
+// Public routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/auth/users', requireAuth);
+
+// Protected routes — any authenticated user can read
 app.use('/api/events', requireAuth, eventRoutes);
 
-// Protected routes (require valid JWT)
-app.use('/api/products', requireAuth, productRoutes);
-app.use('/api/tasks', requireAuth, taskRoutes);
-app.use('/api/github', requireAuth, githubRoutes);
-app.use('/api/ai', requireAuth, aiLimiter, aiRoutes);
-app.use('/api/investigate', requireAuth, aiLimiter, investigationRoutes);
-app.use('/api/pr-review', requireAuth, aiLimiter, prReviewRoutes);
-app.use('/api/insights', requireAuth, aiLimiter, insightsRoutes);
-app.use('/api/roadmap', requireAuth, aiLimiter, roadmapRoutes);
-app.use('/api/ideation', requireAuth, aiLimiter, ideationRoutes);
-app.use('/api/changelog', requireAuth, aiLimiter, changelogRoutes);
-app.use('/api/settings', requireAuth, settingsRoutes);
-app.use('/api/gitlab', requireAuth, gitlabRoutes);
+// Admin-only routes
+app.use('/api/products', requireAuth, requireRole('admin'), productRoutes);
+app.use('/api/settings', requireAuth, requireRole('admin'), settingsRoutes);
+app.use('/api/gitlab', requireAuth, requireRole('admin'), gitlabRoutes);
+
+// Member+ routes (task mutations and AI features)
+app.use('/api/tasks', requireAuth, requireRole('admin', 'member'), taskRoutes);
+app.use('/api/github', requireAuth, requireRole('admin', 'member'), githubRoutes);
+app.use('/api/ai', requireAuth, requireRole('admin', 'member'), aiLimiter, aiRoutes);
+app.use('/api/investigate', requireAuth, requireRole('admin', 'member'), aiLimiter, investigationRoutes);
+app.use('/api/pr-review', requireAuth, requireRole('admin', 'member'), aiLimiter, prReviewRoutes);
+app.use('/api/insights', requireAuth, requireRole('admin', 'member'), aiLimiter, insightsRoutes);
+app.use('/api/roadmap', requireAuth, requireRole('admin', 'member'), aiLimiter, roadmapRoutes);
+app.use('/api/ideation', requireAuth, requireRole('admin', 'member'), aiLimiter, ideationRoutes);
+app.use('/api/changelog', requireAuth, requireRole('admin', 'member'), aiLimiter, changelogRoutes);
 
 // Manual sync trigger for a product (protected)
-app.post('/api/products/:id/sync', requireAuth, async (req, res) => {
+app.post('/api/products/:id/sync', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const result = await triggerSync(req.params.id);
     // Broadcast sync complete event to all SSE clients
