@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { authenticatedFetch } from '../lib/api-client';
 
 export interface InsightsSessionSummary {
   id: string;
@@ -50,8 +51,6 @@ interface InsightsState {
   reset: () => void;
 }
 
-const API_BASE = '/api/insights';
-
 export const useInsightsStore = create<InsightsState>((set, get) => ({
   sessions: [],
   currentSession: null,
@@ -65,7 +64,7 @@ export const useInsightsStore = create<InsightsState>((set, get) => ({
   loadSessions: async () => {
     set({ isLoadingSessions: true });
     try {
-      const res = await fetch(API_BASE);
+      const res = await authenticatedFetch('/insights');
       const sessions = await res.json();
       set({ sessions, isLoadingSessions: false });
     } catch {
@@ -74,9 +73,8 @@ export const useInsightsStore = create<InsightsState>((set, get) => ({
   },
 
   createSession: async (title?: string) => {
-    const res = await fetch(API_BASE, {
+    const res = await authenticatedFetch('/insights', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title }),
     });
     const session = await res.json();
@@ -94,7 +92,7 @@ export const useInsightsStore = create<InsightsState>((set, get) => ({
   selectSession: async (id: string) => {
     set({ isLoadingSession: true, phase: 'idle', streamingText: '', currentTool: null, error: null });
     try {
-      const res = await fetch(`${API_BASE}/${id}`);
+      const res = await authenticatedFetch(`/insights/${id}`);
       const session = await res.json();
       set({ currentSession: session, isLoadingSession: false });
     } catch {
@@ -103,7 +101,7 @@ export const useInsightsStore = create<InsightsState>((set, get) => ({
   },
 
   deleteSession: async (id: string) => {
-    await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+    await authenticatedFetch(`/insights/${id}`, { method: 'DELETE' });
     set((s) => ({
       sessions: s.sessions.filter(sess => sess.id !== id),
       currentSession: s.currentSession?.id === id ? null : s.currentSession,
@@ -111,9 +109,8 @@ export const useInsightsStore = create<InsightsState>((set, get) => ({
   },
 
   renameSession: async (id: string, title: string) => {
-    await fetch(`${API_BASE}/${id}`, {
+    await authenticatedFetch(`/insights/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title }),
     });
     set((s) => ({
