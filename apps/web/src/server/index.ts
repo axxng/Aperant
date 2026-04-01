@@ -4,6 +4,8 @@ import rateLimit from 'express-rate-limit';
 import { config } from 'dotenv';
 import { closeDb } from './db/schema.js';
 import { requireAuth } from './middleware/auth.js';
+import { userCount, createUserWithoutPassword } from './db/users.js';
+import { v4 as uuid } from 'uuid';
 import { productRoutes } from './routes/products.js';
 import { taskRoutes } from './routes/tasks.js';
 import { githubRoutes } from './routes/github.js';
@@ -23,6 +25,16 @@ import { broadcastEvent } from './routes/events.js';
 import { resolveConfig } from './config-resolver.js';
 
 config();
+
+// Bootstrap admin user from ADMIN_EMAIL env var on first boot
+(function bootstrapAdmin() {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (adminEmail && userCount() === 0) {
+    const id = uuid();
+    createUserWithoutPassword(id, adminEmail, 'Admin', 'admin');
+    console.log(`[auth] Created initial admin account for ${adminEmail}`);
+  }
+})();
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
@@ -50,6 +62,7 @@ const aiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 15, standardHeaders: '
 
 // Public routes (no auth required)
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth/users', requireAuth);
 app.use('/api/events', requireAuth, eventRoutes);
 
 // Protected routes (require valid JWT)
