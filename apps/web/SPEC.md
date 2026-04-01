@@ -48,11 +48,11 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub/GitLa
 
 | Prefix | Router | Auth | Rate Limit | Description |
 |--------|--------|------|------------|-------------|
-| `/api/auth` | `authRoutes` | Public | 20/15min | Register, login, user management |
+| `/api/auth` | `authRoutes` | Public | 20/15min | OTP login, user management (admin) |
 | `/api/events` | `eventRoutes` | JWT (query param) | — | SSE event stream |
 | `/api/health` | inline | Public | — | Health check |
-| `/api/products` | `productRoutes` | JWT | — | Product CRUD |
-| `/api/tasks` | `taskRoutes` | JWT | — | Task CRUD + ordering |
+| `/api/products` | `productRoutes` | JWT + admin | — | Product CRUD |
+| `/api/tasks` | `taskRoutes` | JWT + member | — | Task CRUD + ordering |
 | `/api/github` | `githubRoutes` | JWT | — | GitHub API proxy |
 | `/api/ai` | `aiRoutes` | JWT | 15/min | AI session endpoints |
 | `/api/investigate` | `investigationRoutes` | JWT | 15/min | Issue investigation (SSE) |
@@ -261,7 +261,8 @@ Key files:
 SSE-based event stream with auto-reconnect and toast notifications.
 
 - EventSource hook with exponential backoff (1s → 30s max), JWT token passed via `?token=` query param
-- Events: sync_complete, sync_error, sync_started, task_created/updated/deleted, product_updated
+- Events: sync_complete, sync_error, sync_started, task_created, task_updated, task_deleted, tasks_reordered, product_updated
+- Task mutations (create, update, status change, delete, reorder) broadcast SSE events for real-time multi-tab/multi-user sync
 - Auto-refresh: task and product stores update on relevant events
 - Toast system: success/error/info/warning with auto-dismiss (5s), colored icons, dismiss buttons
 - GitHub sync scheduler runs every 60s when GitHub token is available (settings DB or `GITHUB_TOKEN` env var)
@@ -275,22 +276,31 @@ Key files:
 
 ### 12. Multi-User Authentication
 
-JWT-based auth with role-based access control.
+Whitelist-only email OTP authentication with role-based access control.
 
-- **Register** — email, name, password (min 8 chars). First user auto-promoted to admin
-- **Login** — Returns JWT (HMAC-SHA256, 7-day expiry). Warns at startup if `JWT_SECRET` not set (random fallback invalidates tokens on restart).
+- **No self-registration** — Admin whitelists email addresses via a user management panel in Settings
+- **Bootstrap** — `ADMIN_EMAIL` env var seeds the first admin on startup when zero users exist
+- **OTP login** — User enters whitelisted email → receives 6-digit OTP via Resend → enters code → receives JWT (7-day expiry). Non-whitelisted emails get the same "check your email" response (no information leak)
+- **Rate limiting** — Max 5 OTP requests per email per 15 minutes
 - **Roles:** admin, member, viewer
-- **Admin endpoints:** List users, update role, delete user (cannot self-delete)
-- Password hashing: scrypt with random salt
+- **Role enforcement** — `requireRole(...roles)` middleware applied to all route groups:
+  - `requireRole('admin')`: settings, user management, product CRUD, sync triggers, GitLab config
+  - `requireRole('admin', 'member')`: task mutations, AI features (insights, roadmap, ideation, changelog, investigate, pr-review)
+  - `requireAuth` only (any role): all GET/read endpoints, SSE events
+- **Admin panel** — List users with roles, add whitelisted email + role, change role, remove user
+- **Resend integration** — `RESEND_API_KEY` + `OTP_FROM_EMAIL` env vars. Falls back to console.log in development
 - Auth store persisted in localStorage via Zustand persist middleware
 - Client auto-attaches JWT to all API requests via `authenticatedFetch()` (SSE uses `?token=` query param)
 
 Key files:
-- `server/auth/jwt.ts` — Token creation/verification, password hashing, startup warning
-- `server/routes/auth.ts` — Register, login, me, user management
-- `server/middleware/auth.ts` — `requireAuth` (Bearer header + query param) and `requireAdmin` middleware
-- `server/db/users.ts` — User CRUD
-- `client/stores/auth-store.ts`
+- `server/auth/jwt.ts` — Token creation/verification, startup warning
+- `server/auth/otp.ts` — OTP generation, storage, verification (5-minute expiry)
+- `server/auth/email.ts` — Resend email delivery with dev fallback
+- `server/routes/auth.ts` — Request OTP, verify OTP, me, user management (admin)
+- `server/middleware/auth.ts` — `requireAuth`, `requireRole(...roles)`, `requireAdmin`
+- `server/db/users.ts` — User CRUD (password_hash nullable for OTP-only auth)
+- `client/components/LoginPage.tsx` — Two-step OTP login form
+- `client/stores/auth-store.ts` — `requestOtp()`, `verifyOtp()`, `checkSession()`
 - `client/lib/api-client.ts` — Auto-attaches JWT token
 
 ### AI Provider Infrastructure
@@ -318,8 +328,9 @@ Applied across the entire server and client:
 
 | Category | Implementation | Files |
 |----------|---------------|-------|
-| **JWT timing attacks** | `crypto.timingSafeEqual()` for signature and password hash comparison | `server/auth/jwt.ts` |
-| **Auth middleware** | `requireAuth` applied to all routes (14 groups incl. SSE); accepts Bearer header or `?token=` query param | `server/middleware/auth.ts`, `server/index.ts` |
+| **JWT timing attacks** | `crypto.timingSafeEqual()` for signature comparison | `server/auth/jwt.ts` |
+| **Auth middleware** | `requireAuth` + `requireRole()` applied to all routes; accepts Bearer header or `?token=` query param | `server/middleware/auth.ts`, `server/index.ts` |
+| **OTP rate limiting** | Max 5 OTP requests per email per 15 minutes | `server/auth/otp.ts` |
 | **Rate limiting** | Auth: 20 req/15min, AI endpoints: 15 req/min | `server/index.ts` (express-rate-limit) |
 | **CORS** | Origin whitelist, Authorization header allowed | `server/index.ts` |
 | **Path traversal** | `resolved.startsWith(cwd + sep)` in AI tools | `server/ai/tools/index.ts` |
@@ -336,7 +347,7 @@ Applied across the entire server and client:
 
 ## Database Schema
 
-SQLite with 6 migrations:
+SQLite with 8 migrations:
 
 | Table | Migration | Description |
 |-------|-----------|-------------|
@@ -349,7 +360,8 @@ SQLite with 6 migrations:
 | `roadmaps` | 003 | Roadmap data with phases/features (JSON) |
 | `ideation_sessions` | 004 | AI-generated ideas per product (JSON) |
 | `changelogs` | 005 | Generated changelog entries |
-| `users` | 006 | User accounts (email, name, password_hash, role) |
+| `users` | 006 | User accounts (email, name, password_hash nullable, role) |
+| `otp_codes` | 007 | OTP codes (email, code_hash, expires_at, used) |
 
 ---
 
@@ -377,9 +389,12 @@ Edit `.env` and set at minimum:
 
 | Variable | Required For | How to Get |
 |----------|-------------|------------|
+| `ADMIN_EMAIL` | First admin bootstrap (creates admin user on first boot) | Your email address |
 | `ANTHROPIC_API_KEY` | AI features (investigation, review, insights, roadmap, ideation, changelog) | [console.anthropic.com](https://console.anthropic.com/) or Settings UI |
 | `GITHUB_TOKEN` | GitHub issue sync, PR review, branch listing | GitHub Settings → Developer Settings → PATs or Settings UI |
 | `JWT_SECRET` | Token persistence across server restarts (random fallback logs warning) | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `RESEND_API_KEY` | OTP email delivery (falls back to console.log without it) | [resend.com](https://resend.com/) |
+| `OTP_FROM_EMAIL` | Sender address for OTP emails | e.g. `otp@yourdomain.com` |
 
 Optional variables: `PORT` (default 3001), `ALLOWED_ORIGINS` (CORS), `DB_PATH` (default `./data/aperant.db`), `AI_MODEL` (default `claude-sonnet-4-20250514`).
 
@@ -395,7 +410,7 @@ npm run dev
 # API:    http://localhost:3001
 ```
 
-On first launch, navigate to http://localhost:5173 and register an account. The first user is automatically made admin.
+On first launch, set `ADMIN_EMAIL` in `.env`. The server auto-creates an admin user for that email on boot. Navigate to http://localhost:5173 and log in with the OTP sent to your email (or check the console if `RESEND_API_KEY` is not set).
 
 ### Build for Production
 
@@ -420,10 +435,15 @@ npm run lint:fix        # Auto-fix lint issues
 ### Manual Testing Checklist
 
 #### Auth & Account
-- [ ] Register a new account at http://localhost:5173 (first user becomes admin)
-- [ ] Log out via UI and log back in
+- [ ] Set `ADMIN_EMAIL` in `.env`, start server — admin user is auto-created
+- [ ] Navigate to http://localhost:5173 — login page appears
+- [ ] Enter admin email → receive OTP (check console if no Resend key) → enter code → logged in
+- [ ] Verify email and logout button appear in sidebar
+- [ ] Log out and log back in
 - [ ] Refresh the page — token persists, user stays logged in
 - [ ] Open a new incognito window — requires login (no shared state)
+- [ ] As admin, go to Settings → User Management → add a new user email with member role
+- [ ] Log in as the new member — verify they cannot access admin-only features (product CRUD, settings)
 
 #### Products
 - [ ] Create a product (name + color picker)
@@ -474,7 +494,10 @@ npm run lint:fix        # Auto-fix lint issues
 - [ ] Try accessing `/api/products` without a token — should return 401
 - [ ] Try accessing `/api/products` with an invalid token — should return 401
 - [ ] Try accessing `/api/events` without a token — should return 401
-- [ ] Hit `/api/auth/login` rapidly — rate limiter kicks in after 20 attempts
+- [ ] Hit `/api/auth/request-otp` rapidly — rate limiter kicks in (5 per email per 15 min)
+- [ ] Request OTP for non-whitelisted email — same response as whitelisted (no information leak)
+- [ ] As viewer, try to create a task — should return 403
+- [ ] As member, try to access settings endpoints — should return 403
 - [ ] Verify API responses for settings don't leak API key values (should show `••••••••`)
 - [ ] Start server without `JWT_SECRET` — verify warning is logged about token invalidation on restart
 
@@ -492,11 +515,17 @@ npm run lint        # Biome linting
 curl http://localhost:3001/api/health
 # → {"status":"ok","timestamp":"..."}
 
-# Register first user
-curl -s -X POST http://localhost:3001/api/auth/register \
+# Request OTP (ADMIN_EMAIL must be set and server bootstrapped)
+curl -s -X POST http://localhost:3001/api/auth/request-otp \
   -H 'Content-Type: application/json' \
-  -d '{"email":"test@example.com","name":"Test User","password":"testpass123"}' | jq .
-# → {"token":"...","user":{"id":"...","email":"test@example.com","name":"Test User","role":"admin"}}
+  -d '{"email":"admin@example.com"}' | jq .
+# → {"message":"If this email is registered, a code has been sent"}
+
+# Verify OTP (check console for code if RESEND_API_KEY not set)
+curl -s -X POST http://localhost:3001/api/auth/verify-otp \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@example.com","code":"123456"}' | jq .
+# → {"token":"...","user":{"id":"...","email":"admin@example.com","role":"admin"}}
 
 # Save the token, then:
 TOKEN="<paste token here>"
