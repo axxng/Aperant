@@ -196,7 +196,7 @@ export const TaskCard = memo(function TaskCard({
                 <Checkbox
                   checked={isSelected}
                   onCheckedChange={onToggleSelect}
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
                   aria-label={`Select task: ${task.title}`}
                 />
               </div>

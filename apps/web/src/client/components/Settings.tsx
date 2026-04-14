@@ -1,15 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Palette, Globe, Bot, Key, RefreshCw,
+  Palette, Globe, Key, RefreshCw,
   Eye, EyeOff, Check, Loader2, Sun, Moon, Monitor,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { authenticatedFetch } from '../lib/api-client';
 import { useSettingsStore, type ThemeMode, type ColorTheme } from '../stores/settings-store';
-import { useAuthStore } from '../stores/auth-store';
 import { Button } from './ui/button';
-import { UserManagement } from './UserManagement';
 
 const THEME_MODES: Array<{ value: ThemeMode; icon: typeof Sun }> = [
   { value: 'light', icon: Sun },
@@ -27,17 +25,13 @@ const COLOR_THEMES: Array<{ value: ColorTheme; dot: string }> = [
   { value: 'neo', dot: 'bg-pink-500' },
 ];
 
-const MODELS = ['opus', 'sonnet', 'haiku'] as const;
-
 const LANGUAGES = ['en', 'fr'] as const;
 
 export function Settings() {
   const { t } = useTranslation(['settings', 'common']);
   const store = useSettingsStore();
-  const { user } = useAuthStore();
 
   const [editedFields, setEditedFields] = useState<Set<string>>(new Set());
-  const [showAnthropicKey, setShowAnthropicKey] = useState(false);
   const [showGithubToken, setShowGithubToken] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -84,13 +78,9 @@ export function Settings() {
       colorTheme: store.colorTheme,
       language: store.language,
       syncInterval: String(store.syncInterval),
-      defaultModel: store.defaultModel,
     };
 
     // Only send API keys if user actually edited them
-    if (editedFields.has('anthropicApiKey')) {
-      payload.anthropicApiKey = store.anthropicApiKey;
-    }
     if (editedFields.has('githubToken')) {
       payload.githubToken = store.githubToken;
     }
@@ -212,66 +202,10 @@ export function Settings() {
           </div>
         </SettingsSection>
 
-        {/* AI Model */}
-        <SettingsSection icon={Bot} title={t('settings:sections.model')}>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">{t('settings:model.label')}</label>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              {MODELS.map((model) => (
-                <Button
-                  key={model}
-                  variant={store.defaultModel === model ? 'default' : 'outline'}
-                  size="sm"
-                  className="justify-start"
-                  onClick={() => { store.setDefaultModel(model); markEdited('defaultModel'); }}
-                >
-                  {t(`settings:model.${model}`)}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </SettingsSection>
-
         {/* API Keys */}
         <SettingsSection icon={Key} title={t('settings:sections.apiKeys')}>
-          {/* Anthropic */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">{t('settings:apiKeys.anthropic')}</label>
-            <div className="relative">
-              <input
-                type={showAnthropicKey ? 'text' : 'password'}
-                value={store.anthropicApiKey}
-                placeholder={t('settings:apiKeys.anthropicPlaceholder')}
-                onChange={(e) => {
-                  store.setAnthropicApiKey(e.target.value);
-                  markEdited('anthropicApiKey');
-                }}
-                className={cn(
-                  'flex h-10 w-full rounded-lg border border-border bg-card px-3 py-2 pr-10 text-sm text-foreground',
-                  'placeholder:text-muted-foreground',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:border-primary',
-                  'transition-colors duration-200'
-                )}
-              />
-              <button
-                type="button"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowAnthropicKey(!showAnthropicKey)}
-              >
-                {showAnthropicKey ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {t('settings:apiKeys.anthropicDescription')}
-            </p>
-          </div>
-
           {/* GitHub */}
-          <div className="space-y-1.5 mt-4">
+          <div className="space-y-1.5">
             <label className="text-sm font-medium">{t('settings:apiKeys.github')}</label>
             <div className="relative">
               <input
@@ -337,13 +271,6 @@ export function Settings() {
             </p>
           </div>
         </SettingsSection>
-
-        {/* User Management (admin only) */}
-        {user?.role === 'admin' && (
-          <div className="border-t pt-6 mt-6">
-            <UserManagement />
-          </div>
-        )}
 
         {/* Bottom save button */}
         <div className="flex justify-end pt-4 border-t border-border">

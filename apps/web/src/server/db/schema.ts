@@ -116,66 +116,6 @@ const MIGRATIONS = [
     `,
   },
   {
-    name: '002_insights_sessions',
-    sql: `
-      CREATE TABLE insights_sessions (
-        id TEXT PRIMARY KEY,
-        title TEXT,
-        messages TEXT NOT NULL DEFAULT '[]',
-        model_config TEXT DEFAULT '{}',
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-      );
-    `,
-  },
-  {
-    name: '003_roadmaps',
-    sql: `
-      CREATE TABLE roadmaps (
-        id TEXT PRIMARY KEY,
-        product_id TEXT NOT NULL,
-        vision TEXT NOT NULL DEFAULT '',
-        target_audience TEXT NOT NULL DEFAULT '',
-        phases TEXT NOT NULL DEFAULT '[]',
-        features TEXT NOT NULL DEFAULT '[]',
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-      );
-
-      CREATE INDEX idx_roadmaps_product ON roadmaps(product_id);
-    `,
-  },
-  {
-    name: '004_ideation_sessions',
-    sql: `
-      CREATE TABLE ideation_sessions (
-        id TEXT PRIMARY KEY,
-        product_id TEXT NOT NULL,
-        ideas TEXT NOT NULL DEFAULT '[]',
-        config TEXT NOT NULL DEFAULT '{}',
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-      );
-
-      CREATE INDEX idx_ideation_product ON ideation_sessions(product_id);
-    `,
-  },
-  {
-    name: '005_changelogs',
-    sql: `
-      CREATE TABLE changelogs (
-        id TEXT PRIMARY KEY,
-        product_id TEXT NOT NULL,
-        content TEXT NOT NULL DEFAULT '',
-        config TEXT NOT NULL DEFAULT '{}',
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-      );
-
-      CREATE INDEX idx_changelogs_product ON changelogs(product_id);
-    `,
-  },
-  {
     name: '006_users',
     sql: `
       CREATE TABLE users (

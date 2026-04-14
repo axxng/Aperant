@@ -58,7 +58,7 @@ const labelSchema = z.object({ name: z.string().max(100), color: z.string().max(
 const assigneeSchema = z.object({ login: z.string().max(100), avatarUrl: z.string().url().optional() });
 
 const taskMetadataSchema = z.object({
-  sourceType: z.enum(['github', 'gitlab', 'manual']).optional(),
+  sourceType: z.enum(['github', 'manual']).optional(),
   complexity: z.enum(['trivial', 'small', 'medium', 'large', 'complex']).optional(),
   impact: z.enum(['low', 'medium', 'high', 'critical']).optional(),
   rationale: z.string().max(5000).optional(),

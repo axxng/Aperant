@@ -1,6 +1,6 @@
 # Aperant Web
 
-A multi-product backlog platform for managing tasks, GitHub/GitLab issues, AI-powered code review, and strategic planning — all from the browser.
+A multi-product backlog management platform with consolidated and per-product Kanban views, GitHub issue sync, and OTP authentication — all from the browser.
 
 This is the web version of the [Aperant desktop app](../desktop/), replacing Electron IPC with a REST + SSE API server and the Electron renderer with a React SPA.
 
@@ -13,7 +13,7 @@ npm install
 
 # 2. Configure environment
 cp .env.example .env
-# Edit .env — at minimum set ANTHROPIC_API_KEY for AI features
+# Edit .env — at minimum set ADMIN_EMAIL for the initial admin account
 
 # 3. Start development servers (API + Vite dev server)
 npm run dev
@@ -21,36 +21,32 @@ npm run dev
 
 The app starts at **http://localhost:5173** (client) with the API at **http://localhost:3001**.
 
-On first launch, register an account — the first user is automatically made admin.
+On first launch, request an OTP code for the admin email — the first user is automatically made admin.
 
 ## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `ANTHROPIC_API_KEY` | For AI features | Anthropic API key for investigation, review, insights, roadmap, ideation, changelog |
-| `GITHUB_TOKEN` | For GitHub features | GitHub PAT for issue sync, PR review, branch listing |
+| `ADMIN_EMAIL` | Yes | Email address for the initial admin account |
+| `RESEND_API_KEY` | Yes | Resend API key for sending OTP emails |
+| `OTP_FROM_EMAIL` | Yes | Sender email address for OTP codes (must be verified in Resend) |
+| `GITHUB_TOKEN` | For GitHub sync | GitHub PAT for pulling issues from repos and GitHub Projects into the backlog |
 | `JWT_SECRET` | Recommended | HMAC-SHA256 secret for JWT tokens. If unset, a random one is generated per server start (tokens won't survive restarts) |
 | `PORT` | No | API server port (default: `3001`) |
 | `ALLOWED_ORIGINS` | No | Comma-separated CORS origins (default: `http://localhost:5173,http://localhost:3001`) |
 | `DB_PATH` | No | SQLite database path (default: `./data/aperant.db`) |
-| `AI_MODEL` | No | Default AI model (default: `claude-sonnet-4-20250514`) |
-
-GitLab tokens and instance URL can be configured via the Settings UI or environment variables.
 
 ## Architecture
 
 ```
 React SPA (Vite)  →  REST + SSE  →  Express API Server  →  SQLite
      :5173              :3001              ↓
-                                  Vercel AI SDK → Anthropic API
-                                          ↓
-                                  GitHub / GitLab APIs
+                                   GitHub API
 ```
 
 - **Frontend:** React 19, TypeScript, Vite 7, Zustand 5, Tailwind CSS v4, Radix UI, dnd-kit
 - **Backend:** Express 5, TypeScript, better-sqlite3, Zod validation, express-rate-limit
-- **AI:** Vercel AI SDK v6 (`ai` + `@ai-sdk/anthropic`)
-- **i18n:** react-i18next with English + French (12 namespaces)
+- **i18n:** react-i18next with English + French (8 namespaces)
 
 The Vite dev server proxies `/api/*` to the Express server. In production, serve the built client as static files from Express.
 
@@ -64,37 +60,40 @@ The Vite dev server proxies `/api/*` to the Express server. In production, serve
 - **Task CRUD** — Create, edit, delete tasks with priority (4 levels) and category (9 types)
 - **Product badges** — Colored dot + name on each task card in consolidated view
 
-### GitHub Integration
-- **Issues** — Split-pane list with search, state filter, infinite scroll, import-to-task
-- **AI Investigation** — Streaming analysis of issue root cause, affected areas, proposed solution
-- **Pull Requests** — List with detail view, diff stats, file changes
-- **AI Code Review** — Streaming review covering security, logic, performance, style
-- **PR Creation** — Create PRs from the task edit dialog
-
-### GitLab Integration
-- **Issues** — Split-pane list with state filter, search, pagination
-- **Merge Requests** — List with state filter (opened/closed/merged), branch info, merge status
-- Self-hosted instance URL support (HTTPS required, configurable in Settings)
-
-### AI-Powered Features
-All AI features use SSE streaming for real-time output.
-
-- **Insights** — Multi-session AI chat for exploring codebases (agent has Read, Glob, Grep, WebFetch tools)
-- **Roadmap** — AI-generated strategic roadmap with phases, features, MoSCoW prioritization
-- **Ideation** — AI auto-discovery across 6 categories (code, UI/UX, docs, security, performance, quality)
-- **Changelog** — AI-generated release notes with 3 formats, 3 audiences, 3 source modes
+### GitHub Sync
+- **Issue sync** — Pull issues from GitHub repos and GitHub Projects into the backlog
+- **Product configuration** — Set GitHub owner/repo per product in product settings
+- **Sync scheduler** — Configurable sync interval to keep backlog in sync with GitHub
+- **Task editing syncs to GitHub** — Changes to tasks linked to GitHub issues are pushed back
 
 ### Settings & Auth
 - **Appearance** — Light/Dark/System mode, 7 color themes
 - **Language** — English / French
-- **API Keys** — Anthropic + GitHub token management (masked in responses)
-- **Auth** — JWT-based with admin/member/viewer roles. First user is auto-admin.
-- **Rate limiting** — Auth endpoints (20/15min), AI endpoints (15/min)
+- **GitHub token** — Token management for issue sync (masked in responses)
+- **Auth** — OTP-based authentication with admin/member/viewer roles. First user is auto-admin.
+- **Rate limiting** — Auth endpoints (20/15min)
 
 ### Real-Time
 - **SSE event stream** — Auto-reconnect with exponential backoff
 - **Toast notifications** — Sync status, errors, task changes
 - **Auto-refresh** — Stores update on relevant SSE events
+
+### Coming Soon
+
+The following features are planned for follow-up PRs from the `claude/multi-product-backlog-JVLE2` branch:
+
+- **GitHub Issues browser** — Split-pane issue list with search, state filter, infinite scroll, import-to-task
+- **GitHub AI Investigation** — Streaming analysis of issue root cause, affected areas, proposed solution
+- **GitHub PR list** — PR listing with detail view, diff stats, file changes
+- **GitHub AI Code Review** — Streaming review covering security, logic, performance, style
+- **PR Creation** — Create PRs from the task edit dialog
+- **GitLab Integration** — Issues and merge requests with self-hosted instance support
+- **AI Insights** — Multi-session AI chat for exploring codebases
+- **AI Roadmap** — AI-generated strategic roadmap with phases, features, MoSCoW prioritization
+- **AI Ideation** — Auto-discovery across 6 categories (code, UI/UX, docs, security, performance, quality)
+- **AI Changelog** — AI-generated release notes with multiple formats and audiences
+- **AI provider infrastructure** — Vercel AI SDK integration with Anthropic
+- **User management admin panel** — Admin UI for managing users and roles
 
 ## Project Structure
 
@@ -102,29 +101,28 @@ All AI features use SSE streaming for real-time output.
 apps/web/
 ├── src/
 │   ├── client/                  # React SPA
-│   │   ├── components/          # UI components (20+)
+│   │   ├── components/          # UI components (15+)
 │   │   │   ├── ui/              # Radix-based primitives (badge, button, dialog, etc.)
 │   │   │   ├── KanbanBoard.tsx  # Dual-view board (sort + priority)
 │   │   │   ├── Sidebar.tsx      # Navigation sidebar
 │   │   │   └── ...
 │   │   ├── hooks/               # Custom hooks (filters, SSE, toast, sync)
-│   │   ├── stores/              # Zustand stores (13 stores)
+│   │   ├── stores/              # Zustand stores (8 stores)
 │   │   ├── lib/                 # API client, i18n, utils
 │   │   ├── styles/              # Tailwind globals
 │   │   ├── App.tsx              # Router + layouts
 │   │   └── main.tsx             # Entry point
 │   ├── server/                  # Express API server
-│   │   ├── ai/                  # AI layer (providers, session, tools, config)
-│   │   ├── auth/                # JWT + password hashing
+│   │   ├── auth/                # JWT + OTP verification
 │   │   ├── db/                  # SQLite schema + per-table modules (8 files)
 │   │   ├── middleware/          # Auth middleware
-│   │   ├── routes/              # Express routers (14 route files)
+│   │   ├── routes/              # Express routers (8 route files)
 │   │   ├── sync/                # GitHub sync engine + scheduler
 │   │   ├── validation.ts        # Zod schemas
 │   │   └── index.ts             # Server entry point
 │   └── shared/                  # Shared between client + server
-│       ├── types/               # TypeScript types (8 type files)
-│       └── i18n/locales/        # en/*.json + fr/*.json (12 namespaces each)
+│       ├── types/               # TypeScript types (5 type files)
+│       └── i18n/locales/        # en/*.json + fr/*.json (8 namespaces each)
 ├── .env.example                 # Environment variable template
 ├── package.json
 ├── vite.config.ts               # Vite + Tailwind + /api proxy
@@ -153,14 +151,15 @@ apps/web/
 ### Manual Testing Checklist
 
 **Setup:**
-1. `cp .env.example .env` and set `ANTHROPIC_API_KEY`
+1. `cp .env.example .env` and set `ADMIN_EMAIL`, `RESEND_API_KEY`, `OTP_FROM_EMAIL`
 2. `npm install && npm run dev`
 3. Open http://localhost:5173
 
 **Auth:**
-- [ ] Register a new account at first launch
-- [ ] Log out and log back in
+- [ ] Request an OTP code for the admin email
+- [ ] Enter the OTP code to authenticate
 - [ ] Token persists across page refresh
+- [ ] Log out and request a new OTP to log back in
 
 **Products & Tasks:**
 - [ ] Create a product (name + color)
@@ -173,32 +172,15 @@ apps/web/
 - [ ] Click "All Products" — see consolidated backlog with product badges on each card
 - [ ] Switch to Sort view — use search, priority filter, category filter, sort options
 
-**GitHub (requires `GITHUB_TOKEN`):**
+**GitHub Sync (requires `GITHUB_TOKEN`):**
 - [ ] Configure product with GitHub owner/repo in product settings
-- [ ] Navigate to Issues — see split-pane list with search and state filter
-- [ ] Click an issue — see detail panel with labels, assignees, body
-- [ ] Click "Import as Task" — task created in backlog
-- [ ] Click "Investigate" — AI streams analysis via SSE
-- [ ] Navigate to PRs — see list with diff stats
-- [ ] Click a PR — see branch info, files, labels
-- [ ] Click "AI Review" — streaming code review
-
-**GitLab (configure in Settings):**
-- [ ] Enter GitLab token + instance URL in Settings
-- [ ] Navigate to GitLab Issues — see issues from your project
-- [ ] Navigate to GitLab MRs — see merge requests
-
-**AI Features (requires `ANTHROPIC_API_KEY`):**
-- [ ] Insights — create a chat session, ask about the codebase, see streaming response with tool usage
-- [ ] Roadmap — generate a roadmap for a product, see phases and features
-- [ ] Ideation — generate ideas, filter by type, view details, convert to task
-- [ ] Changelog — configure format/audience/source, generate, see preview
+- [ ] Trigger a sync — issues pulled into backlog
+- [ ] Verify synced tasks reflect GitHub issue data
 
 **Settings:**
 - [ ] Toggle dark/light/system mode
 - [ ] Switch color theme — see preview dots
 - [ ] Switch language to French — all UI text changes
-- [ ] Set Anthropic API key (masked after save)
 
 **Real-Time:**
 - [ ] Trigger a GitHub sync (product page > sync button)
@@ -217,18 +199,18 @@ npm run lint        # Biome linting
 All protected endpoints require `Authorization: Bearer <token>` header.
 
 ```bash
-# Register (first user becomes admin)
-curl -X POST http://localhost:3001/api/auth/register \
+# Request OTP code
+curl -X POST http://localhost:3001/api/auth/request-otp \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@example.com","name":"Admin","password":"password123"}'
+  -d '{"email":"admin@example.com"}'
 
-# Login
-curl -X POST http://localhost:3001/api/auth/login \
+# Verify OTP and get token
+curl -X POST http://localhost:3001/api/auth/verify-otp \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@example.com","password":"password123"}'
+  -d '{"email":"admin@example.com","code":"123456"}'
 # Returns: { "token": "...", "user": { ... } }
 
-# List products (use token from login)
+# List products (use token from verify-otp)
 curl http://localhost:3001/api/products \
   -H 'Authorization: Bearer <token>'
 

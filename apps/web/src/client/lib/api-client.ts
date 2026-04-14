@@ -1,7 +1,6 @@
 import type { Product, CreateProductInput, UpdateProductInput } from '@shared/types/product';
 import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatus, TaskOrderState } from '@shared/types/task';
-import type { SyncResult, PaginatedIssuesResult, CreatePullRequestInput, GitHubPullRequestResult, GitHubBranch } from '@shared/types/github';
-import type { GitHubPR, PRFile, PaginatedPRsResult } from '@shared/types/pr';
+import type { SyncResult } from '@shared/types/github';
 
 const API_BASE = '/api';
 
@@ -82,10 +81,6 @@ export const api = {
       }),
   },
   github: {
-    getIssues: (owner: string, repo: string, params?: { state?: string; page?: string }) => {
-      const searchParams = new URLSearchParams(params as Record<string, string>);
-      return request<PaginatedIssuesResult>(`/github/repos/${owner}/${repo}/issues?${searchParams}`);
-    },
     getProjectInfo: (owner: string, number: number) =>
       request<{ id: string; title: string; number: number; owner: string; statusOptions: Array<{ id: string; name: string }> }>(
         `/github/projects/${owner}/${number}`
@@ -94,48 +89,6 @@ export const api = {
       request<{ items: any[]; hasMore: boolean; endCursor: string }>(
         `/github/projects/${encodeURIComponent(owner)}/${number}/items${cursor ? `?${new URLSearchParams({ cursor })}` : ''}`
       ),
-    createPullRequest: (owner: string, repo: string, input: CreatePullRequestInput) =>
-      request<GitHubPullRequestResult>(`/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`, {
-        method: 'POST',
-        body: JSON.stringify(input),
-      }),
-    getBranches: (owner: string, repo: string) =>
-      request<GitHubBranch[]>(`/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches`),
-    getPullRequests: (owner: string, repo: string, params?: { state?: string; page?: string }) => {
-      const searchParams = new URLSearchParams(params as Record<string, string>);
-      return request<PaginatedPRsResult>(`/github/repos/${owner}/${repo}/pulls?${searchParams}`);
-    },
-    getPullRequest: (owner: string, repo: string, number: number) =>
-      request<GitHubPR>(`/github/repos/${owner}/${repo}/pulls/${number}`),
-    getPullRequestFiles: (owner: string, repo: string, number: number) =>
-      request<PRFile[]>(`/github/repos/${owner}/${repo}/pulls/${number}/files`),
-  },
-  investigate: {
-    /**
-     * Start an AI investigation of a GitHub issue.
-     * Returns an EventSource for SSE streaming of progress and results.
-     */
-    startInvestigation: (params: {
-      owner: string;
-      repo: string;
-      issueNumber: number;
-      issueTitle: string;
-      issueBody?: string;
-      labels?: string[];
-    }): { eventSource: AbortController; response: Promise<Response> } => {
-      const controller = new AbortController();
-      const token = getAuthToken();
-      const response = fetch(`${API_BASE}/investigate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(params),
-        signal: controller.signal,
-      });
-      return { eventSource: controller, response };
-    },
   },
   events: {
     subscribe: (): EventSource => {

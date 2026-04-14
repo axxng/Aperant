@@ -6,16 +6,7 @@ import { KanbanBoard } from './components/KanbanBoard';
 import { CreateProductDialog } from './components/CreateProductDialog';
 import { CreateTaskDialog } from './components/CreateTaskDialog';
 import { TaskEditDialog } from './components/TaskEditDialog';
-import { CreatePRDialog } from './components/CreatePRDialog';
-import { GitHubIssuesList } from './components/GitHubIssuesList';
-import { GitHubPRList } from './components/GitHubPRList';
-import { Insights } from './components/Insights';
-import { Roadmap } from './components/Roadmap';
-import { Ideation } from './components/Ideation';
-import { Changelog } from './components/Changelog';
 import { Settings } from './components/Settings';
-import { GitLabIssuesList } from './components/GitLabIssuesList';
-import { GitLabMRList } from './components/GitLabMRList';
 import { ProductSettings } from './components/ProductSettings';
 import { ToastContainer } from './components/ToastContainer';
 import { LoginPage } from './components/LoginPage';
@@ -53,14 +44,8 @@ function AuthenticatedApp() {
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [prTask, setPrTask] = useState<Task | null>(null);
-
   const handleTaskClick = useCallback((task: Task) => {
     setEditingTask(task);
-  }, []);
-
-  const handleCreatePR = useCallback((task: Task) => {
-    setPrTask(task);
   }, []);
 
   const editProduct = editingTask ? products.find(p => p.id === editingTask.productId) : null;
@@ -91,38 +76,6 @@ function AuthenticatedApp() {
               element={<ProductSettings />}
             />
             <Route
-              path="/products/:productId/issues"
-              element={<GitHubIssuesList />}
-            />
-            <Route
-              path="/products/:productId/prs"
-              element={<GitHubPRList />}
-            />
-            <Route
-              path="/products/:productId/roadmap"
-              element={<Roadmap />}
-            />
-            <Route
-              path="/products/:productId/ideation"
-              element={<Ideation />}
-            />
-            <Route
-              path="/products/:productId/changelog"
-              element={<Changelog />}
-            />
-            <Route
-              path="/products/:productId/gitlab-issues"
-              element={<GitLabIssuesList />}
-            />
-            <Route
-              path="/products/:productId/gitlab-mrs"
-              element={<GitLabMRList />}
-            />
-            <Route
-              path="/insights"
-              element={<Insights />}
-            />
-            <Route
               path="/settings"
               element={<Settings />}
             />
@@ -138,12 +91,6 @@ function AuthenticatedApp() {
         onOpenChange={(open) => { if (!open) setEditingTask(null); }}
         productName={editProduct?.name}
         productColor={editProduct?.color}
-        onCreatePR={handleCreatePR}
-      />
-      <CreatePRDialog
-        task={prTask}
-        open={prTask !== null}
-        onOpenChange={(open) => { if (!open) setPrTask(null); }}
       />
       <ToastContainer />
     </TooltipProvider>

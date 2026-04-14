@@ -1,13 +1,12 @@
 import React, { memo, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useProductStore } from '../stores/product-store';
 import { cn } from '../lib/utils';
-import { LayoutDashboard, Package, Plus, Settings, RefreshCw, CircleDot, GitPullRequest, Lightbulb, Map, Zap, FileText, GitMerge, CircleAlert, LogOut } from 'lucide-react';
+import { LayoutDashboard, Plus, Settings, RefreshCw, LogOut } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from './ui/tooltip';
 
 interface SidebarProps {
   onAddProduct: () => void;
@@ -19,8 +18,6 @@ export const Sidebar = memo(function Sidebar({ onAddProduct }: SidebarProps) {
   const { user, logout } = useAuthStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [syncingId, setSyncingId] = useState<string | null>(null);
-  const navigate = useNavigate();
-
   const handleSync = async (e: React.MouseEvent, productId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -69,20 +66,6 @@ export const Sidebar = memo(function Sidebar({ onAddProduct }: SidebarProps) {
         {!isCollapsed && <span>{t('common:allProducts')}</span>}
       </NavLink>
 
-      {/* Insights */}
-      <NavLink
-        to="/insights"
-        className={({ isActive }) =>
-          cn(
-            'flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-accent/50',
-            isActive && 'bg-accent text-accent-foreground font-medium'
-          )
-        }
-      >
-        <Lightbulb className="h-4 w-4 shrink-0" />
-        {!isCollapsed && <span>{t('navigation:items.insights')}</span>}
-      </NavLink>
-
       {/* Product list */}
       <ScrollArea className="flex-1">
         <div className="py-1">
@@ -122,94 +105,6 @@ export const Sidebar = memo(function Sidebar({ onAddProduct }: SidebarProps) {
                   </>
                 )}
               </NavLink>
-              {!isCollapsed && activeProductId === product.id && (
-                <>
-                  <NavLink
-                    to={`/products/${product.id}/issues`}
-                    className={({ isActive }) =>
-                      cn(
-                        'flex items-center gap-2 pl-8 pr-3 py-1.5 text-xs transition-colors hover:bg-accent/50',
-                        isActive && 'bg-accent text-accent-foreground font-medium'
-                      )
-                    }
-                  >
-                    <CircleDot className="h-3 w-3 shrink-0" />
-                    <span>{t('navigation:items.issues')}</span>
-                  </NavLink>
-                  <NavLink
-                    to={`/products/${product.id}/prs`}
-                    className={({ isActive }) =>
-                      cn(
-                        'flex items-center gap-2 pl-8 pr-3 py-1.5 text-xs transition-colors hover:bg-accent/50',
-                        isActive && 'bg-accent text-accent-foreground font-medium'
-                      )
-                    }
-                  >
-                    <GitPullRequest className="h-3 w-3 shrink-0" />
-                    <span>{t('navigation:items.prs')}</span>
-                  </NavLink>
-                  <NavLink
-                    to={`/products/${product.id}/roadmap`}
-                    className={({ isActive }) =>
-                      cn(
-                        'flex items-center gap-2 pl-8 pr-3 py-1.5 text-xs transition-colors hover:bg-accent/50',
-                        isActive && 'bg-accent text-accent-foreground font-medium'
-                      )
-                    }
-                  >
-                    <Map className="h-3 w-3 shrink-0" />
-                    <span>{t('navigation:items.roadmap')}</span>
-                  </NavLink>
-                  <NavLink
-                    to={`/products/${product.id}/ideation`}
-                    className={({ isActive }) =>
-                      cn(
-                        'flex items-center gap-2 pl-8 pr-3 py-1.5 text-xs transition-colors hover:bg-accent/50',
-                        isActive && 'bg-accent text-accent-foreground font-medium'
-                      )
-                    }
-                  >
-                    <Zap className="h-3 w-3 shrink-0" />
-                    <span>{t('navigation:items.ideation')}</span>
-                  </NavLink>
-                  <NavLink
-                    to={`/products/${product.id}/changelog`}
-                    className={({ isActive }) =>
-                      cn(
-                        'flex items-center gap-2 pl-8 pr-3 py-1.5 text-xs transition-colors hover:bg-accent/50',
-                        isActive && 'bg-accent text-accent-foreground font-medium'
-                      )
-                    }
-                  >
-                    <FileText className="h-3 w-3 shrink-0" />
-                    <span>{t('navigation:items.changelog')}</span>
-                  </NavLink>
-                  <NavLink
-                    to={`/products/${product.id}/gitlab-issues`}
-                    className={({ isActive }) =>
-                      cn(
-                        'flex items-center gap-2 pl-8 pr-3 py-1.5 text-xs transition-colors hover:bg-accent/50',
-                        isActive && 'bg-accent text-accent-foreground font-medium'
-                      )
-                    }
-                  >
-                    <CircleAlert className="h-3 w-3 shrink-0" />
-                    <span>{t('navigation:items.gitlabIssues')}</span>
-                  </NavLink>
-                  <NavLink
-                    to={`/products/${product.id}/gitlab-mrs`}
-                    className={({ isActive }) =>
-                      cn(
-                        'flex items-center gap-2 pl-8 pr-3 py-1.5 text-xs transition-colors hover:bg-accent/50',
-                        isActive && 'bg-accent text-accent-foreground font-medium'
-                      )
-                    }
-                  >
-                    <GitMerge className="h-3 w-3 shrink-0" />
-                    <span>{t('navigation:items.gitlabMRs')}</span>
-                  </NavLink>
-                </>
-              )}
             </React.Fragment>
           ))}
         </div>

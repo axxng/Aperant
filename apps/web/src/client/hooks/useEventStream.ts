@@ -11,7 +11,7 @@ interface UseEventStreamOptions {
 
 export function useEventStream({ onEvent, handlers, enabled = true }: UseEventStreamOptions = {}) {
   const eventSourceRef = useRef<EventSource | null>(null);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const reconnectAttempts = useRef(0);
   const maxReconnectDelay = 30000;
   const token = useAuthStore((s) => s.token);

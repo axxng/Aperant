@@ -2,14 +2,6 @@
   "items": {
     "allProducts": "All Products",
     "kanban": "Kanban Board",
-    "issues": "GitHub Issues",
-    "prs": "Pull Requests",
-    "insights": "Insights",
-    "roadmap": "Roadmap",
-    "ideation": "Ideation",
-    "changelog": "Changelog",
-    "gitlabIssues": "GitLab Issues",
-    "gitlabMRs": "GitLab MRs",
     "settings": "Settings"
   },
   "sidebar": {

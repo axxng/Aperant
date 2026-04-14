@@ -60,7 +60,7 @@ settingsRoutes.get('/', (_req: Request, res: Response) => {
 
 /** GET /:key — Get a specific setting */
 settingsRoutes.get('/:key', (req: Request, res: Response) => {
-  const { key } = req.params;
+  const key = String(req.params.key);
   if (!VALID_KEYS.includes(key as any)) {
     res.status(400).json({ error: 'Invalid setting key' });
     return;
@@ -108,7 +108,7 @@ settingsRoutes.put('/', (req: Request, res: Response) => {
 
 /** DELETE /:key — Delete a setting */
 settingsRoutes.delete('/:key', (req: Request, res: Response) => {
-  const { key } = req.params;
+  const key = String(req.params.key);
   if (!VALID_KEYS.includes(key as any)) {
     res.status(400).json({ error: 'Invalid setting key' });
     return;
