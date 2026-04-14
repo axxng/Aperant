@@ -2,53 +2,72 @@
 
 A multi-product backlog management platform with consolidated and per-product Kanban views, GitHub issue sync, and OTP authentication — all from the browser.
 
-This is the web version of the [Aperant desktop app](../desktop/), replacing Electron IPC with a REST + SSE API server and the Electron renderer with a React SPA.
+This is the web version of the [Aperant desktop app](../desktop/), deployed on Vercel with serverless API functions and Turso (cloud SQLite).
 
-## Quick Start
+## Deployment
 
+### Prerequisites
+- [Vercel account](https://vercel.com) (free tier)
+- [Turso account](https://turso.tech) (free tier)
+- GitHub repository linked to Vercel
+
+### 1. Create Turso Database
 ```bash
-# 1. Install dependencies
-cd apps/web
-npm install
+# Install Turso CLI
+curl -sSfL https://get.tur.so/install.sh | bash
 
-# 2. Configure environment
-cp .env.example .env
-# Edit .env — at minimum set ADMIN_EMAIL for the initial admin account
+# Create database
+turso db create aperant
 
-# 3. Start development servers (API + Vite dev server)
-npm run dev
+# Get connection URL
+turso db show aperant --url
+
+# Create auth token
+turso db tokens create aperant
 ```
 
-The app starts at **http://localhost:5173** (client) with the API at **http://localhost:3001**.
+### 2. Connect GitHub to Vercel
+1. Go to [vercel.com/new](https://vercel.com/new)
+2. Import your GitHub repository
+3. Set **Root Directory** to `apps/web`
+4. Framework will auto-detect as **Vite**
+5. Add environment variables (see below)
+6. Deploy
 
-On first launch, request an OTP code for the admin email — the first user is automatically made admin.
-
-## Environment Variables
+### 3. Set Environment Variables
+In Vercel Dashboard → Project → Settings → Environment Variables:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `ADMIN_EMAIL` | Yes | Email address for the initial admin account |
-| `RESEND_API_KEY` | Yes | Resend API key for sending OTP emails |
-| `OTP_FROM_EMAIL` | Yes | Sender email address for OTP codes (must be verified in Resend) |
-| `GITHUB_TOKEN` | For GitHub sync | GitHub PAT for pulling issues from repos and GitHub Projects into the backlog |
-| `JWT_SECRET` | Recommended | HMAC-SHA256 secret for JWT tokens. If unset, a random one is generated per server start (tokens won't survive restarts) |
-| `PORT` | No | API server port (default: `3001`) |
-| `ALLOWED_ORIGINS` | No | Comma-separated CORS origins (default: `http://localhost:5173,http://localhost:3001`) |
-| `DB_PATH` | No | SQLite database path (default: `./data/aperant.db`) |
+| `TURSO_DATABASE_URL` | Yes | Turso connection URL (e.g., `libsql://aperant-yourorg.turso.io`) |
+| `TURSO_AUTH_TOKEN` | Yes | Turso database auth token |
+| `JWT_SECRET` | Yes | Random 32-byte hex for JWT signing. Generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `ADMIN_EMAIL` | Yes | Email for the initial admin account (auto-created on first request) |
+| `RESEND_API_KEY` | For OTP emails | Resend API key for sending login codes (falls back to Vercel function logs) |
+| `OTP_FROM_EMAIL` | For OTP emails | Sender address for OTP emails (must be verified in Resend) |
+| `GITHUB_TOKEN` | For GitHub sync | GitHub PAT for pulling issues into the backlog |
+
+### 4. First Login
+1. Open your Vercel deployment URL
+2. Enter the `ADMIN_EMAIL` address
+3. Check email for OTP code (or check Vercel function logs if no Resend key)
+4. Enter code → logged in as admin
 
 ## Architecture
 
 ```
-React SPA (Vite)  →  REST + SSE  →  Express API Server  →  SQLite
-     :5173              :3001              ↓
-                                   GitHub API
+React SPA (Vercel Static)  →  /api/*  →  Vercel Serverless Functions  →  Turso (LibSQL)
+                                                    ↓
+                                              GitHub API
 ```
 
 - **Frontend:** React 19, TypeScript, Vite 7, Zustand 5, Tailwind CSS v4, Radix UI, dnd-kit
-- **Backend:** Express 5, TypeScript, better-sqlite3, Zod validation, express-rate-limit
-- **i18n:** react-i18next with English + French (8 namespaces)
+- **Backend:** Vercel serverless functions (`@vercel/node`), `@libsql/client` (Turso), Zod validation
+- **Real-time:** DB-backed event polling (3s interval)
+- **Sync:** Vercel Cron job (every minute) for GitHub issue sync
+- **i18n:** react-i18next with English + French (5 namespaces)
 
-The Vite dev server proxies `/api/*` to the Express server. In production, serve the built client as static files from Express.
+Every push to the linked GitHub branch triggers a Vercel preview deployment. Merging to the production branch deploys to production.
 
 ## Features
 
@@ -74,9 +93,9 @@ The Vite dev server proxies `/api/*` to the Express server. In production, serve
 - **Rate limiting** — Auth endpoints (20/15min)
 
 ### Real-Time
-- **SSE event stream** — Auto-reconnect with exponential backoff
+- **DB-backed event polling** — 3-second polling interval
 - **Toast notifications** — Sync status, errors, task changes
-- **Auto-refresh** — Stores update on relevant SSE events
+- **Auto-refresh** — Stores update on relevant events
 
 ### Coming Soon
 
@@ -99,49 +118,45 @@ The following features are planned for follow-up PRs from the `claude/multi-prod
 
 ```
 apps/web/
+├── api/                              # Vercel serverless API functions
+│   ├── _lib/                         # Shared server code (not deployed as routes)
+│   │   ├── db/                       # Turso database layer (async)
+│   │   ├── auth/                     # JWT, OTP, auth middleware
+│   │   ├── sync/                     # GitHub sync engine
+│   │   ├── validation.ts             # Zod schemas
+│   │   ├── config-resolver.ts        # Settings DB → env var fallback
+│   │   ├── broadcast.ts              # Event log for polling
+│   │   └── github.ts                 # GitHub REST + GraphQL helpers
+│   ├── auth/                         # Auth endpoints (OTP login, user management)
+│   ├── products/                     # Product CRUD + sync trigger
+│   ├── tasks/                        # Task CRUD + ordering
+│   ├── events/poll.ts                # Event polling endpoint
+│   ├── settings/                     # Settings CRUD
+│   ├── github/                       # GitHub API proxy
+│   ├── cron/sync.ts                  # Vercel cron: GitHub sync + event cleanup
+│   └── health.ts                     # Health check
 ├── src/
-│   ├── client/                  # React SPA
-│   │   ├── components/          # UI components (15+)
-│   │   │   ├── ui/              # Radix-based primitives (badge, button, dialog, etc.)
-│   │   │   ├── KanbanBoard.tsx  # Dual-view board (sort + priority)
-│   │   │   ├── Sidebar.tsx      # Navigation sidebar
+│   ├── client/                       # React SPA
+│   │   ├── components/               # UI components
+│   │   │   ├── ui/                   # Radix-based primitives
+│   │   │   ├── KanbanBoard.tsx       # Dual-view board (sort + priority)
 │   │   │   └── ...
-│   │   ├── hooks/               # Custom hooks (filters, SSE, toast, sync)
-│   │   ├── stores/              # Zustand stores (8 stores)
-│   │   ├── lib/                 # API client, i18n, utils
-│   │   ├── styles/              # Tailwind globals
-│   │   ├── App.tsx              # Router + layouts
-│   │   └── main.tsx             # Entry point
-│   ├── server/                  # Express API server
-│   │   ├── auth/                # JWT + OTP verification
-│   │   ├── db/                  # SQLite schema + per-table modules (8 files)
-│   │   ├── middleware/          # Auth middleware
-│   │   ├── routes/              # Express routers (8 route files)
-│   │   ├── sync/                # GitHub sync engine + scheduler
-│   │   ├── validation.ts        # Zod schemas
-│   │   └── index.ts             # Server entry point
-│   └── shared/                  # Shared between client + server
-│       ├── types/               # TypeScript types (5 type files)
-│       └── i18n/locales/        # en/*.json + fr/*.json (8 namespaces each)
-├── .env.example                 # Environment variable template
-├── package.json
-├── vite.config.ts               # Vite + Tailwind + /api proxy
-├── tsconfig.json                # Client TypeScript config
-├── tsconfig.server.json         # Server TypeScript config
-├── SPEC.md                      # Complete feature specification
-└── data/                        # SQLite database (auto-created, gitignored)
+│   │   ├── hooks/                    # Custom hooks (filters, polling, toast, sync)
+│   │   ├── stores/                   # Zustand stores (8 stores)
+│   │   ├── lib/                      # API client, i18n, utils
+│   │   ├── styles/                   # Tailwind globals
+│   │   └── App.tsx                   # Router + layouts
+│   └── shared/                       # Shared types, i18n
+├── vercel.json                       # Vercel config (headers, cron)
+├── vite.config.ts                    # Vite build config
+└── package.json
 ```
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start both API server + Vite dev server (with hot reload) |
-| `npm run dev:server` | Start API server only (tsx watch) |
-| `npm run dev:client` | Start Vite dev server only |
-| `npm run build` | Build client (Vite) + type-check |
-| `npm run build:server` | Build server TypeScript |
-| `npm run preview` | Run production server (`dist/server/index.js`) |
+| `npm run build` | Build client (Vite) |
 | `npm run typecheck` | Type-check without emitting |
 | `npm run lint` | Run Biome linter |
 | `npm run lint:fix` | Auto-fix lint issues |
@@ -151,9 +166,8 @@ apps/web/
 ### Manual Testing Checklist
 
 **Setup:**
-1. `cp .env.example .env` and set `ADMIN_EMAIL`, `RESEND_API_KEY`, `OTP_FROM_EMAIL`
-2. `npm install && npm run dev`
-3. Open http://localhost:5173
+1. Deploy to Vercel and set environment variables
+2. Open the deployment URL
 
 **Auth:**
 - [ ] Request an OTP code for the admin email
@@ -185,7 +199,7 @@ apps/web/
 **Real-Time:**
 - [ ] Trigger a GitHub sync (product page > sync button)
 - [ ] See toast notification on sync complete
-- [ ] Open two browser tabs — changes in one appear in the other via SSE
+- [ ] Open two browser tabs — changes in one appear in the other via polling
 
 ### Automated
 
@@ -200,28 +214,28 @@ All protected endpoints require `Authorization: Bearer <token>` header.
 
 ```bash
 # Request OTP code
-curl -X POST http://localhost:3001/api/auth/request-otp \
+curl -X POST https://your-app.vercel.app/api/auth/request-otp \
   -H 'Content-Type: application/json' \
   -d '{"email":"admin@example.com"}'
 
 # Verify OTP and get token
-curl -X POST http://localhost:3001/api/auth/verify-otp \
+curl -X POST https://your-app.vercel.app/api/auth/verify-otp \
   -H 'Content-Type: application/json' \
   -d '{"email":"admin@example.com","code":"123456"}'
 # Returns: { "token": "...", "user": { ... } }
 
 # List products (use token from verify-otp)
-curl http://localhost:3001/api/products \
+curl https://your-app.vercel.app/api/products \
   -H 'Authorization: Bearer <token>'
 
 # Create a product
-curl -X POST http://localhost:3001/api/products \
+curl -X POST https://your-app.vercel.app/api/products \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
   -d '{"name":"My App","color":"#3b82f6","githubOwner":"org","githubRepo":"repo"}'
 
 # Health check (public)
-curl http://localhost:3001/api/health
+curl https://your-app.vercel.app/api/health
 ```
 
 See [SPEC.md](SPEC.md) for the complete feature specification, API route table, database schema, and security details.

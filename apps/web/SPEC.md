@@ -4,11 +4,11 @@
 
 ## Overview
 
-Aperant Web is a multi-product backlog management platform that brings the desktop Electron app's task and product management features to the browser. Multiple team members manage tasks across GitHub repositories through a shared web interface. The server (Express + SQLite) replaces Electron IPC, and a React SPA replaces the Electron renderer.
+Aperant Web is a multi-product backlog management platform that brings the desktop Electron app's task and product management features to the browser. Multiple team members manage tasks across GitHub repositories through a shared web interface. Vercel serverless functions + Turso (cloud SQLite) replace Electron IPC, and a React SPA replaces the Electron renderer.
 
 **Architecture:**
 ```
-React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub API
+React SPA (Vercel Static) → /api/* → Vercel Serverless Functions → Turso (LibSQL) + GitHub API
 ```
 
 **Tech Stack:**
@@ -16,7 +16,7 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub API
 | Layer | Technology |
 |-------|------------|
 | Frontend | React 19, TypeScript (strict), Vite 7, Zustand 5, Tailwind CSS v4, Radix UI, dnd-kit, react-router-dom, react-i18next |
-| Backend | Express 5, TypeScript, better-sqlite3, Zod, uuid, express-rate-limit |
+| Backend | Vercel serverless functions (@vercel/node), TypeScript, @libsql/client (Turso), Zod, uuid |
 | Testing | Vitest, Biome (linting) |
 | i18n | i18next + react-i18next, 5 namespaces, English + French |
 
@@ -35,15 +35,15 @@ React SPA (Vite) → REST + SSE → Express API Server → SQLite + GitHub API
 
 ### API Endpoints
 
-| Prefix | Router | Auth | Rate Limit | Description |
-|--------|--------|------|------------|-------------|
-| `/api/auth` | `authRoutes` | Public | 20/15min | OTP login, user management (admin) |
-| `/api/events` | `eventRoutes` | JWT (query param) | — | SSE event stream |
-| `/api/health` | inline | Public | — | Health check |
-| `/api/products` | `productRoutes` | JWT + admin | — | Product CRUD |
-| `/api/tasks` | `taskRoutes` | JWT + member | — | Task CRUD + ordering |
-| `/api/github` | `githubRoutes` | JWT | — | GitHub API proxy |
-| `/api/settings` | `settingsRoutes` | JWT | — | App settings CRUD |
+| Prefix | Router | Auth | Description |
+|--------|--------|------|-------------|
+| `/api/auth` | `api/auth/*` | Public | OTP login, user management (admin) |
+| `/api/events` | `api/events/poll.ts` | Bearer | Event polling endpoint |
+| `/api/health` | `api/health.ts` | Public | Health check |
+| `/api/products` | `api/products/*` | JWT + admin | Product CRUD |
+| `/api/tasks` | `api/tasks/*` | JWT + member | Task CRUD + ordering |
+| `/api/github` | `api/github/*` | JWT | GitHub API proxy |
+| `/api/settings` | `api/settings/*` | JWT | App settings CRUD |
 
 ### Sidebar Navigation
 
@@ -89,8 +89,8 @@ Full task lifecycle with CRUD, inline editing, and status management.
 - **Drag-and-drop** — Move tasks between status columns, reorder within columns (priority view)
 
 Key files:
-- `server/routes/tasks.ts` — CRUD + status + ordering endpoints
-- `server/db/tasks.ts` — SQLite operations
+- `api/tasks/` — CRUD + status + ordering endpoints
+- `api/_lib/db/tasks.ts` — Turso database operations
 - `client/components/CreateTaskDialog.tsx`, `TaskEditDialog.tsx`
 - `shared/types/task.ts` — Task, TaskStatus, TaskPriority, TaskCategory types
 
@@ -112,34 +112,38 @@ Global app settings with immediate persistence.
 
 - **Appearance:** Light/Dark/System mode, 7 color themes (Default, Ocean, Forest, Dusk, Lime, Retro, Neo)
 - **Language:** English / Français toggle
-- **API Keys:** GitHub token (show/hide toggle, masked in API responses). Keys saved in settings DB are used by server routes with env var fallback via `config-resolver.ts`.
+- **API Keys:** GitHub token (show/hide toggle, masked in API responses). Keys saved in settings DB are used by API routes with env var fallback via `config-resolver.ts`.
 - **Sync:** Interval configuration (10-3600 seconds, sent as string to match bulk settings schema)
 - Server-side key-value store with whitelist validation
 - Route: `/settings`
 
 Key files:
 - `client/components/Settings.tsx` — Full settings UI (uses `authenticatedFetch`)
-- `server/routes/settings.ts` — CRUD with key whitelist, sensitive value masking
-- `server/config-resolver.ts` — Resolves config from DB settings then env var fallback
+- `api/settings/` — CRUD with key whitelist, sensitive value masking
+- `api/_lib/config-resolver.ts` — Resolves config from DB settings then env var fallback
+- `api/_lib/db/` — Database operations
 - `client/stores/settings-store.ts`
 
 ### 11. Real-Time Sync & Notifications
 
-SSE-based event stream with auto-reconnect and toast notifications.
+Polling-based event system with toast notifications.
 
-- EventSource hook with exponential backoff (1s → 30s max), JWT token passed via `?token=` query param
-- Events: sync_complete, sync_error, sync_started, task_created, task_updated, task_deleted, tasks_reordered, product_updated
-- Task mutations (create, update, status change, delete, reorder) broadcast SSE events for real-time multi-tab/multi-user sync
+- Polling hook with 3-second interval, Bearer token passed via Authorization header
+- Events stored in DB events table, polled by client: sync_complete, sync_error, sync_started, task_created, task_updated, task_deleted, tasks_reordered, product_updated
+- Task mutations (create, update, status change, delete, reorder) write events to DB for multi-tab/multi-user sync
 - Auto-refresh: task and product stores update on relevant events
 - Toast system: success/error/info/warning with auto-dismiss (5s), colored icons, dismiss buttons
-- GitHub sync scheduler runs every 60s when GitHub token is available (settings DB or `GITHUB_TOKEN` env var)
+- GitHub sync runs via Vercel cron job every minute when GitHub token is available (settings DB or `GITHUB_TOKEN` env var)
 
 Key files:
-- `client/hooks/useEventStream.ts` — SSE with reconnect
+- `client/hooks/useEventPolling.ts` — Polling with 3-second interval
 - `client/hooks/useToast.ts` — Zustand toast store
 - `client/hooks/useSyncEvents.ts` — Event → store bridge + toast triggers
 - `client/components/ToastContainer.tsx`
-- `server/sync/scheduler.ts`, `server/sync/github-sync.ts`
+- `api/cron/sync.ts` — Vercel cron job for GitHub sync
+- `api/_lib/sync/github-sync.ts` — GitHub sync logic
+- `api/_lib/db/events.ts` — Event storage and retrieval
+- `api/_lib/broadcast.ts` — Event broadcasting to DB
 
 ### 12. Multi-User Authentication
 
@@ -153,18 +157,18 @@ Whitelist-only email OTP authentication with role-based access control.
 - **Role enforcement** — `requireRole(...roles)` middleware applied to all route groups:
   - `requireRole('admin')`: settings, product CRUD, sync triggers
   - `requireRole('admin', 'member')`: task mutations
-  - `requireAuth` only (any role): all GET/read endpoints, SSE events
+  - `requireAuth` only (any role): all GET/read endpoints, event polling
 - **Resend integration** — `RESEND_API_KEY` + `OTP_FROM_EMAIL` env vars. Falls back to console.log in development
 - Auth store persisted in localStorage via Zustand persist middleware
-- Client auto-attaches JWT to all API requests via `authenticatedFetch()` (SSE uses `?token=` query param)
+- Client auto-attaches JWT to all API requests via `authenticatedFetch()`
 
 Key files:
-- `server/auth/jwt.ts` — Token creation/verification, startup warning
-- `server/auth/otp.ts` — OTP generation, storage, verification (5-minute expiry)
-- `server/auth/email.ts` — Resend email delivery with dev fallback
-- `server/routes/auth.ts` — Request OTP, verify OTP, me, user management (admin)
-- `server/middleware/auth.ts` — `requireAuth`, `requireRole(...roles)`, `requireAdmin`
-- `server/db/users.ts` — User CRUD (password_hash nullable for OTP-only auth)
+- `api/_lib/auth/jwt.ts` — Token creation/verification, startup warning
+- `api/_lib/auth/otp.ts` — OTP generation, storage, verification (5-minute expiry)
+- `api/_lib/auth/email.ts` — Resend email delivery with dev fallback
+- `api/auth/*.ts` — Request OTP, verify OTP, me, user management (admin)
+- `api/_lib/auth/middleware.ts` — `requireAuth`, `requireRole(...roles)`, `requireAdmin`
+- `api/_lib/db/users.ts` — User CRUD (password_hash nullable for OTP-only auth)
 - `client/components/LoginPage.tsx` — Two-step OTP login form
 - `client/stores/auth-store.ts` — `requestOtp()`, `verifyOtp()`, `checkSession()`
 - `client/lib/api-client.ts` — Auto-attaches JWT token
@@ -177,28 +181,26 @@ Coming soon — see `claude/multi-product-backlog-JVLE2` branch.
 
 ## Security Hardening
 
-Applied across the entire server and client:
+Applied across the entire API and client:
 
 | Category | Implementation | Files |
 |----------|---------------|-------|
-| **JWT timing attacks** | `crypto.timingSafeEqual()` for signature comparison | `server/auth/jwt.ts` |
-| **Auth middleware** | `requireAuth` + `requireRole()` applied to all routes; accepts Bearer header or `?token=` query param | `server/middleware/auth.ts`, `server/index.ts` |
-| **OTP rate limiting** | Max 5 OTP requests per email per 15 minutes | `server/auth/otp.ts` |
-| **Rate limiting** | Auth: 20 req/15min | `server/index.ts` (express-rate-limit) |
-| **CORS** | Origin whitelist, Authorization header allowed | `server/index.ts` |
-| **Settings validation** | Key whitelist on GET/DELETE, fixed-length secret masking | `server/routes/settings.ts` |
-| **Input validation** | Zod schemas on all mutating endpoints | `server/validation.ts` |
-| **Security headers** | X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Cache-Control | `server/index.ts` |
+| **JWT timing attacks** | `crypto.timingSafeEqual()` for signature comparison | `api/_lib/auth/jwt.ts` |
+| **Auth middleware** | `requireAuth` + `requireRole()` applied to all routes; accepts Bearer header | `api/_lib/auth/middleware.ts` |
+| **OTP rate limiting** | Max 5 OTP requests per email per 15 minutes (DB-based) | `api/_lib/auth/otp.ts` |
+| **Settings validation** | Key whitelist on GET/DELETE, fixed-length secret masking | `api/settings/` |
+| **Input validation** | Zod schemas on all mutating endpoints | `api/_lib/validation.ts` |
+| **Security headers** | X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Cache-Control | `vercel.json` |
 | **Client auth** | JWT auto-attached to all API requests via `authenticatedFetch()` and `request()` | `client/lib/api-client.ts` |
-| **Config resolution** | API keys resolved from settings DB first, then env var fallback | `server/config-resolver.ts` |
-| **SSE auth** | `/api/events` requires JWT via `?token=` query param (EventSource can't set headers) | `server/middleware/auth.ts`, `client/hooks/useEventStream.ts` |
-| **JWT secret warning** | Logs warning on startup if `JWT_SECRET` is unset (random fallback invalidates tokens on restart) | `server/auth/jwt.ts` |
+| **Config resolution** | API keys resolved from settings DB first, then env var fallback | `api/_lib/config-resolver.ts` |
+| **Polling auth** | `/api/events/poll` requires JWT via Bearer token in Authorization header | `api/_lib/auth/middleware.ts`, `client/hooks/useEventPolling.ts` |
+| **JWT secret warning** | Logs warning if `JWT_SECRET` is unset (random fallback invalidates tokens on restart) | `api/_lib/auth/jwt.ts` |
 
 ---
 
 ## Database Schema
 
-SQLite tables (core release):
+Turso (cloud SQLite) tables (core release):
 
 | Table | Migration | Description |
 |-------|-----------|-------------|
@@ -209,6 +211,7 @@ SQLite tables (core release):
 | `settings` | 000 | Key-value app settings |
 | `users` | 006 | User accounts (email, name, password_hash nullable, role) |
 | `otp_codes` | 007 | OTP codes (email, code_hash, expires_at, used) |
+| `events` | 008 | Event log for polling (`id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL, data TEXT NOT NULL DEFAULT '{}', created_at TEXT NOT NULL DEFAULT (datetime('now'))`) |
 
 ---
 
@@ -216,56 +219,49 @@ SQLite tables (core release):
 
 ### Prerequisites
 
-- Node.js 20+
-- npm 10+
+- Vercel account
+- Turso account ([turso.tech](https://turso.tech/))
+- Node.js 20+ (for local development)
 
-### Install
+### Deploy
+
+1. **Create a Turso database:**
+   ```bash
+   turso db create aperant-web
+   turso db tokens create aperant-web
+   ```
+
+2. **Link your GitHub repo to Vercel** — Import the repository in the Vercel dashboard, set the root directory to `apps/web`.
+
+3. **Set environment variables** in Vercel project settings:
+
+| Variable | Required For | How to Get |
+|----------|-------------|------------|
+| `TURSO_DATABASE_URL` | Database connection | `turso db show aperant-web --url` |
+| `TURSO_AUTH_TOKEN` | Database authentication | `turso db tokens create aperant-web` |
+| `ADMIN_EMAIL` | First admin bootstrap (creates admin user when zero users exist) | Your email address |
+| `GITHUB_TOKEN` | GitHub issue sync, branch listing | GitHub Settings → Developer Settings → PATs or Settings UI |
+| `JWT_SECRET` | Token persistence across deployments (random fallback logs warning) | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `RESEND_API_KEY` | OTP email delivery (falls back to console.log without it) | [resend.com](https://resend.com/) |
+| `OTP_FROM_EMAIL` | Sender address for OTP emails | e.g. `otp@yourdomain.com` |
+
+`GITHUB_TOKEN` can alternatively be set via the Settings UI — the API checks the settings DB first, falling back to env vars.
+
+### Local Development
 
 ```bash
 cd apps/web
 npm install
-```
 
-### Configure
+# Install Vercel CLI
+npm i -g vercel
 
-```bash
-cp .env.example .env
-```
+# Link to your Vercel project and pull env vars
+vercel link
+vercel env pull .env.local
 
-Edit `.env` and set at minimum:
-
-| Variable | Required For | How to Get |
-|----------|-------------|------------|
-| `ADMIN_EMAIL` | First admin bootstrap (creates admin user on first boot) | Your email address |
-| `GITHUB_TOKEN` | GitHub issue sync, branch listing | GitHub Settings → Developer Settings → PATs or Settings UI |
-| `JWT_SECRET` | Token persistence across server restarts (random fallback logs warning) | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
-| `RESEND_API_KEY` | OTP email delivery (falls back to console.log without it) | [resend.com](https://resend.com/) |
-| `OTP_FROM_EMAIL` | Sender address for OTP emails | e.g. `otp@yourdomain.com` |
-
-Coming soon: `ANTHROPIC_API_KEY` and `AI_MODEL` will be needed for AI features — see `claude/multi-product-backlog-JVLE2` branch.
-
-Optional variables: `PORT` (default 3001), `ALLOWED_ORIGINS` (CORS), `DB_PATH` (default `./data/aperant.db`).
-
-`GITHUB_TOKEN` can alternatively be set via the Settings UI — the server checks the settings DB first, falling back to env vars.
-
-### Run
-
-```bash
-# Development (API server + Vite dev server with hot reload)
-npm run dev
-
-# Client: http://localhost:5173
-# API:    http://localhost:3001
-```
-
-On first launch, set `ADMIN_EMAIL` in `.env`. The server auto-creates an admin user for that email on boot. Navigate to http://localhost:5173 and log in with the OTP sent to your email (or check the console if `RESEND_API_KEY` is not set).
-
-### Build for Production
-
-```bash
-npm run build           # Type-check + Vite build
-npm run build:server    # Server TypeScript only
-npm run preview         # Run built server (serves client from dist/)
+# Run locally with Vercel dev
+vercel dev
 ```
 
 ### Lint & Type-Check
@@ -283,9 +279,9 @@ npm run lint:fix        # Auto-fix lint issues
 ### Manual Testing Checklist
 
 #### Auth & Account
-- [ ] Set `ADMIN_EMAIL` in `.env`, start server — admin user is auto-created
-- [ ] Navigate to http://localhost:5173 — login page appears
-- [ ] Enter admin email → receive OTP (check console if no Resend key) → enter code → logged in
+- [ ] Set `ADMIN_EMAIL` in Vercel env vars, deploy — admin user is auto-created on first request
+- [ ] Navigate to your Vercel deployment URL — login page appears
+- [ ] Enter admin email → receive OTP (check Vercel function logs if no Resend key) → enter code → logged in
 - [ ] Verify email and logout button appear in sidebar
 - [ ] Log out and log back in
 - [ ] Refresh the page — token persists, user stays logged in
@@ -316,18 +312,17 @@ npm run lint:fix        # Auto-fix lint issues
 #### Real-Time Sync
 - [ ] Trigger a manual sync (product page → sync button in header)
 - [ ] See toast notification on sync complete/error
-- [ ] Open two browser tabs. Create a task in one tab. Verify it appears in the other tab via SSE auto-refresh.
+- [ ] Open two browser tabs. Create a task in one tab. Verify it appears in the other tab via polling auto-refresh.
 
 #### Security
 - [ ] Try accessing `/api/products` without a token — should return 401
 - [ ] Try accessing `/api/products` with an invalid token — should return 401
-- [ ] Try accessing `/api/events` without a token — should return 401
+- [ ] Try accessing `/api/events/poll` without a token — should return 401
 - [ ] Hit `/api/auth/request-otp` rapidly — rate limiter kicks in (5 per email per 15 min)
 - [ ] Request OTP for non-whitelisted email — same response as whitelisted (no information leak)
 - [ ] As viewer, try to create a task — should return 403
 - [ ] As member, try to access settings endpoints — should return 403
 - [ ] Verify API responses for settings don't leak API key values (should show `••••••••`)
-- [ ] Start server without `JWT_SECRET` — verify warning is logged about token invalidation on restart
 
 ### Automated Checks
 
@@ -339,18 +334,21 @@ npm run lint        # Biome linting
 ### API Smoke Tests
 
 ```bash
+# Replace with your Vercel deployment URL
+BASE_URL="https://your-app.vercel.app"
+
 # Health check (public, no auth needed)
-curl http://localhost:3001/api/health
+curl $BASE_URL/api/health
 # → {"status":"ok","timestamp":"..."}
 
-# Request OTP (ADMIN_EMAIL must be set and server bootstrapped)
-curl -s -X POST http://localhost:3001/api/auth/request-otp \
+# Request OTP (ADMIN_EMAIL must be set)
+curl -s -X POST $BASE_URL/api/auth/request-otp \
   -H 'Content-Type: application/json' \
   -d '{"email":"admin@example.com"}' | jq .
 # → {"message":"If this email is registered, a code has been sent"}
 
-# Verify OTP (check console for code if RESEND_API_KEY not set)
-curl -s -X POST http://localhost:3001/api/auth/verify-otp \
+# Verify OTP (check Vercel function logs for code if RESEND_API_KEY not set)
+curl -s -X POST $BASE_URL/api/auth/verify-otp \
   -H 'Content-Type: application/json' \
   -d '{"email":"admin@example.com","code":"123456"}' | jq .
 # → {"token":"...","user":{"id":"...","email":"admin@example.com","role":"admin"}}
@@ -359,26 +357,25 @@ curl -s -X POST http://localhost:3001/api/auth/verify-otp \
 TOKEN="<paste token here>"
 
 # List products
-curl -s http://localhost:3001/api/products -H "Authorization: Bearer $TOKEN" | jq .
+curl -s $BASE_URL/api/products -H "Authorization: Bearer $TOKEN" | jq .
 
 # Create a product
-curl -s -X POST http://localhost:3001/api/products \
+curl -s -X POST $BASE_URL/api/products \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"My App","color":"#3b82f6"}' | jq .
 
 # Create a task
-curl -s -X POST http://localhost:3001/api/tasks \
+curl -s -X POST $BASE_URL/api/tasks \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"productId":"<product-id>","title":"First task","description":"Test","priority":"high","category":"feature"}' | jq .
 
 # List all tasks (consolidated)
-curl -s http://localhost:3001/api/tasks -H "Authorization: Bearer $TOKEN" | jq .
+curl -s $BASE_URL/api/tasks -H "Authorization: Bearer $TOKEN" | jq .
 
-# SSE event stream (hold open, requires auth token)
-curl -N "http://localhost:3001/api/events?token=$TOKEN"
-# → :heartbeat (every 30s)
+# Poll for events
+curl -s "$BASE_URL/api/events/poll" -H "Authorization: Bearer $TOKEN" | jq .
 ```
 
 ---
@@ -387,8 +384,9 @@ curl -N "http://localhost:3001/api/events?token=$TOKEN"
 
 - **i18n required** — All UI text uses `react-i18next`. Add keys to both `en/*.json` and `fr/*.json`.
 - **Zod validation** — All API inputs validated server-side via Zod schemas.
-- **Typed API client** — All endpoints in `client/lib/api-client.ts` with proper types. Use `authenticatedFetch()` for raw responses or `request()` via `api.*` for JSON. Never use raw `fetch()` for protected endpoints.
-- **Auth required** — All routes (including SSE) use `requireAuth` middleware. Auth routes are public. SSE uses `?token=` query param since `EventSource` can't set headers.
+- **Typed API client** — All endpoints in `client/lib/api-client.ts` with proper types. Use `authenticatedFetch()` for raw responses or `request()` via `api.*` for JSON. Never use raw `fetch()` for protected endpoints. Polling endpoint uses the same `authenticatedFetch()` with Bearer token.
+- **Auth required** — All routes use `requireAuth` middleware. Auth routes are public. Polling endpoint uses standard Bearer token authentication.
+- **Config resolution** — API keys resolved from settings DB first, then env var fallback via `api/_lib/config-resolver.ts`.
 - **Minimal changes** — Implement only what's specified. Don't add unrequested features.
 
 ---
