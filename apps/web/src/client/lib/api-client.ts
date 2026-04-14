@@ -36,7 +36,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
 /**
  * Authenticated fetch — injects JWT and returns the raw Response.
- * Use for SSE streams or any request where you need the raw response.
+ * Use for polling or any request where you need the raw response.
  */
 export async function authenticatedFetch(path: string, options?: RequestInit): Promise<Response> {
   const token = getAuthToken();
@@ -89,12 +89,5 @@ export const api = {
       request<{ items: any[]; hasMore: boolean; endCursor: string }>(
         `/github/projects/${encodeURIComponent(owner)}/${number}/items${cursor ? `?${new URLSearchParams({ cursor })}` : ''}`
       ),
-  },
-  events: {
-    subscribe: (): EventSource => {
-      const token = getAuthToken();
-      const url = token ? `${API_BASE}/events?token=${encodeURIComponent(token)}` : `${API_BASE}/events`;
-      return new EventSource(url);
-    },
   },
 };

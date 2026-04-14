@@ -1,6 +1,6 @@
-import { useCallback } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEventStream } from './useEventStream';
+import { useEventPolling } from './useEventPolling';
 import { useToast } from './useToast';
 import { useTaskStore } from '../stores/task-store';
 import { useProductStore } from '../stores/product-store';
@@ -11,44 +11,38 @@ export function useSyncEvents() {
   const { loadTasks } = useTaskStore();
   const { activeProductId, loadProducts } = useProductStore();
 
-  const handleEvent = useCallback((event: string, data: any) => {
-    switch (event) {
-      case 'sync_complete':
-        success(
-          t('common:syncComplete'),
-          data.productId ? t('common:syncCompleteDescription') : undefined
-        );
-        // Refresh tasks for the synced product
-        if (activeProductId && data.productId === activeProductId) {
-          loadTasks(activeProductId);
-        }
-        break;
+  const handlers = useMemo(() => ({
+    sync_complete: (data: any) => {
+      success(
+        t('common:syncComplete'),
+        data.productId ? t('common:syncCompleteDescription') : undefined
+      );
+      if (activeProductId && data.productId === activeProductId) {
+        loadTasks(activeProductId);
+      }
+    },
+    sync_error: (data: any) => {
+      error(t('common:syncError'), data.error || t('common:syncErrorDescription'));
+    },
+    sync_started: () => {
+      info(t('common:syncStarted'));
+    },
+    task_created: () => {
+      if (activeProductId) { loadTasks(activeProductId); } else { loadTasks(); }
+    },
+    task_updated: () => {
+      if (activeProductId) { loadTasks(activeProductId); } else { loadTasks(); }
+    },
+    task_deleted: () => {
+      if (activeProductId) { loadTasks(activeProductId); } else { loadTasks(); }
+    },
+    tasks_reordered: () => {
+      if (activeProductId) { loadTasks(activeProductId); } else { loadTasks(); }
+    },
+    product_updated: () => {
+      loadProducts();
+    },
+  }), [activeProductId, loadTasks, loadProducts, success, error, info, t]);
 
-      case 'sync_error':
-        error(t('common:syncError'), data.error || t('common:syncErrorDescription'));
-        break;
-
-      case 'sync_started':
-        info(t('common:syncStarted'));
-        break;
-
-      case 'task_created':
-      case 'task_updated':
-      case 'task_deleted':
-      case 'tasks_reordered':
-        // Refresh task list on any task change
-        if (activeProductId) {
-          loadTasks(activeProductId);
-        } else {
-          loadTasks();
-        }
-        break;
-
-      case 'product_updated':
-        loadProducts();
-        break;
-    }
-  }, [activeProductId, loadTasks, loadProducts, success, error, info, t]);
-
-  useEventStream({ onEvent: handleEvent });
+  useEventPolling({ handlers });
 }

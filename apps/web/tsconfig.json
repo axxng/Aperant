@@ -10,14 +10,13 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/client/*"],
-      "@shared/*": ["./src/shared/*"],
-      "@server/*": ["./src/server/*"]
+      "@shared/*": ["./src/shared/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "api/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
