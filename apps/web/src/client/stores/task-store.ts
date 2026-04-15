@@ -11,8 +11,8 @@ interface TaskState {
 
   loadTasks: (productId?: string) => Promise<void>;
   createTask: (input: CreateTaskInput) => Promise<Task>;
-  updateTask: (id: string, input: UpdateTaskInput) => Promise<void>;
-  updateTaskStatus: (id: string, status: TaskStatus) => Promise<void>;
+  updateTask: (id: string, input: UpdateTaskInput) => Promise<Task>;
+  updateTaskStatus: (id: string, status: TaskStatus) => Promise<Task>;
   deleteTask: (id: string) => Promise<void>;
   setSelectedTask: (id: string | null) => void;
   loadTaskOrder: (scope: string) => Promise<void>;
@@ -48,6 +48,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === id ? task : t)),
     }));
+    return task;
   },
 
   updateTaskStatus: async (id, status) => {
@@ -55,6 +56,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === id ? task : t)),
     }));
+    return task;
   },
 
   deleteTask: async (id) => {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTaskStore } from '../stores/task-store';
+import { useToast } from '../hooks/useToast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -28,6 +29,7 @@ interface TaskEditDialogProps {
 export function TaskEditDialog({ task, open, onOpenChange, productName, productColor, onCreatePR }: TaskEditDialogProps) {
   const { t } = useTranslation(['tasks', 'common']);
   const { updateTask, deleteTask } = useTaskStore();
+  const { warning } = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<TaskStatus>('backlog');
@@ -53,13 +55,16 @@ export function TaskEditDialog({ task, open, onOpenChange, productName, productC
 
     setIsSubmitting(true);
     try {
-      await updateTask(task.id, {
+      const updatedTask = await updateTask(task.id, {
         title: title.trim(),
         description: description.trim(),
         status,
         priority: priority || undefined,
         category: category || undefined,
       });
+      if ((updatedTask as any).githubSyncStatus === 'failed') {
+        warning(t('tasks:sync.pendingToast'));
+      }
       onOpenChange(false);
     } catch (error) {
       console.error('Failed to update task:', error);

@@ -25,6 +25,7 @@ import { cn } from '../lib/utils';
 import { Plus, RefreshCw, ChevronDown, ChevronRight, Search, SlidersHorizontal, GripVertical } from 'lucide-react';
 import { useKanbanFilters } from '../hooks/useKanbanFilters';
 import { KanbanFilterBar } from './KanbanFilterBar';
+import { useToast } from '../hooks/useToast';
 import type { Task, TaskStatus } from '@shared/types/task';
 
 interface KanbanBoardProps {
@@ -52,6 +53,7 @@ export const KanbanBoard = memo(function KanbanBoard({
   const { t } = useTranslation(['tasks', 'common']);
   const { products, activeProductId } = useProductStore();
   const { updateTaskStatus, reorderTasks, taskOrder, loadTaskOrder } = useTaskStore();
+  const { warning } = useToast();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [collapsedColumns, setCollapsedColumns] = useState<Set<TaskStatus>>(new Set());
   const [viewMode, setViewMode] = useState<'sort' | 'priority'>('sort');
@@ -164,7 +166,10 @@ export const KanbanBoard = memo(function KanbanBoard({
           await reorderTasks(scope, currentStatus, reordered.map((t) => t.id));
         }
       } else if (targetStatus && targetStatus !== currentStatus) {
-        await updateTaskStatus(taskId, targetStatus);
+        const updatedTask = await updateTaskStatus(taskId, targetStatus);
+        if ((updatedTask as any).githubSyncStatus === 'failed') {
+          warning(t('tasks:sync.pendingToast'));
+        }
       }
     },
     [tasks, tasksByStatus, updateTaskStatus, reorderTasks, viewMode, activeProductId]
