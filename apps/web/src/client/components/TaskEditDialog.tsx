@@ -62,7 +62,7 @@ export function TaskEditDialog({ task, open, onOpenChange, productName, productC
         priority: priority || undefined,
         category: category || undefined,
       });
-      if ((updatedTask as any).githubSyncStatus === 'failed') {
+      if ((updatedTask as Task & { githubSyncStatus?: string }).githubSyncStatus === 'failed') {
         warning(t('tasks:sync.pendingToast'));
       }
       onOpenChange(false);

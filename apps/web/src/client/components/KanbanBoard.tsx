@@ -167,7 +167,7 @@ export const KanbanBoard = memo(function KanbanBoard({
         }
       } else if (targetStatus && targetStatus !== currentStatus) {
         const updatedTask = await updateTaskStatus(taskId, targetStatus);
-        if ((updatedTask as any).githubSyncStatus === 'failed') {
+        if ((updatedTask as Task & { githubSyncStatus?: string }).githubSyncStatus === 'failed') {
           warning(t('tasks:sync.pendingToast'));
         }
       }
