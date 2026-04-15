@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ensureDb } from '../../_lib/db/client.js';
 import { authenticateRequest, hasRole } from '../../_lib/auth/middleware.js';
 import { broadcastEvent } from '../../_lib/events.js';
+import { syncProduct } from '../../_lib/sync/github-sync.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   await ensureDb();
@@ -20,10 +21,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const productId = req.query.id as string;
 
   try {
-    // TODO: Import and call syncProduct once the sync module is created
-    // import { syncProduct } from '../../_lib/sync.js';
-    // const result = await syncProduct(productId);
-    const result = { status: 'stub', message: 'Sync module not yet implemented' };
+    await broadcastEvent('sync_started', { productId });
+    const result = await syncProduct(productId);
 
     await broadcastEvent('sync_complete', { productId, result });
     return res.json({ success: true, result });

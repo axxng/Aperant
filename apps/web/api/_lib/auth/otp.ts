@@ -14,7 +14,7 @@ export function generateOtp(): { code: string; hash: string } {
 export async function storeOtp(email: string, codeHash: string): Promise<string> {
   const c = getClient();
   const id = uuid();
-  const expiresAt = new Date(Date.now() + OTP_EXPIRY_SECONDS * 1000).toISOString();
+  const expiresAt = new Date(Date.now() + OTP_EXPIRY_SECONDS * 1000).toISOString().replace('T', ' ').replace('Z', '');
 
   // Clean up expired OTPs for this email
   await c.execute({

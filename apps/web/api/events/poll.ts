@@ -13,7 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await authenticateRequest(req, res);
   if (!user) return;
 
-  const since = (req.query.since as string) || new Date(Date.now() - 30_000).toISOString();
+  const since = (req.query.since as string) || new Date(Date.now() - 30_000).toISOString().replace('T', ' ').replace('Z', '');
   const events = await getEventsSince(since);
 
   res.json({ events });

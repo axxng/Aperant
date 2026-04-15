@@ -10,10 +10,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await authenticateRequest(req, res);
   if (!user) return;
 
-  if (!hasRole(user, 'admin')) {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-
   switch (req.method) {
     case 'GET': {
       const products = await getAllProducts();
@@ -21,6 +17,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     case 'POST': {
+      if (!hasRole(user, 'admin')) {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
       const result = createProductSchema.safeParse(req.body);
       if (!result.success) {
         return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });

@@ -10,7 +10,7 @@ interface UseEventPollingOptions {
 }
 
 export function useEventPolling({ handlers, enabled = true, intervalMs = 3000 }: UseEventPollingOptions = {}) {
-  const sinceRef = useRef(new Date().toISOString());
+  const sinceRef = useRef(new Date().toISOString().replace('T', ' ').replace('Z', ''));
   const handlersRef = useRef(handlers);
   handlersRef.current = handlers;
 
