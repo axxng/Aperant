@@ -20,6 +20,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const id = req.query.id as string;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    return res.status(400).json({ error: 'Invalid ID format' });
+  }
 
   switch (req.method) {
     case 'PATCH': {

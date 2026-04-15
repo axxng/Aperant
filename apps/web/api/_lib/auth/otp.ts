@@ -45,20 +45,11 @@ export async function verifyOtp(email: string, code: string): Promise<boolean> {
   const c = getClient();
   const hash = crypto.createHash('sha256').update(code).digest('hex');
 
-  // Find valid OTP
-  const findResult = await c.execute({
-    sql: "SELECT id FROM otp_codes WHERE email = ? AND code_hash = ? AND used = 0 AND expires_at > datetime('now') ORDER BY created_at DESC LIMIT 1",
+  // Atomic: mark as used in a single statement and check if any row was affected
+  const result = await c.execute({
+    sql: "UPDATE otp_codes SET used = 1 WHERE email = ? AND code_hash = ? AND used = 0 AND expires_at > datetime('now')",
     args: [email, hash],
   });
 
-  const row = findResult.rows[0];
-  if (!row) return false;
-
-  // Mark as used
-  await c.execute({
-    sql: 'UPDATE otp_codes SET used = 1 WHERE id = ?',
-    args: [row.id as string],
-  });
-
-  return true;
+  return result.rowsAffected > 0;
 }

@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ensureDb } from '../_lib/db/client.js';
 import { purgeOldEvents } from '../_lib/events.js';
@@ -15,7 +16,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const authHeader = req.headers.authorization;
   const cronSecret = process.env.CRON_SECRET;
 
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  const expected = `Bearer ${cronSecret}`;
+  const headerBuffer = Buffer.from(authHeader || '');
+  const expectedBuffer = Buffer.from(expected);
+  if (!cronSecret || headerBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(headerBuffer, expectedBuffer)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
