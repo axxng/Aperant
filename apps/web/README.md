@@ -81,9 +81,11 @@ Every push to the linked GitHub branch triggers a Vercel preview deployment. Mer
 
 ### GitHub Sync
 - **Issue sync** — Pull issues from GitHub repos and GitHub Projects into the backlog
+- **Write-back sync** — Task edits (title, description, status, labels, assignees) push back to GitHub issues
+- **Project board sync** — Status changes update the GitHub Project board column
+- **Retry on failure** — Failed write-backs retry automatically via cron (1-minute cycle)
 - **Product configuration** — Set GitHub owner/repo per product in product settings
 - **Sync scheduler** — Configurable sync interval to keep backlog in sync with GitHub
-- **Task editing syncs to GitHub** — Changes to tasks linked to GitHub issues are pushed back
 
 ### Settings & Auth
 - **Appearance** — Light/Dark/System mode, 7 color themes

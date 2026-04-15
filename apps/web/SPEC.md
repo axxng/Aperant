@@ -94,6 +94,21 @@ Key files:
 - `client/components/CreateTaskDialog.tsx`, `TaskEditDialog.tsx`
 - `shared/types/task.ts` — Task, TaskStatus, TaskPriority, TaskCategory types
 
+### 2b. GitHub Write-Back Sync
+
+When a task linked to a GitHub issue is edited, changes are pushed back to GitHub:
+
+- **Fields synced:** title, body (description), state (open/closed), labels, assignees
+- **Status mapping:** Moving to "Done" closes the issue; moving out of "Done" reopens it
+- **Project board:** If the task came from a GitHub Project, the board column is updated via GraphQL using the reversed `statusMapping` from the product config
+- **Failure handling:** On GitHub API failure, the task saves locally and is flagged `github_sync_pending`. The cron job retries pending write-backs every minute.
+- **UI feedback:** Warning toast on sync failure; spinning sync icon on task cards with pending write-backs
+
+Key files:
+- `api/_lib/sync/github-writeback.ts` — `syncTaskToGitHub()`, `retryPendingWritebacks()`
+- `api/tasks/[id]/index.ts`, `api/tasks/[id]/status.ts` — Call write-back after local save
+- `api/cron/sync.ts` — Retry pending write-backs after pull sync
+
 ### 3–8, 10. Coming Soon
 
 The following features are implemented on the `claude/multi-product-backlog-JVLE2` branch and will be added in follow-up PRs:
