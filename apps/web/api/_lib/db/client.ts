@@ -192,4 +192,10 @@ const MIGRATIONS = [
       CREATE INDEX IF NOT EXISTS idx_tasks_sync_pending ON tasks(github_sync_pending) WHERE github_sync_pending = 1;
     `,
   },
+  {
+    name: '010_github_sync_retry_count',
+    sql: `
+      ALTER TABLE tasks ADD COLUMN github_sync_retry_count INTEGER NOT NULL DEFAULT 0;
+    `,
+  },
 ];

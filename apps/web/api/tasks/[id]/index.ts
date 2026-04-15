@@ -41,9 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (task.githubRepo && task.githubIssueNumber) {
         const syncResult = await syncTaskToGitHub(task, result.data);
         if (syncResult.success) {
-          if (task.githubSyncPending) {
-            await updateTask(id, { githubSyncPending: false });
-          }
+          await updateTask(id, { githubSyncPending: false, githubSyncRetryCount: 0 });
           githubSyncStatus = 'synced';
         } else {
           await updateTask(id, { githubSyncPending: true });
@@ -51,8 +49,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
-      await broadcastEvent('task_updated', task);
-      return res.json({ ...task, githubSyncStatus });
+      const freshTask = await getTaskById(id);
+      await broadcastEvent('task_updated', freshTask || task);
+      return res.json({ ...freshTask || task, githubSyncStatus });
     }
 
     case 'DELETE': {

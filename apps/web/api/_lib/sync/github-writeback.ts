@@ -233,16 +233,25 @@ async function getProjectFieldInfo(
   }
 }
 
+const MAX_SYNC_RETRIES = 10;
+
 /**
  * Retry all tasks with pending GitHub write-backs.
  * Called by the cron job after the pull sync.
  */
-export async function retryPendingWritebacks(): Promise<{ succeeded: number; failed: number }> {
+export async function retryPendingWritebacks(): Promise<{ succeeded: number; failed: number; skipped: number }> {
   const pendingTasks = await getTasksPendingSync();
   let succeeded = 0;
   let failed = 0;
+  let skipped = 0;
 
   for (const task of pendingTasks) {
+    // Skip tasks that have exceeded the retry limit
+    if ((task.githubSyncRetryCount ?? 0) >= MAX_SYNC_RETRIES) {
+      skipped++;
+      continue;
+    }
+
     // Sync the full current state of the task
     const changes: UpdateTaskInput = {
       title: task.title,
@@ -254,13 +263,14 @@ export async function retryPendingWritebacks(): Promise<{ succeeded: number; fai
 
     const result = await syncTaskToGitHub(task, changes);
     if (result.success) {
-      await updateTask(task.id, { githubSyncPending: false });
+      await updateTask(task.id, { githubSyncPending: false, githubSyncRetryCount: 0 });
       succeeded++;
     } else {
-      console.log(`GitHub write-back retry failed for task ${task.id}: ${result.error}`);
+      await updateTask(task.id, { githubSyncRetryCount: (task.githubSyncRetryCount ?? 0) + 1 });
+      console.log(`GitHub write-back retry failed for task ${task.id} (attempt ${(task.githubSyncRetryCount ?? 0) + 1}/${MAX_SYNC_RETRIES}): ${result.error}`);
       failed++;
     }
   }
 
-  return { succeeded, failed };
+  return { succeeded, failed, skipped };
 }

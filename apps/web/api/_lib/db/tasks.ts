@@ -91,6 +91,7 @@ export async function updateTask(id: string, input: UpdateTaskInput): Promise<Ta
   if (input.assignees !== undefined) { updates.push('assignees = ?'); values.push(JSON.stringify(input.assignees)); }
   if (input.metadata !== undefined) { updates.push('metadata = ?'); values.push(JSON.stringify(input.metadata)); }
   if (input.githubSyncPending !== undefined) { updates.push('github_sync_pending = ?'); values.push(input.githubSyncPending ? 1 : 0); }
+  if (input.githubSyncRetryCount !== undefined) { updates.push('github_sync_retry_count = ?'); values.push(input.githubSyncRetryCount); }
 
   if (updates.length === 0) return existing;
 
@@ -167,6 +168,7 @@ function rowToTask(row: any): Task {
     milestone: row.milestone ? safeJsonParse(row.milestone as string, undefined) : undefined,
     metadata: safeJsonParse(row.metadata as string, {}),
     githubSyncPending: row.github_sync_pending === 1,
+    githubSyncRetryCount: Number(row.github_sync_retry_count ?? 0),
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };

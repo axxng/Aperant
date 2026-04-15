@@ -34,11 +34,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // 2. Write-back retry: Turso → GitHub
-    let writebackResults: { succeeded: number; failed: number } | null = null;
+    let writebackResults: { succeeded: number; failed: number; skipped: number } | null = null;
     try {
       writebackResults = await retryPendingWritebacks();
-      if (writebackResults.succeeded > 0 || writebackResults.failed > 0) {
-        console.log(`Write-back retry: ${writebackResults.succeeded} succeeded, ${writebackResults.failed} failed`);
+      if (writebackResults.succeeded > 0 || writebackResults.failed > 0 || writebackResults.skipped > 0) {
+        console.log(`Write-back retry: ${writebackResults.succeeded} succeeded, ${writebackResults.failed} failed, ${writebackResults.skipped} skipped`);
       }
     } catch (error: any) {
       console.log(`Write-back retry error: ${error.message}`);

@@ -30,6 +30,8 @@ export interface Task {
   githubProjectItemId?: string;
   /** Whether this task has pending changes to sync to GitHub */
   githubSyncPending?: boolean;
+  /** Number of failed GitHub write-back attempts */
+  githubSyncRetryCount?: number;
 
   // GitHub issue metadata (synced)
   labels?: Array<{ name: string; color: string }>;
@@ -81,6 +83,7 @@ export interface UpdateTaskInput {
   assignees?: Array<{ login: string; avatarUrl?: string }>;
   metadata?: TaskMetadata;
   githubSyncPending?: boolean;
+  githubSyncRetryCount?: number;
 }
 
 /** Per-column task ordering */
