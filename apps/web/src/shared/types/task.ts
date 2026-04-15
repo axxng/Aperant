@@ -28,6 +28,8 @@ export interface Task {
   githubRepo?: string;
   /** GitHub Project item ID (for board sync) */
   githubProjectItemId?: string;
+  /** Whether this task has pending changes to sync to GitHub */
+  githubSyncPending?: boolean;
 
   // GitHub issue metadata (synced)
   labels?: Array<{ name: string; color: string }>;
@@ -78,6 +80,7 @@ export interface UpdateTaskInput {
   labels?: Array<{ name: string; color: string }>;
   assignees?: Array<{ login: string; avatarUrl?: string }>;
   metadata?: TaskMetadata;
+  githubSyncPending?: boolean;
 }
 
 /** Per-column task ordering */

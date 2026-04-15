@@ -92,6 +92,7 @@ export const updateTaskSchema = z.object({
   labels: z.array(labelSchema).max(50).optional(),
   assignees: z.array(assigneeSchema).max(50).optional(),
   metadata: taskMetadataSchema,
+  githubSyncPending: z.boolean().optional(),
 });
 
 export const updateTaskStatusSchema = z.object({

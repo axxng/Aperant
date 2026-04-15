@@ -90,6 +90,7 @@ export async function updateTask(id: string, input: UpdateTaskInput): Promise<Ta
   if (input.labels !== undefined) { updates.push('labels = ?'); values.push(JSON.stringify(input.labels)); }
   if (input.assignees !== undefined) { updates.push('assignees = ?'); values.push(JSON.stringify(input.assignees)); }
   if (input.metadata !== undefined) { updates.push('metadata = ?'); values.push(JSON.stringify(input.metadata)); }
+  if (input.githubSyncPending !== undefined) { updates.push('github_sync_pending = ?'); values.push(input.githubSyncPending ? 1 : 0); }
 
   if (updates.length === 0) return existing;
 
@@ -111,6 +112,13 @@ export async function deleteTask(id: string): Promise<boolean> {
     args: [id],
   });
   return result.rowsAffected > 0;
+}
+
+export async function getTasksPendingSync(): Promise<Task[]> {
+  const result = await getClient().execute(
+    'SELECT * FROM tasks WHERE github_sync_pending = 1'
+  );
+  return result.rows.map(rowToTask);
 }
 
 export async function getTaskOrder(scope: string): Promise<TaskOrderState> {
@@ -158,6 +166,7 @@ function rowToTask(row: any): Task {
     assignees: safeJsonParse(row.assignees as string, []),
     milestone: row.milestone ? safeJsonParse(row.milestone as string, undefined) : undefined,
     metadata: safeJsonParse(row.metadata as string, {}),
+    githubSyncPending: row.github_sync_pending === 1,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
