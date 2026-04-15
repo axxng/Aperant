@@ -185,4 +185,11 @@ const MIGRATIONS = [
       CREATE INDEX IF NOT EXISTS idx_events_created ON events(created_at);
     `,
   },
+  {
+    name: '009_github_sync_pending',
+    sql: `
+      ALTER TABLE tasks ADD COLUMN github_sync_pending INTEGER NOT NULL DEFAULT 0;
+      CREATE INDEX IF NOT EXISTS idx_tasks_sync_pending ON tasks(github_sync_pending) WHERE github_sync_pending = 1;
+    `,
+  },
 ];
