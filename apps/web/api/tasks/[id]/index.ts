@@ -4,6 +4,7 @@ import { authenticateRequest, hasRole } from '../../_lib/auth/middleware.js';
 import { getTaskById, updateTask, deleteTask } from '../../_lib/db/tasks.js';
 import { updateTaskSchema } from '../../_lib/validation.js';
 import { broadcastEvent } from '../../_lib/events.js';
+import { syncTaskToGitHub } from '../../_lib/sync/github-writeback.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   await ensureDb();
@@ -31,8 +32,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       const task = await updateTask(id, result.data);
       if (!task) return res.status(404).json({ error: 'Task not found' });
+
+      // Sync changes to GitHub if task is linked
+      let githubSyncStatus: 'synced' | 'failed' | 'pending' | undefined;
+      if (task.githubRepo && task.githubIssueNumber) {
+        const syncResult = await syncTaskToGitHub(task, result.data);
+        if (syncResult.success) {
+          if (task.githubSyncPending) {
+            await updateTask(id, { githubSyncPending: false });
+          }
+          githubSyncStatus = 'synced';
+        } else {
+          await updateTask(id, { githubSyncPending: true });
+          githubSyncStatus = 'failed';
+        }
+      }
+
       await broadcastEvent('task_updated', task);
-      return res.json(task);
+      return res.json({ ...task, githubSyncStatus });
     }
 
     case 'DELETE': {
