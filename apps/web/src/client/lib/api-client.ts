@@ -69,8 +69,8 @@ export const api = {
       request<Task>('/tasks', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: UpdateTaskInput) =>
       request<Task>(`/tasks/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-    updateStatus: (id: string, status: TaskStatus) =>
-      request<Task>(`/tasks/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+    updateStatus: (id: string, data: { status: TaskStatus; updatedAt?: string }) =>
+      request<Task>(`/tasks/${id}/status`, { method: 'PATCH', body: JSON.stringify(data) }),
     delete: (id: string) =>
       request<{ success: boolean }>(`/tasks/${id}`, { method: 'DELETE' }),
     getOrder: (scope: string) => request<TaskOrderState>(`/tasks/order/${encodeURIComponent(scope)}`),

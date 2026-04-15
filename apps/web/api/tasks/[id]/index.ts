@@ -33,13 +33,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!result.success) {
         return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });
       }
-      const task = await updateTask(id, result.data);
+
+      // Optimistic concurrency check
+      if (result.data.updatedAt) {
+        const current = await getTaskById(id);
+        if (!current) return res.status(404).json({ error: 'Task not found' });
+        if (current.updatedAt !== result.data.updatedAt) {
+          return res.status(409).json({ error: 'Task was modified by another user. Please refresh and try again.' });
+        }
+      }
+
+      // Strip updatedAt from update payload (it's for concurrency check only)
+      const { updatedAt: _updatedAt, ...updateData } = result.data;
+      const task = await updateTask(id, updateData);
       if (!task) return res.status(404).json({ error: 'Task not found' });
 
       // Sync changes to GitHub if task is linked
       let githubSyncStatus: 'synced' | 'failed' | 'pending' | undefined;
       if (task.githubRepo && task.githubIssueNumber) {
-        const syncResult = await syncTaskToGitHub(task, result.data);
+        const syncResult = await syncTaskToGitHub(task, updateData);
         if (syncResult.success) {
           await updateTask(id, { githubSyncPending: false, githubSyncRetryCount: 0 });
           githubSyncStatus = 'synced';

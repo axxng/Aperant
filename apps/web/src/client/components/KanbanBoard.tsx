@@ -52,7 +52,7 @@ export const KanbanBoard = memo(function KanbanBoard({
 }: KanbanBoardProps) {
   const { t } = useTranslation(['tasks', 'common']);
   const { products, activeProductId } = useProductStore();
-  const { updateTaskStatus, reorderTasks, taskOrder, loadTaskOrder } = useTaskStore();
+  const { updateTaskStatus, reorderTasks, taskOrder, loadTaskOrder, loadTasks } = useTaskStore();
   const { warning } = useToast();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [collapsedColumns, setCollapsedColumns] = useState<Set<TaskStatus>>(new Set());
@@ -166,13 +166,25 @@ export const KanbanBoard = memo(function KanbanBoard({
           await reorderTasks(scope, currentStatus, reordered.map((t) => t.id));
         }
       } else if (targetStatus && targetStatus !== currentStatus) {
-        const updatedTask = await updateTaskStatus(taskId, targetStatus);
-        if ((updatedTask as Task & { githubSyncStatus?: string }).githubSyncStatus === 'failed') {
-          warning(t('tasks:sync.pendingToast'));
+        try {
+          const updatedTask = await updateTaskStatus(taskId, targetStatus);
+          if ((updatedTask as Task & { githubSyncStatus?: string }).githubSyncStatus === 'failed') {
+            warning(t('tasks:sync.pendingToast'));
+          }
+        } catch (error: any) {
+          const msg = error?.message || '';
+          if (msg.includes('modified by another user') || msg.includes('409')) {
+            warning(t('tasks:sync.conflictToast'));
+            if (activeProductId) {
+              loadTasks(activeProductId);
+            } else {
+              loadTasks();
+            }
+          }
         }
       }
     },
-    [tasks, tasksByStatus, updateTaskStatus, reorderTasks, viewMode, activeProductId]
+    [tasks, tasksByStatus, updateTaskStatus, reorderTasks, viewMode, activeProductId, loadTasks]
   );
 
   const toggleColumn = useCallback((status: TaskStatus) => {

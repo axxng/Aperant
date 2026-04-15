@@ -93,10 +93,12 @@ export const updateTaskSchema = z.object({
   assignees: z.array(assigneeSchema).max(50).optional(),
   metadata: taskMetadataSchema,
   githubSyncPending: z.boolean().optional(),
+  updatedAt: z.string().optional(),
 });
 
 export const updateTaskStatusSchema = z.object({
   status: z.enum(taskStatuses),
+  updatedAt: z.string().optional(),
 });
 
 export const setTaskOrderSchema = z.object({

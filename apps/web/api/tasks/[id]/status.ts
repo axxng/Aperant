@@ -30,6 +30,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });
   }
 
+  // Optimistic concurrency check
+  if (result.data.updatedAt) {
+    const current = await getTaskById(id);
+    if (!current) return res.status(404).json({ error: 'Task not found' });
+    if (current.updatedAt !== result.data.updatedAt) {
+      return res.status(409).json({ error: 'Task was modified by another user. Please refresh and try again.' });
+    }
+  }
+
   const task = await updateTask(id, { status: result.data.status });
   if (!task) return res.status(404).json({ error: 'Task not found' });
 

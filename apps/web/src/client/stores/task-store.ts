@@ -44,7 +44,8 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   },
 
   updateTask: async (id, input) => {
-    const task = await api.tasks.update(id, input);
+    const currentTask = get().tasks.find((t) => t.id === id);
+    const task = await api.tasks.update(id, { ...input, updatedAt: currentTask?.updatedAt });
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === id ? task : t)),
     }));
@@ -52,7 +53,8 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   },
 
   updateTaskStatus: async (id, status) => {
-    const task = await api.tasks.updateStatus(id, status);
+    const currentTask = get().tasks.find((t) => t.id === id);
+    const task = await api.tasks.updateStatus(id, { status, updatedAt: currentTask?.updatedAt });
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === id ? task : t)),
     }));

@@ -66,8 +66,14 @@ export function TaskEditDialog({ task, open, onOpenChange, productName, productC
         warning(t('tasks:sync.pendingToast'));
       }
       onOpenChange(false);
-    } catch (error) {
-      console.error('Failed to update task:', error);
+    } catch (error: any) {
+      const msg = error?.message || '';
+      if (msg.includes('modified by another user') || msg.includes('409')) {
+        warning(t('tasks:sync.conflictToast'));
+        onOpenChange(false);
+      } else {
+        console.error('Failed to update task:', error);
+      }
     } finally {
       setIsSubmitting(false);
     }

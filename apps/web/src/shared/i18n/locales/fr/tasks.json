@@ -90,6 +90,7 @@
   },
   "sync": {
     "pendingToast": "Enregistré localement. La synchronisation GitHub sera retentée automatiquement.",
-    "pendingTooltip": "Synchronisation GitHub en attente"
+    "pendingTooltip": "Synchronisation GitHub en attente",
+    "conflictToast": "Cette tâche a été modifiée par un autre utilisateur. Veuillez rouvrir et réessayer."
   }
 }

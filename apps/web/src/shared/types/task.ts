@@ -84,6 +84,8 @@ export interface UpdateTaskInput {
   metadata?: TaskMetadata;
   githubSyncPending?: boolean;
   githubSyncRetryCount?: number;
+  /** Optimistic concurrency token — must match server's updatedAt to avoid 409 */
+  updatedAt?: string;
 }
 
 /** Per-column task ordering */

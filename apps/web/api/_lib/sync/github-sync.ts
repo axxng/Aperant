@@ -64,6 +64,11 @@ async function syncRepo(productId: string, owner: string, repo: string): Promise
         const existingTask = await getTaskByGitHubIssue(sourceKey, issue.number);
 
         if (existingTask) {
+          // Skip tasks with pending write-back to avoid overwriting local edits
+          if (existingTask.githubSyncPending) {
+            result.updated++;
+            continue;
+          }
           // Update existing task
           const newStatus = issue.state === 'closed' ? 'done' : existingTask.status;
           await updateTask(existingTask.id, {
@@ -257,6 +262,11 @@ async function syncGitHubProject(
           const mappedStatus = statusColumnName ? (mapping[statusColumnName] || 'backlog') : 'backlog';
 
           if (existingTask) {
+            // Skip tasks with pending write-back to avoid overwriting local edits
+            if (existingTask.githubSyncPending) {
+              result.updated++;
+              continue;
+            }
             await updateTask(existingTask.id, {
               title: issue.title,
               description: issue.body || '',

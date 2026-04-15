@@ -90,6 +90,7 @@
   },
   "sync": {
     "pendingToast": "Saved locally. GitHub sync will retry automatically.",
-    "pendingTooltip": "Pending GitHub sync"
+    "pendingTooltip": "Pending GitHub sync",
+    "conflictToast": "This task was updated by someone else. Please reopen and try again."
   }
 }
