@@ -87,5 +87,9 @@
     "baseBranch": "Into branch",
     "selectBranch": "Select branch...",
     "createAsDraft": "Create as draft PR"
+  },
+  "sync": {
+    "pendingToast": "Saved locally. GitHub sync will retry automatically.",
+    "pendingTooltip": "Pending GitHub sync"
   }
 }

@@ -87,5 +87,9 @@
     "baseBranch": "Vers la branche",
     "selectBranch": "Sélectionner une branche...",
     "createAsDraft": "Créer comme brouillon"
+  },
+  "sync": {
+    "pendingToast": "Enregistré localement. La synchronisation GitHub sera retentée automatiquement.",
+    "pendingTooltip": "Synchronisation GitHub en attente"
   }
 }
