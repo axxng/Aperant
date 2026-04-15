@@ -75,7 +75,7 @@ export const createTaskSchema = z.object({
   category: z.enum(taskCategories).optional(),
   githubIssueNumber: z.number().int().positive().optional(),
   githubIssueUrl: z.string().url().optional(),
-  githubRepo: z.string().max(201).optional(),
+  githubRepo: z.string().max(201).regex(/^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/, 'Must be in owner/repo format').optional(),
   githubProjectItemId: z.string().max(100).optional(),
   labels: z.array(labelSchema).max(50).optional(),
   assignees: z.array(assigneeSchema).max(50).optional(),

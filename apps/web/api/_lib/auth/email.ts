@@ -16,7 +16,11 @@ export async function sendOtpEmail(email: string, code: string): Promise<void> {
 
   if (!client) {
     // Development fallback: log to console
-    console.log(`[OTP] Code for ${email}: ${code}`);
+    if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+      console.log(`[OTP] Code for ${email}: ${code}`);
+    } else {
+      console.log(`[OTP] Code sent to ${email} (code hidden in production)`);
+    }
     return;
   }
 

@@ -1,7 +1,10 @@
 import crypto from 'crypto';
 
 const JWT_SECRET = process.env.JWT_SECRET || (() => {
-  console.warn('[auth] JWT_SECRET not set — using random secret. Tokens will be invalidated on restart. Set JWT_SECRET in your environment for persistent sessions.');
+  if (process.env.VERCEL) {
+    throw new Error('JWT_SECRET environment variable is required in production');
+  }
+  console.warn('[auth] JWT_SECRET not set — using random secret (tokens will not persist across restarts)');
   return crypto.randomBytes(32).toString('hex');
 })();
 const TOKEN_EXPIRY = 7 * 24 * 60 * 60; // 7 days in seconds
