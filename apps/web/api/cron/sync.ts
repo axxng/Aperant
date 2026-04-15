@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ensureDb } from '../_lib/db/client.js';
 import { purgeOldEvents } from '../_lib/events.js';
+import { syncAllProducts } from '../_lib/sync/github-sync.js';
+import { retryPendingWritebacks } from '../_lib/sync/github-writeback.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   await ensureDb();
@@ -18,15 +20,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // TODO: Import and call syncAllProducts once the sync module is created
-    // import { syncAllProducts } from '../_lib/sync.js';
-    // const results = await syncAllProducts();
-    const results = { status: 'stub', message: 'Sync module not yet implemented' };
+    // 1. Pull sync: GitHub → Turso
+    let syncResults: any = null;
+    try {
+      const results = await syncAllProducts();
+      syncResults = Object.fromEntries(results);
+    } catch (error: any) {
+      console.log(`Pull sync error: ${error.message}`);
+    }
 
-    // Purge old events (older than 1 hour)
+    // 2. Write-back retry: Turso → GitHub
+    let writebackResults: { succeeded: number; failed: number } | null = null;
+    try {
+      writebackResults = await retryPendingWritebacks();
+      if (writebackResults.succeeded > 0 || writebackResults.failed > 0) {
+        console.log(`Write-back retry: ${writebackResults.succeeded} succeeded, ${writebackResults.failed} failed`);
+      }
+    } catch (error: any) {
+      console.log(`Write-back retry error: ${error.message}`);
+    }
+
+    // 3. Purge old events (older than 1 hour)
     await purgeOldEvents(3600);
 
-    res.json({ success: true, results, purgedEvents: true });
+    res.json({
+      success: true,
+      pullSync: syncResults,
+      writeback: writebackResults,
+      purgedEvents: true,
+    });
   } catch (error: any) {
     res.status(500).json({ error: 'Cron job failed', message: error.message });
   }
