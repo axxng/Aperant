@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Clock, MoreVertical } from 'lucide-react';
+import { Clock, MoreVertical, RefreshCw } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from './ui/tooltip';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -117,7 +118,8 @@ function taskCardPropsAreEqual(prevProps: TaskCardProps, nextProps: TaskCardProp
     prevTask.priority === nextTask.priority &&
     prevTask.category === nextTask.category &&
     prevTask.labels?.length === nextTask.labels?.length &&
-    prevTask.assignees?.length === nextTask.assignees?.length
+    prevTask.assignees?.length === nextTask.assignees?.length &&
+    prevTask.githubSyncPending === nextTask.githubSyncPending
   );
 }
 
@@ -273,6 +275,23 @@ export const TaskCard = memo(function TaskCard({
                 </div>
               ))}
             </div>
+          )}
+
+          {/* GitHub sync pending indicator */}
+          {task.githubSyncPending && task.githubRepo && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1 text-[11px] text-amber-500">
+                    <RefreshCw className="h-3 w-3 animate-spin" />
+                    <span>{t('tasks:sync.pendingTooltip')}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t('tasks:sync.pendingToast')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
 
           {/* Footer: relative time + status dropdown */}
