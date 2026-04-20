@@ -1,0 +1,291 @@
+@import "tailwindcss";
+
+/* Aperant Web - Design System */
+/* Based on the desktop app's Oscura Midnight theme */
+
+/* Define custom theme colors for Tailwind CSS v4 */
+@theme {
+  /* Font families */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+
+  /* Colors - using CSS variables for theme switching */
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  /* Semantic colors */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* Border radius - from design system */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-full: 9999px;
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.25s cubic-bezier(0, 0, 0.2, 1);
+  --animate-slide-up: slide-up 0.25s cubic-bezier(0, 0, 0.2, 1);
+  --animate-scale-in: scale-in 0.2s cubic-bezier(0, 0, 0.2, 1);
+
+  @keyframes fade-in {
+    from { opacity: 0 }
+    to { opacity: 1 }
+  }
+  @keyframes slide-up {
+    from { transform: translateY(8px); opacity: 0 }
+    to { transform: translateY(0); opacity: 1 }
+  }
+  @keyframes scale-in {
+    from { transform: scale(0.95); opacity: 0 }
+    to { transform: scale(1); opacity: 1 }
+  }
+}
+
+/* CSS variables for light mode */
+:root {
+  /* Light Mode - Warm off-white tones */
+  --background: #F2F2ED;
+  --foreground: #0B0B0F;
+
+  --card: #FFFFFF;
+  --card-foreground: #0B0B0F;
+
+  /* Accent - Muted olive/yellow for light mode */
+  --primary: #A5A66A;
+  --primary-foreground: #0B0B0F;
+
+  --secondary: #E8E8E3;
+  --secondary-foreground: #0B0B0F;
+
+  --muted: #EDEDE8;
+  --muted-foreground: #5C6974;
+
+  --accent: #EFEFE0;
+  --accent-foreground: #A5A66A;
+
+  --destructive: #D84F68;
+  --destructive-foreground: #FFFFFF;
+
+  --border: #DEDED9;
+  --input: #DEDED9;
+  --ring: #A5A66A;
+
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #0B0B0F;
+
+  --popover: #FFFFFF;
+  --popover-foreground: #0B0B0F;
+
+  /* Semantic colors */
+  --success: #4EBE96;
+  --success-foreground: #FFFFFF;
+  --success-light: #E0F5ED;
+  --warning: #D2D714;
+  --warning-foreground: #0B0B0F;
+  --warning-light: #F5F5D0;
+  --info: #479FFA;
+  --info-foreground: #FFFFFF;
+  --info-light: #E8F4FF;
+  --error: #D84F68;
+  --error-light: #FCE8EC;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --shadow-focus: 0 0 0 3px rgba(165, 166, 106, 0.2);
+
+  /* Border radius */
+  --radius: 12px;
+}
+
+/* Dark Mode - Oscura Midnight (Default/Primary theme) */
+.dark {
+  /* Near-black backgrounds - OLED optimized */
+  --background: #0B0B0F;
+  --foreground: #E6E6E6;
+
+  /* Card surfaces - subtle elevation */
+  --card: #121216;
+  --card-foreground: #E6E6E6;
+
+  /* Accent - Saturated yellow for vibrant contrast */
+  --primary: #D6D876;
+  --primary-foreground: #0B0B0F;
+
+  --secondary: #1A1A1F;
+  --secondary-foreground: #E6E6E6;
+
+  --muted: #1A1A1F;
+  --muted-foreground: #868F97;
+
+  --accent: #2A2A1F;
+  --accent-foreground: #D6D876;
+
+  --destructive: #FF5C5C;
+  --destructive-foreground: #0B0B0F;
+
+  /* Subtle dark borders for card definition */
+  --border: #232323;
+  --input: #232323;
+  --ring: #D6D876;
+
+  --sidebar: #0E0E12;
+  --sidebar-foreground: #E6E6E6;
+
+  --popover: #1A1A1F;
+  --popover-foreground: #E6E6E6;
+
+  /* Semantic colors - muted for dark mode */
+  --success: #4EBE96;
+  --success-foreground: #0B0B0F;
+  --success-light: #1A2924;
+  --warning: #D2D714;
+  --warning-foreground: #0B0B0F;
+  --warning-light: #262618;
+  --info: #479FFA;
+  --info-foreground: #0B0B0F;
+  --info-light: #1A2230;
+  --error: #FF5C5C;
+  --error-light: #2A1A1A;
+
+  /* Shadows - deeper for dark mode */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.8);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.9);
+  --shadow-focus: 0 0 0 2px rgba(214, 216, 118, 0.2);
+}
+
+/* Base resets */
+* {
+  border-color: var(--border);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-feature-settings: "rlig" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography utilities */
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Card styles */
+.card-surface {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+}
+
+.dark .card-surface {
+  box-shadow: none;
+}
+
+:root .card-surface {
+  box-shadow: var(--shadow-md);
+}
+
+/* Interactive card hover state */
+.card-interactive {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-interactive:hover {
+  border-color: var(--primary);
+}
+
+.dark .card-interactive:hover {
+  border-color: rgba(214, 216, 118, 0.5);
+}
+
+/* Surface elevated - for dropdowns, popovers */
+.surface-elevated {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.dark .surface-elevated {
+  background-color: #1A1A1F;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  opacity: 0.3;
+  border-radius: var(--radius-full);
+  transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  opacity: 0.5;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(134, 143, 151, 0.3);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(134, 143, 151, 0.5);
+}
+
+/* Focus visible styles */
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}

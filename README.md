@@ -116,7 +116,8 @@ AI-assisted feature planning with competitor analysis and audience targeting.
 ```
 Aperant/
 ├── apps/
-│   └── desktop/     # Electron desktop application (TypeScript AI agent layer + UI)
+│   ├── desktop/     # Electron desktop application (TypeScript AI agent layer + UI)
+│   └── web/         # Web-based multi-product backlog (React + Express + SQLite)
 ├── guides/          # Additional documentation
 └── scripts/         # Build utilities
 ```
@@ -128,6 +129,49 @@ Aperant/
 Want to build from source or contribute? See [CONTRIBUTING.md](CONTRIBUTING.md) for complete development setup instructions.
 
 For Linux-specific builds (Flatpak, AppImage), see [guides/linux.md](guides/linux.md).
+
+### Web App (Multi-Product Backlog)
+
+A standalone web application for managing tasks across multiple GitHub repositories with a consolidated Kanban board. Runs independently of the Electron desktop app.
+
+**Prerequisites:**
+- Node.js >= 24
+- A GitHub personal access token (for issue sync)
+
+**Setup and run:**
+
+```bash
+# Install dependencies
+cd apps/web && npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env — set GITHUB_TOKEN and optionally ANTHROPIC_API_KEY
+
+# Start development server (API on :3001, UI on :5173)
+npm run dev
+
+# Or from root:
+npm run dev:web
+```
+
+**Architecture:** Express API server with SQLite database + React SPA frontend. In dev mode, Vite proxies `/api/*` requests to the Express backend.
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start both server and client in development mode |
+| `npm run dev:server` | Start only the Express API server |
+| `npm run dev:client` | Start only the Vite dev server |
+| `npm run build` | TypeScript check + Vite production build |
+| `npm run typecheck` | Run TypeScript type checking |
+| `npm run lint` | Run Biome linter |
+
+**Key features:**
+- Multi-product support (single repo, multi-repo, or GitHub Projects v2)
+- Consolidated Kanban board across all products with drag-and-drop
+- GitHub issue sync with scheduled polling
+- Real-time updates via Server-Sent Events
+- i18n support (English + French)
 
 ---
 
@@ -158,8 +202,12 @@ All releases are:
 | `npm run package:win` | Package for Windows |
 | `npm run package:linux` | Package for Linux |
 | `npm run package:flatpak` | Package as Flatpak (see [guides/linux.md](guides/linux.md)) |
-| `npm run lint` | Run linter |
-| `npm test` | Run frontend tests |
+| `npm run lint` | Run linter (desktop) |
+| `npm test` | Run frontend tests (desktop) |
+| `npm run dev:web` | Start web app in development mode |
+| `npm run build:web` | Build web app for production |
+| `npm run lint:web` | Run linter (web) |
+| `npm run typecheck:web` | Type check web app |
 
 ---
 

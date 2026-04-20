@@ -1,0 +1,96 @@
+{
+  "views": {
+    "sort": "Tri",
+    "priority": "Priorité"
+  },
+  "status": {
+    "backlog": "Backlog",
+    "queue": "File d'attente",
+    "in_progress": "En cours",
+    "ai_review": "Revue IA",
+    "human_review": "Revue",
+    "done": "Terminé",
+    "pr_created": "PR créée",
+    "error": "Erreur"
+  },
+  "priority": {
+    "low": "Basse",
+    "medium": "Moyenne",
+    "high": "Haute",
+    "urgent": "Urgente"
+  },
+  "category": {
+    "feature": "Fonctionnalité",
+    "bug_fix": "Correction de bug",
+    "refactoring": "Refactoring",
+    "documentation": "Documentation",
+    "security": "Sécurité",
+    "performance": "Performance",
+    "ui_ux": "UI/UX",
+    "infrastructure": "Infrastructure",
+    "testing": "Tests"
+  },
+  "kanban": {
+    "emptyBacklog": "Aucune tâche dans le backlog",
+    "emptyQueue": "Aucune tâche en file d'attente",
+    "emptyInProgress": "Aucune tâche en cours",
+    "emptyReview": "Aucune tâche en revue",
+    "emptyDone": "Aucune tâche terminée",
+    "emptyError": "Aucune erreur",
+    "dragHint": "Glissez les tâches entre les colonnes pour changer leur statut",
+    "newTask": "Nouvelle tâche",
+    "addTask": "Ajouter une tâche"
+  },
+  "filters": {
+    "searchPlaceholder": "Rechercher des tâches...",
+    "priority": "Priorité",
+    "category": "Catégorie",
+    "sortBy": "Trier par",
+    "reset": "Réinitialiser les filtres",
+    "noResults": "Aucune tâche ne correspond à vos filtres",
+    "sort": {
+      "newest": "Plus récentes",
+      "oldest": "Plus anciennes",
+      "priority": "Priorité la plus haute"
+    }
+  },
+  "actions": {
+    "moveTo": "Déplacer vers"
+  },
+  "form": {
+    "title": "Titre",
+    "titlePlaceholder": "Saisir le titre de la tâche...",
+    "description": "Description",
+    "descriptionPlaceholder": "Décrivez ce qui doit être fait...",
+    "product": "Produit",
+    "selectProduct": "Sélectionner un produit...",
+    "priority": "Priorité",
+    "category": "Catégorie",
+    "createTask": "Créer la tâche",
+    "editTask": "Modifier la tâche",
+    "updateTask": "Mettre à jour",
+    "status": "Statut",
+    "confirmDelete": "Supprimer cette tâche ?",
+    "githubIssue": "Issue GitHub"
+  },
+  "pr": {
+    "createTitle": "Créer une Pull Request",
+    "create": "Créer une PR",
+    "created": "Pull request créée !",
+    "draft": "Brouillon",
+    "viewOnGitHub": "Voir sur GitHub",
+    "prTitle": "Titre de la PR",
+    "titlePlaceholder": "Saisir le titre de la pull request...",
+    "body": "Description",
+    "bodyPlaceholder": "Décrivez les changements...",
+    "headBranch": "Depuis la branche",
+    "baseBranch": "Vers la branche",
+    "selectBranch": "Sélectionner une branche...",
+    "createAsDraft": "Créer comme brouillon"
+  },
+  "sync": {
+    "pendingToast": "Enregistré localement. La synchronisation GitHub sera retentée automatiquement.",
+    "pendingTooltip": "Synchronisation GitHub en attente",
+    "conflictToast": "Cette tâche a été modifiée par un autre utilisateur. Veuillez rouvrir et réessayer."
+  }
+}

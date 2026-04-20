@@ -1,0 +1,58 @@
+{
+  "title": "Paramètres",
+  "subtitle": "Configurer votre espace de travail Aperant",
+  "saved": "Paramètres enregistrés avec succès",
+  "saveError": "Échec de l'enregistrement des paramètres",
+  "sections": {
+    "appearance": "Apparence",
+    "apiKeys": "Clés API",
+    "sync": "Synchronisation et intégration",
+    "language": "Langue",
+    "model": "Modèle IA"
+  },
+  "theme": {
+    "label": "Mode du thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
+  },
+  "colorTheme": {
+    "label": "Thème de couleur",
+    "default": "Par défaut",
+    "ocean": "Océan",
+    "forest": "Forêt",
+    "dusk": "Crépuscule",
+    "lime": "Citron vert",
+    "retro": "Rétro",
+    "neo": "Néo"
+  },
+  "apiKeys": {
+    "anthropic": "Clé API Anthropic",
+    "anthropicPlaceholder": "sk-ant-...",
+    "anthropicDescription": "Requise pour les fonctionnalités IA (insights, revue, idéation, feuille de route, journal)",
+    "github": "Jeton GitHub",
+    "githubPlaceholder": "ghp_...",
+    "githubDescription": "Requis pour l'intégration GitHub (issues, PRs, synchronisation)"
+  },
+  "sync": {
+    "interval": "Intervalle de synchronisation",
+    "intervalDescription": "Fréquence de synchronisation avec GitHub (en secondes)",
+    "seconds": "secondes"
+  },
+  "language": {
+    "label": "Langue",
+    "en": "English",
+    "fr": "Français"
+  },
+  "model": {
+    "label": "Modèle IA par défaut",
+    "opus": "Claude Opus (Plus performant)",
+    "sonnet": "Claude Sonnet (Équilibré)",
+    "haiku": "Claude Haiku (Plus rapide)"
+  },
+  "actions": {
+    "save": "Enregistrer les paramètres",
+    "saving": "Enregistrement...",
+    "reset": "Réinitialiser par défaut"
+  }
+}

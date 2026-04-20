@@ -1,0 +1,12 @@
+{
+  "items": {
+    "allProducts": "Tous les produits",
+    "kanban": "Tableau Kanban",
+    "settings": "Paramètres"
+  },
+  "sidebar": {
+    "collapse": "Réduire la barre latérale",
+    "expand": "Développer la barre latérale",
+    "addProduct": "Ajouter un produit"
+  }
+}

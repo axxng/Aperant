@@ -1,0 +1,12 @@
+{
+  "items": {
+    "allProducts": "All Products",
+    "kanban": "Kanban Board",
+    "settings": "Settings"
+  },
+  "sidebar": {
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "addProduct": "Add product"
+  }
+}
