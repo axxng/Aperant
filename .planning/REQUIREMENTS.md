@@ -7,14 +7,19 @@
 
 ### Browse — Single-repo issues browser
 
-- [ ] **BROWSE-01**: User can view open GitHub issues for a connected product repo
-- [ ] **BROWSE-02**: User can view closed GitHub issues for a connected product repo
-- [ ] **BROWSE-03**: User can filter issues by one or more labels (multi-select)
-- [ ] **BROWSE-04**: User can filter issues by assignee
-- [ ] **BROWSE-05**: User can search issues by keyword in title
-- [ ] **BROWSE-06**: User can open an issue detail panel showing rendered Markdown body, labels, assignee, and created date
-- [ ] **BROWSE-07**: User can load more issues using a "Load More" button (50 issues per page)
-- [ ] **BROWSE-08**: User can navigate to the original issue on github.com from the detail panel
+- [x] **BROWSE-01
+**: User can view open GitHub issues for a connected product repo
+- [x] **BROWSE-02
+**: User can view closed GitHub issues for a connected product repo
+- [x] **BROWSE-03
+**: User can filter issues by one or more labels (multi-select)
+- [x] **BROWSE-04
+**: User can filter issues by assignee
+- [x] **BROWSE-05**: User can search issues by keyword in title
+- [x] **BROWSE-06**: User can open an issue detail panel showing rendered Markdown body, labels, assignee, and created date
+- [x] **BROWSE-07**: User can load more issues using a "Load More" button (50 issues per page)
+- [x] **BROWSE-08
+**: User can navigate to the original issue on github.com from the detail panel
 
 ### Cross — Cross-repo unified view
 
@@ -86,14 +91,14 @@
 |-------------|-------|--------|
 | INFRA-01 | Phase 1 | Complete |
 | INFRA-02 | Phase 1 | Complete |
-| BROWSE-01 | Phase 2 | Pending |
-| BROWSE-02 | Phase 2 | Pending |
-| BROWSE-03 | Phase 2 | Pending |
-| BROWSE-04 | Phase 2 | Pending |
-| BROWSE-05 | Phase 2 | Pending |
-| BROWSE-06 | Phase 2 | Pending |
-| BROWSE-07 | Phase 2 | Pending |
-| BROWSE-08 | Phase 2 | Pending |
+| BROWSE-01 | Phase 2 | Complete |
+| BROWSE-02 | Phase 2 | Complete |
+| BROWSE-03 | Phase 2 | Complete |
+| BROWSE-04 | Phase 2 | Complete |
+| BROWSE-05 | Phase 2 | Complete |
+| BROWSE-06 | Phase 2 | Complete |
+| BROWSE-07 | Phase 2 | Complete |
+| BROWSE-08 | Phase 2 | Complete |
 | CROSS-01 | Phase 3 | Pending |
 | CROSS-02 | Phase 3 | Pending |
 | CROSS-03 | Phase 3 | Pending |
