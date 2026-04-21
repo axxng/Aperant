@@ -3,10 +3,14 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 vi.mock('../../../../_lib/db/client.js', () => ({ ensureDb: vi.fn() }));
 vi.mock('../../../../_lib/auth/middleware.js', () => ({
-  authenticateRequest: vi.fn().mockResolvedValue({ id: 'user-1' }),
+  authenticateRequest: vi.fn().mockResolvedValue({ userId: 'user-1' }),
 }));
-vi.mock('../../../../_lib/config-resolver.js', () => ({
-  resolveConfig: vi.fn().mockResolvedValue('fake-token'),
+vi.mock('../../../../_lib/db/users.js', () => ({
+  getUserById: vi.fn().mockResolvedValue({
+    id: 'user-1', email: 'test@example.com', name: 'Test', role: 'member',
+    github_token: 'fake-token', github_login: 'testuser',
+    password_hash: null, created_at: '', updated_at: '',
+  }),
 }));
 
 import { authenticateRequest } from '../../../../_lib/auth/middleware.js';
@@ -46,7 +50,7 @@ const SAMPLE_LABELS = [
 describe('labels handler', () => {
   beforeEach(async () => {
     vi.spyOn(globalThis, 'fetch');
-    vi.mocked(authenticateRequest).mockResolvedValue({ id: 'user-1' } as any);
+    vi.mocked(authenticateRequest).mockResolvedValue({ userId: 'user-1' } as any);
     // Dynamic import so the file can fail at import time without crashing the whole suite
     const mod = await import('./labels.js').catch(() => ({ default: null }));
     handler = mod.default ?? (async (_req: VercelRequest, res: VercelResponse) => {
