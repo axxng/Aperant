@@ -8,14 +8,13 @@ const VALID_KEYS = [
   'colorTheme',
   'language',
   'anthropicApiKey',
-  'githubToken',
   'gitlabToken',
   'gitlabInstanceUrl',
   'syncInterval',
   'defaultModel',
 ] as const;
 
-const SENSITIVE_KEYS = ['anthropicApiKey', 'githubToken', 'gitlabToken'];
+const SENSITIVE_KEYS = ['anthropicApiKey', 'gitlabToken'];
 
 const bulkSettingsSchema = z.record(z.enum(VALID_KEYS), z.string());
 

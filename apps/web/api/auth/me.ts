@@ -18,5 +18,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(404).json({ error: 'User not found' });
   }
 
-  res.json({ id: dbUser.id, email: dbUser.email, name: dbUser.name, role: dbUser.role });
+  res.json({ id: dbUser.id, email: dbUser.email, name: dbUser.name, role: dbUser.role, githubLogin: dbUser.github_login ?? null });
 }
