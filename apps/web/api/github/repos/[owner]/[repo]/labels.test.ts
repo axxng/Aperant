@@ -29,12 +29,12 @@ function mockVercelRes(): { res: VercelResponse; json: ReturnType<typeof vi.fn>;
   return { res: { json, status } as unknown as VercelResponse, json, status };
 }
 
-function mockFetchResponse(status: number, body: unknown): Response {
+function mockFetchResponse(status: number, body: unknown, headers: Record<string, string> = {}): Response {
   return {
     status,
     ok: status >= 200 && status < 300,
     json: async () => body,
-    headers: { get: () => null },
+    headers: { get: (key: string) => headers[key.toLowerCase()] ?? null },
   } as unknown as Response;
 }
 
@@ -77,7 +77,7 @@ describe('labels handler', () => {
   });
 
   it('TODO: returns 429 with retryAfter when rate limited', async () => {
-    vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(Object.assign(new Error('rate limited'), { retryAfter: 60, constructor: { name: 'GitHubRateLimitError' } }));
+    vi.mocked(fetch).mockResolvedValueOnce(mockFetchResponse(429, {}, { 'retry-after': '60' }));
     const { res, status } = mockVercelRes();
     await handler(mockVercelReq(), res);
     expect(status).toHaveBeenCalledWith(429);
