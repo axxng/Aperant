@@ -5,6 +5,19 @@
 
 ## v1 Requirements
 
+### Auth — GitHub OAuth login
+
+- [ ] **AUTH-01**: `githubFetch()` accepts a `token` parameter and passes it in the Authorization header
+- [ ] **AUTH-02**: OAuth callback returns 400 when the state cookie does not match the query state param
+- [ ] **AUTH-03**: OAuth callback returns 400 when the `code` query param is missing
+- [ ] **AUTH-04**: The first user to complete GitHub OAuth is assigned `role='admin'`; all subsequent users get `role='member'`
+- [ ] **AUTH-05**: Re-authenticating via OAuth preserves the existing user's role (admin is not downgraded)
+- [ ] **AUTH-06**: `upsertOAuthUser()` uses `ON CONFLICT(email) DO UPDATE` and does not overwrite the `role` column
+- [ ] **AUTH-07**: GitHub proxy routes return 403 when the authenticated user has no `github_token` in the DB
+- [ ] **AUTH-08**: DB migration 012 adds `github_token TEXT` and `github_login TEXT` columns to the `users` table and drops the `otp_codes` table
+- [ ] **AUTH-09**: `LoginPage` renders only a "Sign in with GitHub" button — no email field, no OTP form
+- [ ] **AUTH-13**: All existing GitHub API proxy routes use the requesting user's OAuth token instead of the shared PAT
+
 ### Browse — Single-repo issues browser
 
 - [x] **BROWSE-01

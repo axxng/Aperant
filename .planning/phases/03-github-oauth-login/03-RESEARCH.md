@@ -590,17 +590,17 @@ Complete removal of OTP/Resend:
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`github-sync.ts` cron token after OAuth ships**
    - What we know: The cron background sync (`/api/cron/sync`) uses `resolveConfig('githubToken', 'GITHUB_TOKEN')` — a service-account PAT pattern. This is intentionally out of scope for Phase 3.
    - What's unclear: After removing `githubToken` from `VALID_KEYS` in settings, the cron can no longer update the token via the Settings UI. It must rely on the `GITHUB_TOKEN` env var in Vercel project settings.
-   - Recommendation: Document in phase notes that `GITHUB_TOKEN` env var must be set in Vercel for cron sync to continue working. The admin Settings UI no longer manages it. This is acceptable for UAT — a dedicated service token env var is standard Vercel practice.
+   - RESOLVED: `GITHUB_TOKEN` env var must be set in Vercel project settings for cron sync to continue working. The admin Settings UI no longer manages it. This is acceptable for UAT — a dedicated service token env var is standard Vercel practice. `github-sync.ts` is explicitly out of scope for Phase 3.
 
 2. **Existing users with `ADMIN_EMAIL`-bootstrapped accounts**
    - What we know: Any deployment that used `ADMIN_EMAIL` has a user row with `password_hash = NULL` and `github_token = NULL`.
    - What's unclear: Should migration 012 or the OAuth callback attempt to match this user by email and upgrade them?
-   - Recommendation: The `upsertOAuthUser()` function's `ON CONFLICT(email) DO UPDATE` naturally handles this — when the admin logs in via GitHub with the same email, their row is updated with `github_token` and `github_login`. No special migration step needed.
+   - RESOLVED: The `upsertOAuthUser()` function's `ON CONFLICT(email) DO UPDATE` naturally handles this — when the admin logs in via GitHub with the same email, their row is updated with `github_token` and `github_login`. No special migration step needed.
 
 ---
 

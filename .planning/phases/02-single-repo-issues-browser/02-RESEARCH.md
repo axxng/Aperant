@@ -735,17 +735,19 @@ Note: existing test environment is `node`, targeting `api/**/*.test.ts` only. Fr
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Products with non-repo sources**
    - What we know: `ProductSource` is a discriminated union; `RepoSource` has `owner`/`repo`; `GitHubProjectSource` does not.
    - What's unclear: Should `IssuesView` work for products configured with `github_project` or `repos` (multi-repo) sources? Multi-repo is Phase 3 scope.
    - Recommendation: In Phase 2, if no `'repo'` source found, show a "This product does not have a single connected GitHub repository. Issues browser requires a repo source." empty state rather than crashing.
+   - RESOLVED: Plan 02-07 Task 1 implements an explicit `repoSource` guard — if `product.sources.find(s => s.type === 'repo')` returns undefined, a "no repo source" error state is shown instead of crashing.
 
 2. **`@tailwindcss/typography` dark mode compatibility with Tailwind v4**
    - What we know: Typography plugin 0.5.x was designed for Tailwind v3; v4 changes the plugin API.
    - What's unclear: Whether `@plugin "@tailwindcss/typography"` works seamlessly with Tailwind v4.1.7 in `globals.css`.
    - Recommendation: Test the install in Wave 0. If the `prose` classes do not generate, fall back to manual Markdown body styling (apply `text-sm leading-relaxed space-y-3` on the container and targeted heading/code styles).
+   - RESOLVED: Plan 02-01 Task 1 includes a conditional fallback — if `prose` classes do not generate after install, apply manual `text-sm leading-relaxed space-y-3` Markdown body styling as the fallback.
 
 ---
 

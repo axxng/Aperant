@@ -2,6 +2,7 @@
   "items": {
     "allProducts": "Tous les produits",
     "kanban": "Tableau Kanban",
+    "kanbanTab": "Kanban",
     "settings": "Paramètres"
   },
   "sidebar": {
