@@ -82,43 +82,41 @@
 
 ## Traceability
 
-Populated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | — | Pending |
-| INFRA-02 | — | Pending |
-| BROWSE-01 | — | Pending |
-| BROWSE-02 | — | Pending |
-| BROWSE-03 | — | Pending |
-| BROWSE-04 | — | Pending |
-| BROWSE-05 | — | Pending |
-| BROWSE-06 | — | Pending |
-| BROWSE-07 | — | Pending |
-| BROWSE-08 | — | Pending |
-| CROSS-01 | — | Pending |
-| CROSS-02 | — | Pending |
-| CROSS-03 | — | Pending |
-| TRIAGE-01 | — | Pending |
-| TRIAGE-02 | — | Pending |
-| TRIAGE-03 | — | Pending |
-| TRIAGE-04 | — | Pending |
-| TRIAGE-05 | — | Pending |
-| TRIAGE-06 | — | Pending |
-| NOTES-01 | — | Pending |
-| NOTES-02 | — | Pending |
-| NOTES-03 | — | Pending |
-| PROMOTE-01 | — | Pending |
-| PROMOTE-02 | — | Pending |
-| PROMOTE-03 | — | Pending |
-| PROMOTE-04 | — | Pending |
-| PROMOTE-05 | — | Pending |
+| INFRA-01 | Phase 1 | Pending |
+| INFRA-02 | Phase 1 | Pending |
+| BROWSE-01 | Phase 2 | Pending |
+| BROWSE-02 | Phase 2 | Pending |
+| BROWSE-03 | Phase 2 | Pending |
+| BROWSE-04 | Phase 2 | Pending |
+| BROWSE-05 | Phase 2 | Pending |
+| BROWSE-06 | Phase 2 | Pending |
+| BROWSE-07 | Phase 2 | Pending |
+| BROWSE-08 | Phase 2 | Pending |
+| CROSS-01 | Phase 3 | Pending |
+| CROSS-02 | Phase 3 | Pending |
+| CROSS-03 | Phase 3 | Pending |
+| TRIAGE-01 | Phase 4 | Pending |
+| TRIAGE-02 | Phase 4 | Pending |
+| TRIAGE-03 | Phase 4 | Pending |
+| TRIAGE-04 | Phase 4 | Pending |
+| TRIAGE-05 | Phase 4 | Pending |
+| TRIAGE-06 | Phase 4 | Pending |
+| NOTES-01 | Phase 5 | Pending |
+| NOTES-02 | Phase 5 | Pending |
+| NOTES-03 | Phase 5 | Pending |
+| PROMOTE-01 | Phase 6 | Pending |
+| PROMOTE-02 | Phase 6 | Pending |
+| PROMOTE-03 | Phase 6 | Pending |
+| PROMOTE-04 | Phase 6 | Pending |
+| PROMOTE-05 | Phase 6 | Pending |
 
 **Coverage:**
 - v1 requirements: 27 total
-- Mapped to phases: 0 (populated by roadmapper)
-- Unmapped: 27 ⚠️
+- Mapped to phases: 27
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-21*
-*Last updated: 2026-04-21 after initial definition*
+*Last updated: 2026-04-21 after roadmap creation — all 27 requirements mapped*
