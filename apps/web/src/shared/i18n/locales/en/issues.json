@@ -39,5 +39,25 @@
   "state": {
     "open": "Open",
     "closed": "Closed"
+  },
+  "allIssues": {
+    "heading": "All Issues",
+    "searchPlaceholder": "Search all issues...",
+    "empty": {
+      "openHeading": "No open issues",
+      "closedHeading": "No closed issues",
+      "body": "Issues from all connected repos will appear here."
+    },
+    "error": {
+      "heading": "{{repoName}} — could not load issues",
+      "body": "Check your GitHub connection or try again.",
+      "rateLimit": "{{repoName}} — rate limited, retry in {{retryAfter}}s",
+      "rateLimitUnknown": "{{repoName}} — rate limited",
+      "retry": "Retry load",
+      "dismiss": "Dismiss error for {{repoName}}"
+    },
+    "productBadge": {
+      "tooltip": "From {{productName}}"
+    }
   }
 }
