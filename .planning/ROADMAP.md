@@ -30,7 +30,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. The `issue_triage` table exists in production with all required columns including `github_comment_id` and `comment_status`
   3. GET and PUT `/api/triage/[owner]/[repo]/[number]` routes respond correctly under auth and return triage state
   4. The existing `/api/github/repos/[owner]/[repo]/issues` proxy accepts `labels` and `assignee` query params without breaking existing callers
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 01-01-PLAN.md — Vitest config + GitHubRateLimitError class + githubFetch() rate-limit detection + unit tests
+- [ ] 01-02-PLAN.md — 011_issue_triage DB migration + triage.ts DB helpers (getTriageRecord, upsertTriageRecord) + unit tests
+- [ ] 01-03-PLAN.md — Triage API routes (GET + PUT) + issues proxy filter extension (labels, assignee) + rate-limit catch
 
 ### Phase 2: Single-Repo Issues Browser
 **Goal**: Users can browse, filter, search, and inspect GitHub issues for any connected product repo without leaving Currents
@@ -100,7 +104,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 0/3 | Not started | - |
 | 2. Single-Repo Issues Browser | 0/TBD | Not started | - |
 | 3. Cross-Repo Unified View | 0/TBD | Not started | - |
 | 4. Triage Actions | 0/TBD | Not started | - |
