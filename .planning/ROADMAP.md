@@ -32,8 +32,8 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. The existing `/api/github/repos/[owner]/[repo]/issues` proxy accepts `labels` and `assignee` query params without breaking existing callers
 **Plans**: 3 plans
 Plans:
-- [ ] 01-01-PLAN.md — Vitest config + GitHubRateLimitError class + githubFetch() rate-limit detection + unit tests
-- [ ] 01-02-PLAN.md — 011_issue_triage DB migration + triage.ts DB helpers (getTriageRecord, upsertTriageRecord) + unit tests
+- [x] 01-01-PLAN.md — Vitest config + GitHubRateLimitError class + githubFetch() rate-limit detection + unit tests
+- [x] 01-02-PLAN.md — 011_issue_triage DB migration + triage.ts DB helpers (getTriageRecord, upsertTriageRecord) + unit tests
 - [ ] 01-03-PLAN.md — Triage API routes (GET + PUT) + issues proxy filter extension (labels, assignee) + rate-limit catch
 
 ### Phase 2: Single-Repo Issues Browser
