@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Vitest config + GitHubRateLimitError class + githubFetch() rate-limit detection + unit tests
 - [x] 01-02-PLAN.md — 011_issue_triage DB migration + triage.ts DB helpers (getTriageRecord, upsertTriageRecord) + unit tests
-- [ ] 01-03-PLAN.md — Triage API routes (GET + PUT) + issues proxy filter extension (labels, assignee) + rate-limit catch
+- [x] 01-03-PLAN.md — Triage API routes (GET + PUT) + issues proxy filter extension (labels, assignee) + rate-limit catch
 
 ### Phase 2: Single-Repo Issues Browser
 **Goal**: Users can browse, filter, search, and inspect GitHub issues for any connected product repo without leaving Currents
