@@ -47,8 +47,8 @@
 
 ### Infra — Foundation
 
-- [ ] **INFRA-01**: When GitHub's rate limit is reached, users see an actionable error message (not a generic failure) indicating when they can retry
-- [ ] **INFRA-02**: Triage state DB table is created in a single migration with all required columns, including comment idempotency fields (`github_comment_id`, `comment_status`)
+- [x] **INFRA-01**: When GitHub's rate limit is reached, users see an actionable error message (not a generic failure) indicating when they can retry
+- [x] **INFRA-02**: Triage state DB table is created in a single migration with all required columns, including comment idempotency fields (`github_comment_id`, `comment_status`)
 
 ## v2 Requirements
 
@@ -84,8 +84,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | Phase 1 | Pending |
-| INFRA-02 | Phase 1 | Pending |
+| INFRA-01 | Phase 1 | Complete |
+| INFRA-02 | Phase 1 | Complete |
 | BROWSE-01 | Phase 2 | Pending |
 | BROWSE-02 | Phase 2 | Pending |
 | BROWSE-03 | Phase 2 | Pending |

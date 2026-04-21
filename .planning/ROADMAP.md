@@ -12,7 +12,7 @@ This milestone adds a first-class GitHub Issues browser and triage workflow to C
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Rate-limit safety, DB migration, and triage API routes — prerequisites for all GitHub calls
+- [x] **Phase 1: Foundation** - Rate-limit safety, DB migration, and triage API routes — prerequisites for all GitHub calls (completed 2026-04-21)
 - [ ] **Phase 2: Single-Repo Issues Browser** - Per-product issues list with filters, search, pagination, and detail panel
 - [ ] **Phase 3: Cross-Repo Unified View** - Server-side fan-out aggregating all repos into one list with partial-failure handling
 - [ ] **Phase 4: Triage Actions** - Internal priority, triaged toggle, keyboard navigation, and closed-issue warning
@@ -104,7 +104,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Ready to execute | - |
+| 1. Foundation | 3/3 | Complete    | 2026-04-21 |
 | 2. Single-Repo Issues Browser | 0/TBD | Not started | - |
 | 3. Cross-Repo Unified View | 0/TBD | Not started | - |
 | 4. Triage Actions | 0/TBD | Not started | - |
