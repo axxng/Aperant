@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ensureDb } from '../../../../../../_lib/db/client.js';
 import { authenticateRequest } from '../../../../../../_lib/auth/middleware.js';
+import { getUserById } from '../../../../../../_lib/db/users.js';
 import { githubFetch, GITHUB_API } from '../../../../../../_lib/github.js';
 import { githubCommentSchema } from '../../../../../../_lib/validation.js';
 
@@ -14,6 +15,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await authenticateRequest(req, res);
   if (!user) return;
 
+  const dbUser = await getUserById(user.userId);
+  if (!dbUser?.github_token) {
+    return res.status(403).json({ error: 'GitHub account not connected' });
+  }
+
   try {
     const owner = req.query.owner as string;
     const repo = req.query.repo as string;
@@ -25,6 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const response = await githubFetch(
+      dbUser.github_token,
       `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${encodeURIComponent(number)}/comments`,
       { method: 'POST', body: JSON.stringify({ body: bodyResult.data.body }), headers: { 'Content-Type': 'application/json' } }
     );
