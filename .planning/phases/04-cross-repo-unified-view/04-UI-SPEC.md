@@ -46,7 +46,7 @@ Exceptions:
 - Issue row height: `h-11` (44px) — touch-target minimum, unchanged from Phase 2
 - Sidebar width: `w-56` (224px) expanded, `w-14` (56px) collapsed — unchanged from existing Sidebar
 - Product color dot in row: `h-2 w-2` (8px) — same as label dots and sidebar product dots
-- Product badge text label: `px-1.5 py-0` — matches existing state Badge sizing
+- Product badge text label: `px-2 py-0` — matches existing state Badge sizing
 - Error banner stacking: `space-y-2` (8px) between multiple per-repo banners
 
 **Source:** `IssueListRow.tsx`, `IssueSkeletonRow.tsx`, `Sidebar.tsx`, CONTEXT.md D-12
@@ -106,6 +106,7 @@ New components introduced in this phase:
 - Filter bar: simplified version of `IssuesFilterBar` with state toggle + search only (no labels/assignee dropdowns)
 - Issue list pane: `flex-1 flex flex-col overflow-y-auto`
 - Detail panel: reuse `IssueDetailPanel` as-is
+- **Visual hierarchy:** The issue list pane (`flex-1`) is the primary focal point of the page — it occupies the dominant portion of the viewport and is the main content anchor. All other UI elements (filter bar, error banners, detail panel) are secondary to it.
 
 ### ProductBadge (inline within `IssueListRow` extension or wrapper)
 - Colored dot: `h-2 w-2 rounded-full flex-shrink-0` with `style={{ backgroundColor: product.color }}`
@@ -121,7 +122,7 @@ New components introduced in this phase:
   - Repo name line: `text-sm font-medium text-foreground` e.g. "Acme API"
   - Error description: `text-xs text-muted-foreground` e.g. "Could not load issues" or "Rate limited, retry in 42s"
 - Actions: `flex items-center gap-2 flex-shrink-0`
-  - Retry: `<Button variant="outline" size="sm">Retry</Button>`
+  - Retry: `<Button variant="outline" size="sm">Retry load</Button>`
   - Dismiss: `<Button variant="ghost" size="icon" className="h-6 w-6"><X className="h-3 w-3" /></Button>`
 - Multiple banners: wrapped in `<div className="space-y-2 px-4 py-2">` — stacked, not merged
 - **Note on banner color:** Use `bg-warning/10 border-warning/30` for rate-limit errors (matches existing `Badge variant="warning"` pattern). Use `bg-destructive/10 border-destructive/30` for hard failures (non-rate-limit errors). This matches the existing badge variant color vocabulary.
@@ -159,7 +160,7 @@ New components introduced in this phase:
 - Selected row: `bg-accent/50 border-l-2 border-primary` — identical to Phase 2
 
 ### Retry Banner Interaction
-- "Retry" button calls `refetch()` on the specific failed query (per-repo, not global refetch)
+- "Retry load" button calls `refetch()` on the specific failed query (per-repo, not global refetch)
 - "Dismiss" (×) hides the banner for that repo — local component state (`dismissedRepos: Set<string>`)
 - Dismissed banners stay hidden for the session; a full page refresh brings them back
 - If a dismissed repo's retry eventually succeeds (e.g., after manual retry via another means), the banner naturally disappears when `isError` becomes false
@@ -187,7 +188,7 @@ All strings go into `apps/web/src/shared/i18n/locales/en/issues.json` and `fr/is
 | Error banner — generic body | `issues:allIssues.error.body` | Check your GitHub connection or try again. |
 | Error banner — rate limit | `issues:allIssues.error.rateLimit` | {{repoName}} — rate limited, retry in {{retryAfter}}s |
 | Error banner — rate limit (no time) | `issues:allIssues.error.rateLimitUnknown` | {{repoName}} — rate limited |
-| Retry button | `issues:allIssues.error.retry` | Retry |
+| Retry button | `issues:allIssues.error.retry` | Retry load |
 | Dismiss button aria-label | `issues:allIssues.error.dismiss` | Dismiss error for {{repoName}} |
 | Product badge tooltip | `issues:allIssues.productBadge.tooltip` | From {{productName}} |
 
