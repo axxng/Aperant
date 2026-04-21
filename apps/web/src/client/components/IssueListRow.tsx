@@ -5,16 +5,23 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { cn } from '../lib/utils';
 import type { GitHubIssue } from '@shared/types/github';
 
+interface ProductBadgeInfo {
+  color: string;   // hex from product.color e.g. '#3B82F6' — applied via inline style
+  name: string;    // product.name, truncated in render via max-w-[80px] truncate
+}
+
 interface IssueListRowProps {
   issue: GitHubIssue;
   isSelected: boolean;
   onClick: () => void;
+  productBadge?: ProductBadgeInfo;   // NEW — optional; absent = single-repo IssuesView unchanged
 }
 
 export const IssueListRow = memo(function IssueListRow({
   issue,
   isSelected,
   onClick,
+  productBadge,
 }: IssueListRowProps) {
   const { t } = useTranslation('issues');
 
@@ -85,6 +92,20 @@ export const IssueListRow = memo(function IssueListRow({
       >
         {t(`state.${issue.state}`)}
       </Badge>
+
+      {/* Product badge — shown in unified AllIssuesView only (CROSS-02) */}
+      {productBadge && (
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <span
+            aria-hidden="true"
+            className="h-2 w-2 rounded-full flex-shrink-0"
+            style={{ backgroundColor: productBadge.color }}
+          />
+          <span className="text-[11px] text-muted-foreground truncate max-w-[80px]">
+            {productBadge.name}
+          </span>
+        </div>
+      )}
     </div>
   );
 });
