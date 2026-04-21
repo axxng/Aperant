@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "npx tsx scripts/dev-server.ts",
     "dev:full": "vercel dev",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
@@ -46,11 +47,13 @@
   "devDependencies": {
     "@biomejs/biome": "^2.0.0",
     "@tailwindcss/vite": "^4.1.7",
+    "@types/express": "^5.0.6",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
     "@types/uuid": "^10.0.0",
     "@vercel/node": "^5.0.0",
     "@vitejs/plugin-react": "^4.5.2",
+    "express": "^5.2.1",
     "tailwindcss": "^4.1.7",
     "typescript": "^5.8.3",
     "vite": "^7.0.0",
