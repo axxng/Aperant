@@ -13,7 +13,7 @@ import { authenticateRequest } from '../../../../_lib/auth/middleware.js';
 
 // NOTE: labels.ts does not exist yet — this import will fail until Plan 02 creates it.
 // This test file is the Nyquist RED state.
-let handler: (req: VercelRequest, res: VercelResponse) => Promise<void>;
+let handler: (req: VercelRequest, res: VercelResponse) => Promise<void | VercelResponse>;
 
 function mockVercelReq(overrides: Partial<VercelRequest> = {}): VercelRequest {
   return {
