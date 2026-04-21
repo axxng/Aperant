@@ -88,17 +88,17 @@ Plans:
 **Plans**: 4 plans
 **UI hint**: yes
 Plans:
-- [ ] 04-01-PLAN.md — Wave 0: extend Vitest for frontend (jsdom) + IssueListRow.test.tsx stubs (CROSS-02) + AllIssuesView.test.tsx stubs (CROSS-01, CROSS-03)
-- [ ] 04-02-PLAN.md — IssueListRow productBadge prop extension + useAllIssuesFilters hook + i18n keys (en/fr issues.json + navigation.json)
-- [ ] 04-03-PLAN.md — AllIssuesView component (useQueries fan-out, merge+sort, error banners, product badges)
-- [ ] 04-04-PLAN.md — App.tsx /issues route + Sidebar All Issues NavLink + human verification checkpoint
+- [x] 04-01-PLAN.md — Wave 0: extend Vitest for frontend (jsdom) + IssueListRow.test.tsx stubs (CROSS-02) + AllIssuesView.test.tsx stubs (CROSS-01, CROSS-03)
+- [x] 04-02-PLAN.md — IssueListRow productBadge prop extension + useAllIssuesFilters hook + i18n keys (en/fr issues.json + navigation.json)
+- [x] 04-03-PLAN.md — AllIssuesView component (useQueries fan-out, merge+sort, error banners, product badges)
+- [x] 04-04-PLAN.md — App.tsx /issues route + Sidebar All Issues NavLink + human verification checkpoint
 
 ### Phase 04.1: Engineering Principles Refactor: parse-dont-validate, functional core imperative shell, FSM illegal state, red-green TDD (INSERTED)
 
 **Goal:** Refactor the existing codebase to enforce four core engineering principles — parse-don't-validate, functional core/imperative shell, FSM for illegal state elimination, and red-green TDD — then codify these as standing standards in CLAUDE.md so all future phases inherit them automatically
 **Requirements**: TBD
 **Depends on:** Phase 4
-**Plans:** 0 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 04.1 to break down)
