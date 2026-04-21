@@ -23,8 +23,28 @@ export default defineConfig({
     outDir: 'dist',
   },
   test: {
-    globals: true,
-    environment: 'node',
-    include: ['api/**/*.test.ts'],
+    projects: [
+      {
+        // API tests — node environment (unchanged)
+        extends: true,
+        test: {
+          name: 'api',
+          globals: true,
+          environment: 'node',
+          include: ['api/**/*.test.ts'],
+        },
+      },
+      {
+        // Frontend component tests — jsdom environment
+        extends: true,
+        test: {
+          name: 'frontend',
+          globals: true,
+          environment: 'jsdom',
+          include: ['src/**/*.test.tsx', 'src/**/*.test.ts'],
+          setupFiles: ['src/test-setup.ts'],
+        },
+      },
+    ],
   },
 });
