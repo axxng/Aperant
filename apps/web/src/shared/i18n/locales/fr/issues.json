@@ -33,7 +33,8 @@
     }
   },
   "detail": {
-    "viewOnGitHub": "Voir sur GitHub"
+    "viewOnGitHub": "Voir sur GitHub",
+    "noBody": "Aucune description fournie."
   },
   "state": {
     "open": "Ouvert",
