@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Rate-limit safety, DB migration, and triage API routes — prerequisites for all GitHub calls (completed 2026-04-21)
 - [x] **Phase 2: Single-Repo Issues Browser** - Per-product issues list with filters, search, pagination, and detail panel (completed 2026-04-21)
-- [ ] **Phase 3: GitHub OAuth Login** - Replace email OTP with GitHub OAuth; per-user tokens; remove PAT setting (INSERTED — moved from Phase 7 for UAT)
+- [x] **Phase 3: GitHub OAuth Login** - Replace email OTP with GitHub OAuth; per-user tokens; remove PAT setting (completed 2026-04-21)
 - [ ] **Phase 4: Cross-Repo Unified View** - Server-side fan-out aggregating all repos into one list with partial-failure handling
 - [ ] **Phase 5: Triage Actions** - Internal priority, triaged toggle, keyboard navigation, and closed-issue warning
 - [ ] **Phase 6: Notes** - Idempotent note posting as GitHub comments with success/failure feedback
@@ -70,12 +70,12 @@ Plans:
 **Plans**: 6 plans
 **Note**: INSERTED — moved from Phase 7 for UAT readiness
 Plans:
-- [ ] 03-01-PLAN.md — Wave 0 test stubs: github.test.ts, callback.test.ts, users.test.ts + update issues/labels test mocks
-- [ ] 03-02-PLAN.md — DB migration 012 (github_token, github_login, drop otp_codes) + githubFetch/githubGraphQL signature + upsertOAuthUser + OTP files deleted + resend uninstalled
-- [ ] 03-03-PLAN.md — OAuth initiate route (api/auth/github.ts) + OAuth callback route (api/auth/github/callback.ts) + settings cleanup + me.ts update
-- [ ] 03-04-PLAN.md — Migrate all 9 GitHub proxy routes to per-user token resolution
-- [ ] 03-05-PLAN.md — Frontend: LoginPage replacement + App.tsx token pickup + auth-store + settings-store + Settings.tsx + i18n files
-- [ ] 03-06-PLAN.md — Full test suite + human verification smoke test
+- [x] 03-01-PLAN.md — Wave 0 test stubs: github.test.ts, callback.test.ts, users.test.ts + update issues/labels test mocks
+- [x] 03-02-PLAN.md — DB migration 012 (github_token, github_login, drop otp_codes) + githubFetch/githubGraphQL signature + upsertOAuthUser + OTP files deleted + resend uninstalled
+- [x] 03-03-PLAN.md — OAuth initiate route (api/auth/github.ts) + OAuth callback route (api/auth/github/callback.ts) + settings cleanup + me.ts update
+- [x] 03-04-PLAN.md — Migrate all 9 GitHub proxy routes to per-user token resolution
+- [x] 03-05-PLAN.md — Frontend: LoginPage replacement + App.tsx token pickup + auth-store + settings-store + Settings.tsx + i18n files
+- [x] 03-06-PLAN.md — Full test suite + human verification smoke test
 
 ### Phase 4: Cross-Repo Unified View
 **Goal**: Users can see all GitHub issues from every connected product repo in a single list, with clear origin labelling and graceful partial failure
@@ -134,7 +134,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete    | 2026-04-21 |
 | 2. Single-Repo Issues Browser | 7/7 | Complete    | 2026-04-21 |
-| 3. GitHub OAuth Login | 0/6 | Not started | - |
+| 3. GitHub OAuth Login | 6/6 | Complete    | 2026-04-21 |
 | 4. Cross-Repo Unified View | 0/TBD | Not started | - |
 | 5. Triage Actions | 0/TBD | Not started | - |
 | 6. Notes | 0/TBD | Not started | - |

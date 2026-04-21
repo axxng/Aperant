@@ -16,9 +16,9 @@ A team can run a full triage session — browse issues from all connected repos,
 - ✓ Task CRUD with drag-and-drop, priority, category, inline editing — existing
 - ✓ GitHub write-back sync — task edits pushed back to linked GitHub issues (title, body, state, labels, assignees, project board column) — existing
 - ✓ Pending write-back retry via cron job with UI feedback (spinner, warning toast) — existing
-- ✓ Email OTP authentication (Resend) with role-based access (admin, member, viewer) and admin bootstrap via env var — existing
+- ✓ GitHub OAuth authentication with role-based access (admin, member, viewer); first-user-is-admin; per-user token storage — Phase 3
 - ✓ Polling-based real-time sync with toast notifications (3s interval, multi-tab/multi-user) — existing
-- ✓ Settings page: themes (7), dark/light/system, language (EN/FR), GitHub token, sync interval — existing
+- ✓ Settings page: themes (7), dark/light/system, language (EN/FR), sync interval — Phase 3 (GitHub PAT input removed)
 - ✓ Admin user management panel — existing
 - ✓ Vercel serverless + Turso (LibSQL) infrastructure — existing
 - ✓ GitHub API proxy (repos, issues, PRs, projects via REST and GraphQL) — existing
@@ -67,6 +67,10 @@ The existing GitHub API proxy (`api/github/`) already covers issues, PRs, branch
 | Live write-back link on promoted tasks | Consistent with existing write-back pattern; team wants GitHub issues and backlog tasks to stay in sync | — Pending |
 | Per-product repo model (one repo per product) | Existing model is sufficient; adding multi-repo per product would require schema changes not needed now | — Pending |
 | No AI features in this milestone | Focus on replacing GitHub's issue view first; AI investigation can layer on top once the browse/triage flow is solid | — Pending |
+| SameSite=Lax on oauth_state cookie | SameSite=Strict blocks GitHub's cross-origin redirect back to callback — Lax required for OAuth to work | Phase 3 |
+| Null GitHub email → @github.invalid synthetic address | GitHub allows users to hide email; NOT NULL constraint requires fallback — synthetic address satisfies constraint safely | Phase 3 |
+| upsertOAuthUser excludes role from ON CONFLICT DO UPDATE | Re-authenticating via OAuth must not downgrade an admin to member | Phase 3 |
+| bootstrapAdmin env var replaced by first-user-is-admin OAuth logic | Simpler; no env var needed; first user to authenticate gets admin automatically | Phase 3 |
 
 ## Evolution
 
@@ -86,4 +90,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-21 after Phase 1 completion — Foundation*
+*Last updated: 2026-04-21 after Phase 3 completion — GitHub OAuth Login*
