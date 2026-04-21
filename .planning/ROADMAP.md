@@ -104,7 +104,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Not started | - |
+| 1. Foundation | 0/3 | Ready to execute | - |
 | 2. Single-Repo Issues Browser | 0/TBD | Not started | - |
 | 3. Cross-Repo Unified View | 0/TBD | Not started | - |
 | 4. Triage Actions | 0/TBD | Not started | - |
