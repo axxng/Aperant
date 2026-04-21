@@ -1,16 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-vi.mock('../../../_lib/db/client.js', () => ({ ensureDb: vi.fn() }));
-vi.mock('../../../_lib/db/users.js', () => ({
+vi.mock('../../_lib/db/client.js', () => ({ ensureDb: vi.fn() }));
+vi.mock('../../_lib/db/users.js', () => ({
   upsertOAuthUser: vi.fn(),
   userCount: vi.fn().mockResolvedValue(0),
 }));
-vi.mock('../../../_lib/auth/jwt.js', () => ({
+vi.mock('../../_lib/auth/jwt.js', () => ({
   createToken: vi.fn().mockReturnValue('mock-jwt-token'),
 }));
 
-import { upsertOAuthUser, userCount } from '../../../_lib/db/users.js';
+import { upsertOAuthUser, userCount } from '../../_lib/db/users.js';
 
 function mockVercelReq(overrides: Partial<VercelRequest> = {}): VercelRequest {
   return {
