@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock the DB client — upsertOAuthUser will use getClient().execute()
-const mockExecute = vi.fn();
+// vi.hoisted ensures mockExecute is available inside the vi.mock factory (Vitest hoists vi.mock to top of file)
+const { mockExecute } = vi.hoisted(() => ({ mockExecute: vi.fn() }));
+
 vi.mock('./client.js', () => ({
   getClient: vi.fn().mockReturnValue({ execute: mockExecute }),
 }));
