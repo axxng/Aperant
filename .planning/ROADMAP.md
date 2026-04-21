@@ -60,15 +60,22 @@ Plans:
 ### Phase 3: GitHub OAuth Login
 **Goal**: Replace email OTP authentication with GitHub OAuth; each user's GitHub token is stored per-user and used for all GitHub API calls; the admin-set PAT and Resend email dependency are removed
 **Depends on**: Phase 2
-**Requirements**: TBD (to be written during planning)
+**Requirements**: AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05, AUTH-06, AUTH-07, AUTH-08, AUTH-09, AUTH-13
 **Success Criteria** (what must be TRUE):
   1. Users can log in via "Sign in with GitHub" button — no email form, no OTP
   2. Each user's GitHub OAuth token is stored in the DB and used for GitHub API calls scoped to that user
   3. The first user to log in is assigned admin; subsequent users are members by default; admin can promote members manually
   4. Email OTP routes, Resend dependency, and the shared `githubToken` settings key are removed
   5. All existing GitHub API proxy routes use the requesting user's token instead of the shared PAT
-**Plans**: TBD
+**Plans**: 6 plans
 **Note**: INSERTED — moved from Phase 7 for UAT readiness
+Plans:
+- [ ] 03-01-PLAN.md — Wave 0 test stubs: github.test.ts, callback.test.ts, users.test.ts + update issues/labels test mocks
+- [ ] 03-02-PLAN.md — DB migration 012 (github_token, github_login, drop otp_codes) + githubFetch/githubGraphQL signature + upsertOAuthUser + OTP files deleted + resend uninstalled
+- [ ] 03-03-PLAN.md — OAuth initiate route (api/auth/github.ts) + OAuth callback route (api/auth/github/callback.ts) + settings cleanup + me.ts update
+- [ ] 03-04-PLAN.md — Migrate all 9 GitHub proxy routes to per-user token resolution
+- [ ] 03-05-PLAN.md — Frontend: LoginPage replacement + App.tsx token pickup + auth-store + settings-store + Settings.tsx + i18n files
+- [ ] 03-06-PLAN.md — Full test suite + human verification smoke test
 
 ### Phase 4: Cross-Repo Unified View
 **Goal**: Users can see all GitHub issues from every connected product repo in a single list, with clear origin labelling and graceful partial failure
@@ -127,7 +134,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete    | 2026-04-21 |
 | 2. Single-Repo Issues Browser | 7/7 | Complete    | 2026-04-21 |
-| 3. GitHub OAuth Login | 0/TBD | Not started | - |
+| 3. GitHub OAuth Login | 0/6 | Not started | - |
 | 4. Cross-Repo Unified View | 0/TBD | Not started | - |
 | 5. Triage Actions | 0/TBD | Not started | - |
 | 6. Notes | 0/TBD | Not started | - |
