@@ -14,10 +14,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Rate-limit safety, DB migration, and triage API routes — prerequisites for all GitHub calls (completed 2026-04-21)
 - [x] **Phase 2: Single-Repo Issues Browser** - Per-product issues list with filters, search, pagination, and detail panel (completed 2026-04-21)
-- [ ] **Phase 3: Cross-Repo Unified View** - Server-side fan-out aggregating all repos into one list with partial-failure handling
-- [ ] **Phase 4: Triage Actions** - Internal priority, triaged toggle, keyboard navigation, and closed-issue warning
-- [ ] **Phase 5: Notes** - Idempotent note posting as GitHub comments with success/failure feedback
-- [ ] **Phase 6: Promote to Backlog** - One-action promotion to Kanban task with live write-back and duplicate guard
+- [ ] **Phase 3: GitHub OAuth Login** - Replace email OTP with GitHub OAuth; per-user tokens; remove PAT setting (INSERTED — moved from Phase 7 for UAT)
+- [ ] **Phase 4: Cross-Repo Unified View** - Server-side fan-out aggregating all repos into one list with partial-failure handling
+- [ ] **Phase 5: Triage Actions** - Internal priority, triaged toggle, keyboard navigation, and closed-issue warning
+- [ ] **Phase 6: Notes** - Idempotent note posting as GitHub comments with success/failure feedback
+- [ ] **Phase 7: Promote to Backlog** - One-action promotion to Kanban task with live write-back and duplicate guard
 
 ## Phase Details
 
@@ -56,9 +57,22 @@ Plans:
 - [x] 02-06-PLAN.md — IssueDetailPanel component (slide-in, react-markdown body, View on GitHub)
 - [x] 02-07-PLAN.md — IssuesView assembly (useInfiniteQuery, full wiring, human verification checkpoint)
 
-### Phase 3: Cross-Repo Unified View
-**Goal**: Users can see all GitHub issues from every connected product repo in a single list, with clear origin labelling and graceful partial failure
+### Phase 3: GitHub OAuth Login
+**Goal**: Replace email OTP authentication with GitHub OAuth; each user's GitHub token is stored per-user and used for all GitHub API calls; the admin-set PAT and Resend email dependency are removed
 **Depends on**: Phase 2
+**Requirements**: TBD (to be written during planning)
+**Success Criteria** (what must be TRUE):
+  1. Users can log in via "Sign in with GitHub" button — no email form, no OTP
+  2. Each user's GitHub OAuth token is stored in the DB and used for GitHub API calls scoped to that user
+  3. The first user to log in is assigned admin; subsequent users are members by default; admin can promote members manually
+  4. Email OTP routes, Resend dependency, and the shared `githubToken` settings key are removed
+  5. All existing GitHub API proxy routes use the requesting user's token instead of the shared PAT
+**Plans**: TBD
+**Note**: INSERTED — moved from Phase 7 for UAT readiness
+
+### Phase 4: Cross-Repo Unified View
+**Goal**: Users can see all GitHub issues from every connected product repo in a single list, with clear origin labelling and graceful partial failure
+**Depends on**: Phase 3
 **Requirements**: CROSS-01, CROSS-02, CROSS-03
 **Success Criteria** (what must be TRUE):
   1. User can navigate to a top-level "Issues" view and see issues from all connected repos aggregated in one list
@@ -67,9 +81,9 @@ Plans:
 **Plans**: TBD
 **UI hint**: yes
 
-### Phase 4: Triage Actions
+### Phase 5: Triage Actions
 **Goal**: Users can assign internal priority and mark issues as triaged directly inside Currents, with keyboard shortcuts and safety warnings — without touching the GitHub issue
-**Depends on**: Phase 2
+**Depends on**: Phase 3
 **Requirements**: TRIAGE-01, TRIAGE-02, TRIAGE-03, TRIAGE-04, TRIAGE-05, TRIAGE-06
 **Success Criteria** (what must be TRUE):
   1. User can toggle an issue as triaged and assign it a priority (Critical / High / Medium / Low) from the detail panel; both actions are stored only in Currents
@@ -80,9 +94,9 @@ Plans:
 **Plans**: TBD
 **UI hint**: yes
 
-### Phase 5: Notes
+### Phase 6: Notes
 **Goal**: Users can write and post an internal note on any issue that is added as a comment on the GitHub issue, with no risk of duplicates on retry
-**Depends on**: Phase 1, Phase 4
+**Depends on**: Phase 1, Phase 5
 **Requirements**: NOTES-01, NOTES-02, NOTES-03
 **Success Criteria** (what must be TRUE):
   1. User can write a note in the detail panel and post it; the note appears as a comment on the linked GitHub issue
@@ -91,9 +105,9 @@ Plans:
 **Plans**: TBD
 **UI hint**: yes
 
-### Phase 6: Promote to Backlog
+### Phase 7: Promote to Backlog
 **Goal**: Users can promote a GitHub issue to a Currents backlog task in one action, with the task staying live-synced to the issue and all promotion safeguards in place
-**Depends on**: Phase 4, Phase 5
+**Depends on**: Phase 5, Phase 6
 **Requirements**: PROMOTE-01, PROMOTE-02, PROMOTE-03, PROMOTE-04, PROMOTE-05
 **Success Criteria** (what must be TRUE):
   1. User can promote a GitHub issue to a Currents backlog task from the triage panel in a single action
@@ -107,23 +121,14 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete    | 2026-04-21 |
 | 2. Single-Repo Issues Browser | 7/7 | Complete    | 2026-04-21 |
-| 3. Cross-Repo Unified View | 0/TBD | Not started | - |
-| 4. Triage Actions | 0/TBD | Not started | - |
-| 5. Notes | 0/TBD | Not started | - |
-| 6. Promote to Backlog | 0/TBD | Not started | - |
-
-### Phase 7: To use Github OAuth login, to use the given repo permissions granted from OAuth
-
-**Goal:** [To be planned]
-**Requirements**: TBD
-**Depends on:** Phase 6
-**Plans:** 0 plans
-
-Plans:
-- [ ] TBD (run /gsd-plan-phase 7 to break down)
+| 3. GitHub OAuth Login | 0/TBD | Not started | - |
+| 4. Cross-Repo Unified View | 0/TBD | Not started | - |
+| 5. Triage Actions | 0/TBD | Not started | - |
+| 6. Notes | 0/TBD | Not started | - |
+| 7. Promote to Backlog | 0/TBD | Not started | - |

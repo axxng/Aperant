@@ -13,7 +13,7 @@ This phase replaces the existing email OTP login and admin-set GitHub PAT with G
 - Email OTP, Resend dependency, and all OTP-related code are removed
 - First GitHub user to complete OAuth becomes admin; subsequent users become members (admin promotes others manually)
 
-**Roadmap reorder:** Phase 7 moves to immediately after Phase 3 (Cross-Repo Unified View), becoming the new Phase 4. Triage, Notes, and Promote phases shift forward by one accordingly.
+**Roadmap reorder:** Phase 7 moves to immediately after Phase 2 (Single-Repo Issues Browser), becoming the new Phase 3. Cross-Repo Unified View shifts to Phase 4; Triage, Notes, and Promote shift forward by one accordingly.
 
 No new features beyond auth replacement. Existing product/repo configuration by admin remains unchanged.
 
