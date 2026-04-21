@@ -10,7 +10,6 @@ interface SettingsState {
   colorTheme: ColorTheme;
   language: string;
   anthropicApiKey: string;
-  githubToken: string;
   syncInterval: number;
   defaultModel: string;
 
@@ -25,7 +24,6 @@ interface SettingsState {
   setColorTheme: (colorTheme: ColorTheme) => void;
   setLanguage: (language: string) => void;
   setAnthropicApiKey: (key: string) => void;
-  setGithubToken: (token: string) => void;
   setSyncInterval: (interval: number) => void;
   setDefaultModel: (model: string) => void;
 
@@ -45,7 +43,6 @@ export const useSettingsStore = create<SettingsState>()(
       colorTheme: 'default',
       language: 'en',
       anthropicApiKey: '',
-      githubToken: '',
       syncInterval: 60,
       defaultModel: 'sonnet',
 
@@ -58,7 +55,6 @@ export const useSettingsStore = create<SettingsState>()(
       setColorTheme: (colorTheme) => set({ colorTheme }),
       setLanguage: (language) => set({ language }),
       setAnthropicApiKey: (anthropicApiKey) => set({ anthropicApiKey }),
-      setGithubToken: (githubToken) => set({ githubToken }),
       setSyncInterval: (syncInterval) => set({ syncInterval }),
       setDefaultModel: (defaultModel) => set({ defaultModel }),
 
@@ -72,7 +68,6 @@ export const useSettingsStore = create<SettingsState>()(
         colorTheme: (settings.colorTheme as ColorTheme) || 'default',
         language: settings.language || 'en',
         anthropicApiKey: settings.anthropicApiKey || '',
-        githubToken: settings.githubToken || '',
         syncInterval: settings.syncInterval ? parseInt(settings.syncInterval, 10) : 60,
         defaultModel: settings.defaultModel || 'sonnet',
       }),
