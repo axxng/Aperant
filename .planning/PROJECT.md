@@ -26,7 +26,7 @@ A team can run a full triage session — browse issues from all connected repos,
 ### Active
 
 - [ ] **ISSUES-01**: User can browse open and closed GitHub issues for each connected repo with search, label, and assignee filters
-- [ ] **ISSUES-02**: User can view all GitHub issues from every connected product's repo in a single unified cross-repo list
+- ✓ **ISSUES-02**: User can view all GitHub issues from every connected product's repo in a single unified cross-repo list — Validated in Phase 4: Cross-Repo Unified View
 - [ ] **ISSUES-03**: User can triage an issue — assign internal priority, mark as triaged — without modifying the GitHub issue
 - [ ] **ISSUES-04**: User can leave an internal note on an issue that is posted as a comment on the GitHub issue
 - [ ] **ISSUES-05**: User can promote a GitHub issue to a backlog task with a live write-back link (task edits sync back to the GitHub issue via the existing write-back mechanism)
@@ -90,4 +90,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-21 after Phase 3 completion — GitHub OAuth Login*
+*Last updated: 2026-04-21 after Phase 4 completion — Cross-Repo Unified View*
