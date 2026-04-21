@@ -58,11 +58,13 @@ All sizes use Tailwind text utilities. Font: Inter (`var(--font-sans)`).
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
 | Body | 14px (`text-sm`) | 400 (`font-normal`) | 1.5 | Issue titles in list rows, detail panel body text |
-| Label | 12px (`text-xs`) | 500 (`font-medium`) | 1.4 | Badge text, filter button labels, metadata (assignee login, created date) |
-| Caption | 11px (`text-[11px]`) | 400 (`font-normal`) | 1.4 | Issue number (`#123`), secondary metadata in list rows |
+| Label | 12px (`text-xs`) | 400 (`font-normal`) | 1.4 | Badge text, filter button labels, metadata (assignee login, created date) |
+| Caption | 11px (`text-[11px]`) | 400 (`font-normal`) | 1.4 | Issue number (`#123`), secondary metadata in list rows, state badge in list rows |
 | Heading | 16px (`text-base`) | 600 (`font-semibold`) | 1.2 | Detail panel issue title |
 
-Weights used: 400 (normal) and 600 (semibold) only — matching TaskCard and KanbanFilterBar patterns.
+Weights used: 400 (normal) and 600 (semibold) only — matching TaskCard and KanbanFilterBar patterns. Label (12px) achieves visual distinction through reduced size and uppercase-style usage, not through weight increase.
+
+**Focal point:** The issue title is the primary visual anchor of each list row. It occupies `flex-1` width and uses Body (14px/400) so it dominates the dense row. All other row elements (number, dots, avatar, badge) are visually subordinate.
 
 Source: TaskCard.tsx lines 220, 271 for existing size conventions; CONTEXT.md D-04, D-07.
 
@@ -149,20 +151,23 @@ New components to CREATE:
 - On mobile (`< 768px`): detail panel covers full width, overlaid above the list
 
 ### IssueListRow anatomy
+
+**Focal point:** The issue title (`flex-1 truncate`) is the dominant element. All metadata elements are visually subordinate.
+
 ```
 h-11 flex items-center gap-3 px-4 border-b border-border hover:bg-accent/50 cursor-pointer
-├── #NNN (text-[11px] text-muted-foreground w-12 shrink-0)
-├── title (text-sm font-normal flex-1 truncate)
+├── #NNN (text-[11px] text-muted-foreground w-12 shrink-0)          ← Caption (11px)
+├── title (text-sm font-normal flex-1 truncate)                      ← Body (14px) — PRIMARY ANCHOR
 ├── label dots (flex gap-1 — h-2 w-2 rounded-full, max 4 visible)
 ├── assignee avatar (h-5 w-5 rounded-full)
-└── state badge (Badge variant="success"|"muted" text-[10px])
+└── state badge (Badge variant="success"|"muted" text-[11px])        ← Caption (11px)
 ```
 
 ### Detail Panel anatomy
 ```
 flex flex-col p-6 gap-4
 ├── header: issue title (text-base font-semibold) + #NNN + state badge
-├── meta row: labels (full Badge with color bg) + assignee (avatar + login) + created date
+├── meta row: labels (full Badge with color bg — text-xs font-normal) + assignee (avatar + login) + created date
 ├── "View on GitHub" link (Button variant="link" size="sm", ExternalLink icon)
 ├── divider
 └── Markdown body (react-markdown + remark-gfm, prose-sm styling)
@@ -174,7 +179,7 @@ flex flex-col p-6 gap-4
 
 ### Tab Switcher
 - `NavLink` with `end` prop for Kanban (`/products/:productId`), without `end` for Issues (`/products/:productId/issues`)
-- Active state: `border-b-2 border-primary font-medium`
+- Active state: `border-b-2 border-primary font-semibold`
 - Transition: none (instant)
 
 ### Filter Bar
@@ -182,7 +187,7 @@ flex flex-col p-6 gap-4
 - Label dropdown: `DropdownMenuCheckboxItem` multi-select; active filter count shown as `Badge variant="muted"` on the trigger button
 - Assignee dropdown: `DropdownMenuRadioItem` single-select; "All assignees" as default radio item
 - State toggle: two `Button variant="ghost" size="sm"` items: "Open" and "Closed"; active state uses `bg-accent text-accent-foreground`
-- Reset button (X icon): appears only when `hasActiveFilters === true`; uses `Button variant="ghost" size="sm"`
+- Reset button (X icon, icon-only): appears only when `hasActiveFilters === true`; uses `Button variant="ghost" size="sm"`; must include `aria-label="Reset filters"` and a visually hidden `<span className="sr-only">Reset Filters</span>` for screen readers
 - Filter changes: reset page to 1, replace list (D-13)
 
 ### Issue List
@@ -225,15 +230,16 @@ All copy uses `react-i18next`. New namespace: `issues`. Keys must be added to bo
 | Assignee filter all option | `issues:filters.allAssignees` | All assignees |
 | State filter open | `issues:filters.open` | Open |
 | State filter closed | `issues:filters.closed` | Closed |
-| Reset filters | `issues:filters.reset` | Reset |
-| Load More button | `issues:list.loadMore` | Load More |
+| Reset filters button (visible label) | `issues:filters.reset` | Reset Filters |
+| Reset filters button (aria-label) | `issues:filters.resetAriaLabel` | Reset Filters |
+| Load More button | `issues:list.loadMore` | Load More Issues |
 | Empty state heading (open) | `issues:empty.openHeading` | No open issues |
 | Empty state heading (closed) | `issues:empty.closedHeading` | No closed issues |
 | Empty state body | `issues:empty.body` | This repo has no issues matching your filters. |
 | Empty state CTA | `issues:empty.viewOnGitHub` | View on GitHub |
 | Error heading | `issues:error.heading` | Could not load issues |
 | Error body | `issues:error.body` | Check your GitHub connection or try again. |
-| Error retry button | `issues:error.retry` | Retry |
+| Error retry button | `issues:error.retry` | Try Again |
 | Labels fetch error | `issues:error.labelsFetch` | Could not load labels. Filters may be incomplete. |
 | View on GitHub link | `issues:detail.viewOnGitHub` | View on GitHub |
 | Open badge | `issues:state.open` | Open |
@@ -242,7 +248,7 @@ All copy uses `react-i18next`. New namespace: `issues`. Keys must be added to bo
 | Rate limit error heading | `issues:error.rateLimit.heading` | GitHub rate limit reached |
 | Rate limit error body | `issues:error.rateLimit.body` | You can retry after {{retryAfter}}. |
 
-**Primary CTA:** "Load More" — appends next 50 issues to the list.
+**Primary CTA:** "Load More Issues" — appends next 50 issues to the list.
 
 **No destructive actions in this phase.** Phase 2 is read-only browse + inspect.
 
@@ -298,3 +304,11 @@ No third-party registries declared. No vetting gate required.
 | Badge variants | badge.tsx full audit |
 | Filter bar pattern | KanbanFilterBar.tsx full audit |
 | i18n namespace `issues` | CONTEXT.md code_context section |
+| State badge uses Caption (11px) — not 10px | Typography blocking fix: max 4 sizes enforced |
+| Issue title as row focal point | Visual focal point declaration added |
+| Reset button aria-label + sr-only | Accessibility: icon-only button needs screen reader label |
+| "Try Again" retry CTA | More specific than generic "Retry" |
+| "Reset Filters" label | More specific than generic "Reset" |
+| "Load More Issues" CTA | More specific primary CTA verb+noun |
+| Label weight 400 not 500 — 2-weight max enforced | Typography blocking fix: label role uses font-normal; visual distinction via size (12px) not weight |
+| Tab active state font-semibold not font-medium | Aligns tab interaction with declared weight contract (400/600 only) |
