@@ -95,13 +95,17 @@ Plans:
 
 ### Phase 04.1: Engineering Principles Refactor: parse-dont-validate, functional core imperative shell, FSM illegal state, red-green TDD (INSERTED)
 
-**Goal:** Refactor the existing codebase to enforce four core engineering principles — parse-don't-validate, functional core/imperative shell, FSM for illegal state elimination, and red-green TDD — then codify these as standing standards in CLAUDE.md so all future phases inherit them automatically
-**Requirements**: TBD
+**Goal:** Refactor the existing codebase to enforce four core engineering principles — parse-don't-validate, functional core/imperative shell, FSM for illegal state elimination, and red-green TDD — then codify these as standing standards in apps/web/SPEC.md so all future phases inherit them automatically
+**Requirements**: TBD (cross-cutting refactor — covers decisions D-01 through D-09)
 **Depends on:** Phase 4
-**Plans:** 4/4 plans complete
+**Plans:** 5 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 04.1 to break down)
+- [ ] 04.1-01-PLAN.md — Wave 0 TDD stubs: tasks.test.ts (9 failing stubs for rowToTask + buildSyncState) + products.test.ts (2 failing stubs for rowToProduct)
+- [ ] 04.1-02-PLAN.md — Type foundation: Task discriminated union + GithubSyncState + TriageState + Zod DB row schemas + rowToTask/rowToTriage/rowToProduct Zod parse + cascade TypeScript fixes
+- [ ] 04.1-03-PLAN.md — GitHub API boundary: gitHubApiIssueSchema + gitHubApiPRSchema + oauthTokenResponseSchema + gitHubUserSchema in validation.ts; mapGitHubPR/mapGitHubIssue Zod parse; extend github.test.ts + triage.test.ts
+- [ ] 04.1-04-PLAN.md — Handler 4-step shape sweep: callback.ts pure function extraction + 26 handlers reshaped + callback.test.ts pure function tests
+- [ ] 04.1-05-PLAN.md — Engineering Principles codification in apps/web/SPEC.md
 
 ### Phase 5: Triage Actions
 **Goal**: Users can assign internal priority and mark issues as triaged directly inside Currents, with keyboard shortcuts and safety warnings — without touching the GitHub issue
@@ -151,6 +155,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 2. Single-Repo Issues Browser | 7/7 | Complete    | 2026-04-21 |
 | 3. GitHub OAuth Login | 6/6 | Complete    | 2026-04-21 |
 | 4. Cross-Repo Unified View | 0/4 | Not started | - |
+| 04.1. Engineering Principles Refactor | 0/5 | Not started | - |
 | 5. Triage Actions | 0/TBD | Not started | - |
 | 6. Notes | 0/TBD | Not started | - |
 | 7. Promote to Backlog | 0/TBD | Not started | - |
