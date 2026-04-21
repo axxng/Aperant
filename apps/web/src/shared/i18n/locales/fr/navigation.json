@@ -1,6 +1,7 @@
 {
   "items": {
     "allProducts": "Tous les produits",
+    "allIssues": "Toutes les issues",
     "kanban": "Tableau Kanban",
     "kanbanTab": "Kanban",
     "settings": "Paramètres"

@@ -39,5 +39,25 @@
   "state": {
     "open": "Ouvert",
     "closed": "Fermé"
+  },
+  "allIssues": {
+    "heading": "Toutes les issues",
+    "searchPlaceholder": "Rechercher toutes les issues...",
+    "empty": {
+      "openHeading": "Aucune issue ouverte",
+      "closedHeading": "Aucune issue fermée",
+      "body": "Les issues de tous les dépôts connectés apparaîtront ici."
+    },
+    "error": {
+      "heading": "{{repoName}} — impossible de charger les issues",
+      "body": "Vérifiez votre connexion GitHub ou réessayez.",
+      "rateLimit": "{{repoName}} — limite de taux atteinte, réessayez dans {{retryAfter}}s",
+      "rateLimitUnknown": "{{repoName}} — limite de taux atteinte",
+      "retry": "Réessayer le chargement",
+      "dismiss": "Ignorer l'erreur pour {{repoName}}"
+    },
+    "productBadge": {
+      "tooltip": "De {{productName}}"
+    }
   }
 }
