@@ -34,7 +34,19 @@ export function App() {
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    if (token) {
+    const params = new URLSearchParams(window.location.search);
+    const oauthToken = params.get('token');
+    if (oauthToken) {
+      // OAuth callback redirect — pick up JWT from ?token= query param, clean URL
+      fetch('/api/auth/me', { headers: { Authorization: `Bearer ${oauthToken}` } })
+        .then((r) => r.ok ? r.json() : null)
+        .then((user) => {
+          if (user) useAuthStore.getState().setAuth(oauthToken, user);
+          window.history.replaceState({}, '', '/');
+        })
+        .catch(() => {})
+        .finally(() => setAuthChecked(true));
+    } else if (token) {
       checkSession().finally(() => setAuthChecked(true));
     } else {
       setAuthChecked(true);
