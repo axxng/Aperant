@@ -4,10 +4,14 @@ import handler from './issues.js';
 
 vi.mock('../../../../_lib/db/client.js', () => ({ ensureDb: vi.fn() }));
 vi.mock('../../../../_lib/auth/middleware.js', () => ({
-  authenticateRequest: vi.fn().mockResolvedValue({ id: 'user-1' }),
+  authenticateRequest: vi.fn().mockResolvedValue({ userId: 'user-1' }),
 }));
-vi.mock('../../../../_lib/config-resolver.js', () => ({
-  resolveConfig: vi.fn().mockResolvedValue('fake-token'),
+vi.mock('../../../../_lib/db/users.js', () => ({
+  getUserById: vi.fn().mockResolvedValue({
+    id: 'user-1', email: 'test@example.com', name: 'Test', role: 'member',
+    github_token: 'fake-token', github_login: 'testuser',
+    password_hash: null, created_at: '', updated_at: '',
+  }),
 }));
 
 import { authenticateRequest } from '../../../../_lib/auth/middleware.js';
@@ -51,7 +55,7 @@ describe('issues handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(globalThis, 'fetch');
-    vi.mocked(authenticateRequest).mockResolvedValue({ id: 'user-1' } as any);
+    vi.mocked(authenticateRequest).mockResolvedValue({ userId: 'user-1' } as any);
   });
 
   it('TODO: returns 200 with issues array and hasMore=false for state=open', async () => {
