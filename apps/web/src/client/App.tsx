@@ -12,6 +12,7 @@ import { ProductSettings } from './components/ProductSettings';
 import { ToastContainer } from './components/ToastContainer';
 import { LoginPage } from './components/LoginPage';
 import { IssuesView } from './components/IssuesView'; // IssuesView — created in plan 02-07
+import { AllIssuesView } from './components/AllIssuesView'; // AllIssuesView — Phase 4
 import { useProductStore } from './stores/product-store';
 import { useTaskStore } from './stores/task-store';
 import { useAuthStore } from './stores/auth-store';
@@ -101,6 +102,11 @@ function AuthenticatedApp() {
             <Route
               path="/products/:productId/issues"
               element={<IssuesView />}
+            />
+            {/* All Issues unified view — Phase 4 (CROSS-01) */}
+            <Route
+              path="/issues"
+              element={<AllIssuesView />}
             />
             <Route
               path="/products/:productId/settings"
