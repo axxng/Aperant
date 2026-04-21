@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ensureDb } from '../../../../_lib/db/client.js';
 import { authenticateRequest } from '../../../../_lib/auth/middleware.js';
-import { getUserById } from '../../../../_lib/db/users.js';
 import { githubFetch, GITHUB_API, GitHubRateLimitError } from '../../../../_lib/github.js';
 import { githubOwnerRepoSchema } from '../../../../_lib/validation.js';
 
@@ -22,11 +21,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await authenticateRequest(req, res);
   if (!user) return;
 
-  const dbUser = await getUserById(user.userId);
-  if (!dbUser?.github_token) {
-    return res.status(403).json({ error: 'GitHub account not connected' });
-  }
-
   try {
     const pathResult = githubOwnerRepoSchema.safeParse(req.query);
     if (!pathResult.success) {
@@ -35,7 +29,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { owner, repo } = pathResult.data;
 
     const response = await githubFetch(
-      dbUser.github_token,
       `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/labels?per_page=100`
     );
 

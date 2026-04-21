@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ensureDb } from '../../../../../_lib/db/client.js';
 import { authenticateRequest } from '../../../../../_lib/auth/middleware.js';
-import { getUserById } from '../../../../../_lib/db/users.js';
 import { githubFetch, GITHUB_API, mapGitHubPR } from '../../../../../_lib/github.js';
 import { githubPRQuerySchema, githubCreatePRSchema } from '../../../../../_lib/validation.js';
 import type { GitHubPR } from '../../../../../../src/shared/types/pr.js';
@@ -11,11 +10,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const user = await authenticateRequest(req, res);
   if (!user) return;
-
-  const dbUser = await getUserById(user.userId);
-  if (!dbUser?.github_token) {
-    return res.status(403).json({ error: 'GitHub account not connected' });
-  }
 
   const owner = req.query.owner as string;
   const repo = req.query.repo as string;
@@ -32,7 +26,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const params = new URLSearchParams({ state, page, per_page, sort: 'updated', direction: 'desc' });
 
         const response = await githubFetch(
-          dbUser.github_token,
           `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls?${params}`
         );
 
@@ -59,7 +52,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         const response = await githubFetch(
-          dbUser.github_token,
           `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`,
           { method: 'POST', body: JSON.stringify(bodyResult.data), headers: { 'Content-Type': 'application/json' } }
         );

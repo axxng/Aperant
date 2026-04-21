@@ -5,14 +5,6 @@ vi.mock('../../../../_lib/db/client.js', () => ({ ensureDb: vi.fn() }));
 vi.mock('../../../../_lib/auth/middleware.js', () => ({
   authenticateRequest: vi.fn().mockResolvedValue({ userId: 'user-1' }),
 }));
-vi.mock('../../../../_lib/db/users.js', () => ({
-  getUserById: vi.fn().mockResolvedValue({
-    id: 'user-1', email: 'test@example.com', name: 'Test', role: 'member',
-    github_token: 'fake-token', github_login: 'testuser',
-    password_hash: null, created_at: '', updated_at: '',
-  }),
-}));
-
 import { authenticateRequest } from '../../../../_lib/auth/middleware.js';
 
 // NOTE: labels.ts does not exist yet — this import will fail until Plan 02 creates it.
@@ -50,6 +42,7 @@ const SAMPLE_LABELS = [
 describe('labels handler', () => {
   beforeEach(async () => {
     vi.spyOn(globalThis, 'fetch');
+    process.env.GITHUB_TOKEN = 'fake-token';
     vi.mocked(authenticateRequest).mockResolvedValue({ userId: 'user-1' } as any);
     // Dynamic import so the file can fail at import time without crashing the whole suite
     const mod = await import('./labels.js').catch(() => ({ default: null }));

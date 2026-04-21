@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ensureDb } from '../../../../_lib/db/client.js';
 import { authenticateRequest } from '../../../../_lib/auth/middleware.js';
-import { getUserById } from '../../../../_lib/db/users.js';
 import { githubGraphQL, PROJECT_INFO_QUERY, PROJECT_INFO_QUERY_ORG } from '../../../../_lib/github.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -14,16 +13,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await authenticateRequest(req, res);
   if (!user) return;
 
-  const dbUser = await getUserById(user.userId);
-  if (!dbUser?.github_token) {
-    return res.status(403).json({ error: 'GitHub account not connected' });
-  }
-
   const owner = req.query.owner as string;
   const projectNumber = parseInt(req.query.number as string, 10);
 
   try {
-    const data = await githubGraphQL(dbUser.github_token, PROJECT_INFO_QUERY, { owner, number: projectNumber });
+    const data = await githubGraphQL(PROJECT_INFO_QUERY, { owner, number: projectNumber });
 
     const project = data.user?.projectV2 || data.organization?.projectV2;
     if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -42,7 +36,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error: any) {
     // Try as org if user fails
     try {
-      const data = await githubGraphQL(dbUser.github_token, PROJECT_INFO_QUERY_ORG, { owner, number: projectNumber });
+      const data = await githubGraphQL(PROJECT_INFO_QUERY_ORG, { owner, number: projectNumber });
       const project = data.organization?.projectV2;
       if (!project) return res.status(404).json({ error: 'Project not found' });
 

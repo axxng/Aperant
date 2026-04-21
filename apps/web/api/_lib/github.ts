@@ -14,7 +14,9 @@ const GITHUB_API = 'https://api.github.com';
 
 export { GITHUB_API };
 
-export async function githubFetch(token: string, url: string, options: RequestInit = {}): Promise<Response> {
+export async function githubFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) throw new Error('GITHUB_TOKEN env var not set');
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -55,7 +57,9 @@ export async function githubFetch(token: string, url: string, options: RequestIn
   return response;
 }
 
-export async function githubGraphQL(token: string, query: string, variables: Record<string, any> = {}): Promise<any> {
+export async function githubGraphQL(query: string, variables: Record<string, any> = {}): Promise<any> {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) throw new Error('GITHUB_TOKEN env var not set');
   const response = await fetch('https://api.github.com/graphql', {
     method: 'POST',
     headers: {

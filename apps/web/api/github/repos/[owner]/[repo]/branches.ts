@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ensureDb } from '../../../../_lib/db/client.js';
 import { authenticateRequest } from '../../../../_lib/auth/middleware.js';
-import { getUserById } from '../../../../_lib/db/users.js';
 import { githubFetch, GITHUB_API } from '../../../../_lib/github.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -14,11 +13,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await authenticateRequest(req, res);
   if (!user) return;
 
-  const dbUser = await getUserById(user.userId);
-  if (!dbUser?.github_token) {
-    return res.status(403).json({ error: 'GitHub account not connected' });
-  }
-
   try {
     const owner = req.query.owner as string;
     const repo = req.query.repo as string;
@@ -26,7 +20,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const perPage = (req.query.per_page as string) || '100';
 
     const response = await githubFetch(
-      dbUser.github_token,
       `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches?per_page=${perPage}&page=${page}`
     );
 

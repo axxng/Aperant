@@ -66,10 +66,16 @@ async function main() {
 
     // Register for all HTTP methods
     app.all(expressRoute, async (req, res) => {
-      // Inject dynamic path params into query (Vercel pattern)
-      const vercelReq = Object.assign(req, {
-        query: { ...req.params, ...req.query } as Record<string, string | string[]>,
-        cookies: parseCookies(req.headers.cookie),
+      // Express 5 makes req.query a read-only getter, so use a Proxy to override it
+      const mergedQuery = { ...req.params, ...req.query } as Record<string, string | string[]>;
+      const cookies = parseCookies(req.headers.cookie);
+      const vercelReq = new Proxy(req, {
+        get(target, prop) {
+          if (prop === 'query') return mergedQuery;
+          if (prop === 'cookies') return cookies;
+          const val = (target as any)[prop];
+          return typeof val === 'function' ? val.bind(target) : val;
+        },
       });
       try {
         await handler(vercelReq, res);

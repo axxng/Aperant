@@ -73,9 +73,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const jwt = createToken(user.id, user.email, user.role);
 
     // Clear state cookie and redirect with JWT as query param (SPA picks it up on mount)
-    res.setHeader('Set-Cookie', 'oauth_state=; HttpOnly; Secure; Max-Age=0; Path=/');
+    const securePart = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+    res.setHeader('Set-Cookie', `oauth_state=; HttpOnly${securePart}; Max-Age=0; Path=/`);
     res.redirect(302, `/?token=${jwt}`);
-  } catch (_error: unknown) {
+  } catch (error: unknown) {
+    console.error('[oauth callback]', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 }
