@@ -1,6 +1,16 @@
 import { resolveConfig } from './config-resolver.js';
 import type { GitHubPR, PRFile } from '../../src/shared/types/pr.js';
 
+export class GitHubRateLimitError extends Error {
+  readonly retryAfter: number;
+
+  constructor(retryAfter: number) {
+    super(`GitHub rate limit exceeded. Retry after ${retryAfter} seconds.`);
+    this.name = 'GitHubRateLimitError';
+    this.retryAfter = retryAfter;
+  }
+}
+
 const GITHUB_API = 'https://api.github.com';
 
 export { GITHUB_API };
@@ -13,7 +23,7 @@ export async function getGitHubToken(): Promise<string> {
 
 export async function githubFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const token = await getGitHubToken();
-  return fetch(url, {
+  const response = await fetch(url, {
     ...options,
     headers: {
       'Accept': 'application/vnd.github.v3+json',
@@ -22,6 +32,35 @@ export async function githubFetch(url: string, options: RequestInit = {}): Promi
       ...options.headers,
     },
   });
+
+  // Rate-limit detection: primary (429 or 403 + remaining=0) and secondary (retry-after header)
+  const isRateLimitStatus = response.status === 429 || response.status === 403;
+  if (isRateLimitStatus) {
+    const remaining = response.headers.get('x-ratelimit-remaining');
+    const retryAfterHeader = response.headers.get('retry-after');   // secondary: already in seconds
+    const resetHeader = response.headers.get('x-ratelimit-reset');  // primary: unix timestamp
+
+    const isPrimaryLimit = remaining === '0';
+    const isSecondaryLimit = retryAfterHeader !== null;
+    // 429 always means rate limited; 403 only when remaining=0 or retry-after present
+    const is429 = response.status === 429;
+
+    if (isPrimaryLimit || isSecondaryLimit || is429) {
+      let retryAfter: number;
+      if (retryAfterHeader !== null) {
+        // Secondary rate limit: retry-after is in seconds
+        retryAfter = Math.max(0, parseInt(retryAfterHeader, 10));
+      } else if (resetHeader !== null) {
+        // Primary rate limit: x-ratelimit-reset is a Unix timestamp
+        retryAfter = Math.max(0, Math.ceil(parseInt(resetHeader, 10) - Date.now() / 1000));
+      } else {
+        retryAfter = 60; // fallback per D-02
+      }
+      throw new GitHubRateLimitError(retryAfter);
+    }
+  }
+
+  return response;
 }
 
 export async function githubGraphQL(query: string, variables: Record<string, any> = {}): Promise<any> {
