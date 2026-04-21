@@ -1,4 +1,3 @@
-import { resolveConfig } from './config-resolver.js';
 import type { GitHubPR, PRFile } from '../../src/shared/types/pr.js';
 
 export class GitHubRateLimitError extends Error {
@@ -15,14 +14,7 @@ const GITHUB_API = 'https://api.github.com';
 
 export { GITHUB_API };
 
-export async function getGitHubToken(): Promise<string> {
-  const token = await resolveConfig('githubToken', 'GITHUB_TOKEN');
-  if (!token) throw new Error('GITHUB_TOKEN not configured');
-  return token;
-}
-
-export async function githubFetch(url: string, options: RequestInit = {}): Promise<Response> {
-  const token = await getGitHubToken();
+export async function githubFetch(token: string, url: string, options: RequestInit = {}): Promise<Response> {
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -63,8 +55,7 @@ export async function githubFetch(url: string, options: RequestInit = {}): Promi
   return response;
 }
 
-export async function githubGraphQL(query: string, variables: Record<string, any> = {}): Promise<any> {
-  const token = await getGitHubToken();
+export async function githubGraphQL(token: string, query: string, variables: Record<string, any> = {}): Promise<any> {
   const response = await fetch('https://api.github.com/graphql', {
     method: 'POST',
     headers: {

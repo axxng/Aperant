@@ -1,3 +1,4 @@
+import { v4 as uuid } from 'uuid';
 import { getClient } from './client.js';
 
 export interface UserRow {
@@ -6,6 +7,8 @@ export interface UserRow {
   name: string;
   password_hash: string | null;
   role: string;
+  github_token: string | null;
+  github_login: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -71,4 +74,27 @@ export async function deleteUser(id: string): Promise<void> {
 export async function userCount(): Promise<number> {
   const result = await getClient().execute('SELECT COUNT(*) as count FROM users');
   return Number(result.rows[0]?.count ?? 0);
+}
+
+export async function upsertOAuthUser(params: {
+  githubId: string;
+  email: string;
+  name: string;
+  githubLogin: string;
+  githubToken: string;
+  role: string;
+}): Promise<UserRow> {
+  const id = uuid();
+  await getClient().execute({
+    sql: `INSERT INTO users (id, email, name, github_login, github_token, role)
+          VALUES (?, ?, ?, ?, ?, ?)
+          ON CONFLICT(email) DO UPDATE SET
+            github_login = excluded.github_login,
+            github_token = excluded.github_token,
+            name = CASE WHEN users.name = '' THEN excluded.name ELSE users.name END,
+            updated_at = datetime('now')`,
+    args: [id, params.email, params.name, params.githubLogin, params.githubToken, params.role],
+  });
+  const user = await getUserByEmail(params.email);
+  return user!;
 }
