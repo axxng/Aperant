@@ -1,0 +1,42 @@
+{
+  "tab": {
+    "issues": "Issues"
+  },
+  "filters": {
+    "searchPlaceholder": "Rechercher par titre...",
+    "labels": "Étiquettes",
+    "assignee": "Assigné",
+    "allAssignees": "Tous les assignés",
+    "open": "Ouvertes",
+    "closed": "Fermées",
+    "reset": "Réinitialiser les filtres",
+    "resetAriaLabel": "Réinitialiser les filtres"
+  },
+  "list": {
+    "loadMore": "Charger plus d'issues",
+    "issueNumber": "#{{number}}"
+  },
+  "empty": {
+    "openHeading": "Aucune issue ouverte",
+    "closedHeading": "Aucune issue fermée",
+    "body": "Ce dépôt n'a pas d'issues correspondant à vos filtres.",
+    "viewOnGitHub": "Voir sur GitHub"
+  },
+  "error": {
+    "heading": "Impossible de charger les issues",
+    "body": "Vérifiez votre connexion GitHub ou réessayez.",
+    "retry": "Réessayer",
+    "labelsFetch": "Impossible de charger les étiquettes. Les filtres peuvent être incomplets.",
+    "rateLimit": {
+      "heading": "Limite de taux GitHub atteinte",
+      "body": "Vous pouvez réessayer après {{retryAfter}}."
+    }
+  },
+  "detail": {
+    "viewOnGitHub": "Voir sur GitHub"
+  },
+  "state": {
+    "open": "Ouvert",
+    "closed": "Fermé"
+  }
+}
