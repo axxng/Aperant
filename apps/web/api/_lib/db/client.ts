@@ -1,5 +1,4 @@
 import { createClient, type Client } from '@libsql/client';
-import { v4 as uuid } from 'uuid';
 
 let client: Client | null = null;
 let migrated = false;
@@ -18,7 +17,6 @@ export async function ensureDb(): Promise<Client> {
   const c = getClient();
   if (!migrated) {
     await runMigrations(c);
-    await bootstrapAdmin(c);
     migrated = true;
   }
   return c;
@@ -48,21 +46,6 @@ async function runMigrations(c: Client): Promise<void> {
   }
 }
 
-async function bootstrapAdmin(c: Client): Promise<void> {
-  const adminEmail = process.env.ADMIN_EMAIL;
-  if (!adminEmail) return;
-
-  const countResult = await c.execute('SELECT COUNT(*) as count FROM users');
-  const count = Number(countResult.rows[0]?.count ?? 0);
-  if (count > 0) return;
-
-  const id = uuid();
-  await c.execute({
-    sql: 'INSERT INTO users (id, email, name, role) VALUES (?, ?, ?, ?)',
-    args: [id, adminEmail, 'Admin', 'admin'],
-  });
-  console.log(`Bootstrapped admin user: ${adminEmail}`);
-}
 
 const MIGRATIONS = [
   {
@@ -212,6 +195,14 @@ const MIGRATIONS = [
         updated_at TEXT NOT NULL DEFAULT (datetime('now')),
         PRIMARY KEY (github_repo, github_issue_number)
       );
+    `,
+  },
+  {
+    name: '012_github_oauth',
+    sql: `
+      DROP TABLE IF EXISTS otp_codes;
+      ALTER TABLE users ADD COLUMN github_token TEXT;
+      ALTER TABLE users ADD COLUMN github_login TEXT;
     `,
   },
 ];
