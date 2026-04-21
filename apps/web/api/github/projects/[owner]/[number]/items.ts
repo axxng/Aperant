@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ensureDb } from '../../../../_lib/db/client.js';
 import { authenticateRequest } from '../../../../_lib/auth/middleware.js';
+import { getUserById } from '../../../../_lib/db/users.js';
 import { githubGraphQL, PROJECT_ITEMS_QUERY, PROJECT_ITEMS_QUERY_ORG } from '../../../../_lib/github.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -13,6 +14,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await authenticateRequest(req, res);
   if (!user) return;
 
+  const dbUser = await getUserById(user.userId);
+  if (!dbUser?.github_token) {
+    return res.status(403).json({ error: 'GitHub account not connected' });
+  }
+
   const owner = req.query.owner as string;
   const projectNumber = parseInt(req.query.number as string, 10);
   const cursor = (req.query.cursor as string) || null;
@@ -21,10 +27,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Try as user first, then as org
     let data: any;
     try {
-      data = await githubGraphQL(PROJECT_ITEMS_QUERY, { owner, number: projectNumber, cursor });
+      data = await githubGraphQL(dbUser.github_token, PROJECT_ITEMS_QUERY, { owner, number: projectNumber, cursor });
       data = data.user?.projectV2;
     } catch {
-      data = await githubGraphQL(PROJECT_ITEMS_QUERY_ORG, { owner, number: projectNumber, cursor });
+      data = await githubGraphQL(dbUser.github_token, PROJECT_ITEMS_QUERY_ORG, { owner, number: projectNumber, cursor });
       data = data.organization?.projectV2;
     }
 
