@@ -85,8 +85,23 @@ Plans:
   1. User can navigate to a top-level "Issues" view and see issues from all connected repos aggregated in one list
   2. Each issue card in the unified list displays a colour badge identifying which product repo it belongs to
   3. When one repo's GitHub request fails, the user sees a per-repo error indicator for that repo while the other repos' issues still load and display
-**Plans**: TBD
+**Plans**: 4 plans
 **UI hint**: yes
+Plans:
+- [ ] 04-01-PLAN.md — Wave 0: extend Vitest for frontend (jsdom) + IssueListRow.test.tsx stubs (CROSS-02) + AllIssuesView.test.tsx stubs (CROSS-01, CROSS-03)
+- [ ] 04-02-PLAN.md — IssueListRow productBadge prop extension + useAllIssuesFilters hook + i18n keys (en/fr issues.json + navigation.json)
+- [ ] 04-03-PLAN.md — AllIssuesView component (useQueries fan-out, merge+sort, error banners, product badges)
+- [ ] 04-04-PLAN.md — App.tsx /issues route + Sidebar All Issues NavLink + human verification checkpoint
+
+### Phase 04.1: Engineering Principles Refactor: parse-dont-validate, functional core imperative shell, FSM illegal state, red-green TDD (INSERTED)
+
+**Goal:** Refactor the existing codebase to enforce four core engineering principles — parse-don't-validate, functional core/imperative shell, FSM for illegal state elimination, and red-green TDD — then codify these as standing standards in CLAUDE.md so all future phases inherit them automatically
+**Requirements**: TBD
+**Depends on:** Phase 4
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 04.1 to break down)
 
 ### Phase 5: Triage Actions
 **Goal**: Users can assign internal priority and mark issues as triaged directly inside Currents, with keyboard shortcuts and safety warnings — without touching the GitHub issue
@@ -135,7 +150,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 1. Foundation | 3/3 | Complete    | 2026-04-21 |
 | 2. Single-Repo Issues Browser | 7/7 | Complete    | 2026-04-21 |
 | 3. GitHub OAuth Login | 6/6 | Complete    | 2026-04-21 |
-| 4. Cross-Repo Unified View | 0/TBD | Not started | - |
+| 4. Cross-Repo Unified View | 0/4 | Not started | - |
 | 5. Triage Actions | 0/TBD | Not started | - |
 | 6. Notes | 0/TBD | Not started | - |
 | 7. Promote to Backlog | 0/TBD | Not started | - |

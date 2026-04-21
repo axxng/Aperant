@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 4 context gathered
-last_updated: "2026-04-21T14:18:29.863Z"
+stopped_at: Phase 4 UI-SPEC approved
+last_updated: "2026-04-21T14:27:12.822Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 7
@@ -61,6 +61,7 @@ Progress: [████░░░░░░] 40%
 ### Roadmap Evolution
 
 - Phase 7 added: To use Github OAuth login, to use the given repo permissions granted from OAuth
+- Phase 04.1 inserted after Phase 4: Engineering principles refactor — parse-don't-validate, functional core/imperative shell, FSM illegal state, red-green TDD (URGENT)
 
 ### Decisions
 
@@ -96,5 +97,5 @@ None yet.
 ## Session Continuity
 
 Last session: --stopped-at
-Stopped at: Phase 4 context gathered
+Stopped at: Phase 4 UI-SPEC approved
 Resume file: --resume-file
