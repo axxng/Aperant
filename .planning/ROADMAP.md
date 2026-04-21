@@ -46,8 +46,15 @@ Plans:
   3. User can type a keyword into a search field and see matching issues by title
   4. User can click an issue to open a detail panel showing rendered Markdown body, labels, assignee, and created date
   5. User can click "Load More" to fetch the next page of 50 issues, and can navigate from the detail panel directly to the issue on github.com
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 7 plans
+Plans:
+- [ ] 02-01-PLAN.md — Deps install (@tanstack/react-query, react-markdown, remark-gfm, @tailwindcss/typography) + typography plugin + test stubs
+- [ ] 02-02-PLAN.md — labels.ts API route (authenticated, validated, rate-limit-aware)
+- [ ] 02-03-PLAN.md — App.tsx wiring (QueryClientProvider + IssuesView route) + en/fr issues.json i18n files
+- [ ] 02-04-PLAN.md — useIssuesFilters hook + IssueListRow + IssueSkeletonRow components
+- [ ] 02-05-PLAN.md — IssuesFilterBar component (search + label multi-select + assignee + state toggle)
+- [ ] 02-06-PLAN.md — IssueDetailPanel component (slide-in, react-markdown body, View on GitHub)
+- [ ] 02-07-PLAN.md — IssuesView assembly (useInfiniteQuery, full wiring, human verification checkpoint)
 
 ### Phase 3: Cross-Repo Unified View
 **Goal**: Users can see all GitHub issues from every connected product repo in a single list, with clear origin labelling and graceful partial failure
@@ -105,7 +112,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete    | 2026-04-21 |
-| 2. Single-Repo Issues Browser | 0/TBD | Not started | - |
+| 2. Single-Repo Issues Browser | 0/7 | Not started | - |
 | 3. Cross-Repo Unified View | 0/TBD | Not started | - |
 | 4. Triage Actions | 0/TBD | Not started | - |
 | 5. Notes | 0/TBD | Not started | - |
