@@ -198,4 +198,20 @@ const MIGRATIONS = [
       ALTER TABLE tasks ADD COLUMN github_sync_retry_count INTEGER NOT NULL DEFAULT 0;
     `,
   },
+  {
+    name: '011_issue_triage',
+    sql: `
+      CREATE TABLE IF NOT EXISTS issue_triage (
+        github_repo TEXT NOT NULL,
+        github_issue_number INTEGER NOT NULL,
+        is_triaged INTEGER NOT NULL DEFAULT 0,
+        priority TEXT DEFAULT NULL,
+        github_comment_id INTEGER DEFAULT NULL,
+        comment_status TEXT DEFAULT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (github_repo, github_issue_number)
+      );
+    `,
+  },
 ];
