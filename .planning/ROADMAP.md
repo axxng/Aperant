@@ -117,3 +117,13 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 4. Triage Actions | 0/TBD | Not started | - |
 | 5. Notes | 0/TBD | Not started | - |
 | 6. Promote to Backlog | 0/TBD | Not started | - |
+
+### Phase 7: To use Github OAuth login, to use the given repo permissions granted from OAuth
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 6
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 7 to break down)

@@ -57,6 +57,10 @@ Progress: [████░░░░░░] 40%
 
 ## Accumulated Context
 
+### Roadmap Evolution
+
+- Phase 7 added: To use Github OAuth login, to use the given repo permissions granted from OAuth
+
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
