@@ -110,6 +110,8 @@ export const githubIssueQuerySchema = z.object({
   state: z.enum(['open', 'closed', 'all']).default('open'),
   page: z.string().regex(/^\d+$/).default('1'),
   per_page: z.string().regex(/^\d+$/).default('50'),
+  labels: z.string().optional(),   // comma-separated GitHub label names, passed through as-is
+  assignee: z.string().optional(), // single GitHub login string
 });
 
 export const githubCommentSchema = z.object({

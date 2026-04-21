@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ensureDb } from '../../../../_lib/db/client.js';
 import { authenticateRequest } from '../../../../_lib/auth/middleware.js';
-import { githubFetch, GITHUB_API, mapGitHubIssue } from '../../../../_lib/github.js';
+import { githubFetch, GITHUB_API, mapGitHubIssue, GitHubRateLimitError } from '../../../../_lib/github.js';
 import { githubIssueQuerySchema } from '../../../../_lib/validation.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -23,8 +23,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Invalid query parameters' });
     }
 
-    const { state, page, per_page } = queryResult.data;
+    const { state, page, per_page, labels, assignee } = queryResult.data;
     const params = new URLSearchParams({ state, page, per_page, sort: 'updated', direction: 'desc' });
+    if (labels) params.set('labels', labels);
+    if (assignee) params.set('assignee', assignee);
 
     const response = await githubFetch(
       `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues?${params}`
@@ -43,6 +45,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     res.json({ issues: mapped, hasMore });
   } catch (error: any) {
+    if (error instanceof GitHubRateLimitError) {
+      return res.status(429).json({ error: 'rate_limited', retryAfter: error.retryAfter });
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 }
