@@ -357,3 +357,188 @@ npm run dev:mcp    # Electron MCP server for AI debugging
 
 # Project data: .auto-claude/specs/ (gitignored)
 ```
+
+---
+
+## Engineering Principles (apps/web/)
+
+These four principles apply to **all code in `apps/web/`** (the Currents web app). Future agents and developers MUST follow them for every change. They are the outcome of the Phase 04.1 refactor and are enforced going forward.
+
+### 1. Parse-Don't-Validate
+
+Parse raw input into typed domain objects at every untrusted boundary. Reject immediately on failure. Never do runtime type checks (`as T`, `instanceof`, manual `if typeof`) inside domain logic.
+
+**Untrusted boundaries in this codebase:**
+- API request body/query params → `schema.safeParse(req.body)` (user input → 400) or `schema.parse(req.query.param)` (path params → 500)
+- DB rows → `rowSchema.parse(row)` in every `rowToXxx()` mapper (programmer bug → 500)
+- External API responses (GitHub, OAuth) → `apiSchema.parse(await response.json())` (programmer/deployment bug → 500)
+
+**On parse failure rule (D-02):**
+- User-submitted input (body): `z.safeParse()` + 400 response — user-recoverable errors
+- DB rows and external API responses: `z.parse()` (throws `ZodError`) — programmer/deployment bugs, not user-recoverable; the handler's `try/catch` surfaces a 500
+
+**All Zod schemas** for DB rows, GitHub API responses, and OAuth responses live in `apps/web/api/_lib/validation.ts`.
+
+```typescript
+// CORRECT — parse at DB boundary
+export function rowToTask(row: unknown): Task {
+  const parsed = taskDbRowSchema.parse(row); // throws ZodError on bad row
+  return buildTaskFromRow(parsed); // typed from here on
+}
+
+// WRONG — blind cast
+function rowToTask(row: any): Task {
+  return { id: row.id as string, status: row.status as TaskStatus }; // no validation
+}
+```
+
+```typescript
+// CORRECT — parse GitHub API response
+export function mapGitHubPR(rawPr: unknown): GitHubPR {
+  const pr = gitHubApiPRSchema.parse(rawPr); // ZodError on unexpected shape
+  return { number: pr.number, ... };
+}
+
+// WRONG — unsafe any
+export function mapGitHubPR(pr: any): GitHubPR {
+  return { number: pr.number, ... }; // silently wrong if GitHub changes response shape
+}
+```
+
+### 2. Functional Core / Imperative Shell
+
+Pure functions carry business logic (no I/O, deterministic). A thin imperative shell orchestrates I/O and delegates to pure functions.
+
+**Every API handler in `apps/web/api/` follows the 4-step shape without exception:**
+1. Parse input (Zod schema) — path params and query strings first
+2. Authorize (`authenticateRequest` + `hasRole`)
+3. Call pure domain function(s) — no I/O
+4. Respond (`res.json` / `res.status`)
+
+**Pure functions stay in the same file** as the handler or module that uses them. Separate with a clear `// === Pure domain logic ===` comment block. Do NOT create new `*-logic.ts` files (D-03).
+
+**DB layer:** Data assembly (building SQL args) is extracted as pure functions separate from SQL mutation. See `buildCreateTaskInput()` and `buildUpdateTaskFields()` in `api/_lib/db/tasks.ts` as the canonical pattern.
+
+```typescript
+// CORRECT — 4-step shape
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  await ensureDb();
+  if (req.method !== 'PATCH') return res.status(405).json({ error: 'Method not allowed' });
+
+  // 1. Parse
+  const id = z.string().uuid().parse(req.query.id as string);
+  const result = updateTaskSchema.safeParse(req.body);
+  if (!result.success) return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });
+
+  // 2. Authorize
+  const user = await authenticateRequest(req, res);
+  if (!user) return;
+  if (!hasRole(user, 'admin', 'member')) return res.status(403).json({ error: 'Insufficient permissions' });
+
+  // 3. Pure domain function(s)
+  const { updatedAt: _updatedAt, ...updateData } = result.data;
+
+  // 4. Respond
+  const task = await updateTask(id, updateData);
+  if (!task) return res.status(404).json({ error: 'Task not found' });
+  return res.json(task);
+}
+
+// WRONG — authorize before parse (Step 2 before Step 1)
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const user = await authenticateRequest(req, res); // auth before parse — wrong order
+  if (!user) return;
+  const id = req.query.id as string; // no parse — wrong
+  ...
+}
+```
+
+**Exceptions to 4-step shape:**
+- `api/cron/sync.ts` — custom HMAC auth, not a domain endpoint
+- `api/auth/github.ts` — state generation only, no input
+- `api/auth/me.ts` — GET only, no input to parse
+
+### 3. FSM / Illegal State Elimination
+
+Use discriminated unions to make invalid states unrepresentable. Every domain object with lifecycle state gets a typed state machine.
+
+```typescript
+// CORRECT — illegal state unrepresentable
+export type Task =
+  | (TaskBase & { status: 'backlog' })
+  | (TaskBase & { status: 'error'; reviewReason: ReviewReason })        // error REQUIRES reviewReason
+  | (TaskBase & { status: 'pr_created'; githubIssueNumber: number; githubIssueUrl: string; githubRepo: string }); // pr_created REQUIRES GitHub fields
+
+// WRONG — all fields optional on all variants
+export interface Task {
+  status: TaskStatus;
+  reviewReason?: ReviewReason;  // can be missing on 'error' status — silently invalid
+  githubIssueNumber?: number;   // can be missing on 'pr_created' — silently invalid
+}
+```
+
+**Current discriminated unions in `apps/web/`:**
+- `Task` — 8 status variants in `src/shared/types/task.ts`
+  - `backlog | queue | in_progress | done` — no extra fields required
+  - `ai_review | human_review | error` — require `reviewReason: ReviewReason`
+  - `pr_created` — requires `githubIssueNumber: number`, `githubIssueUrl: string`, `githubRepo: string`
+- `GithubSyncState` — `idle | pending | retrying | failed | complete` in `src/shared/types/task.ts`
+  - `retrying` carries `retryCount: number`; `failed` carries `retryCount: number`
+- `TriageState` — `untouched | prioritized | complete` in `api/_lib/db/triage.ts`
+  - `prioritized` carries `priority: 'critical' | 'high' | 'medium' | 'low'`
+- `ProductSource` — `repo | repos | github_project | gitlab_project` in `api/_lib/validation.ts`
+
+**Keep a separate string literal union for `Record<>` keys:**
+```typescript
+// TaskStatusKey for Record<> keys — NOT the Task discriminated union
+export type TaskStatusKey = 'backlog' | 'queue' | 'in_progress' | 'ai_review' | 'human_review' | 'done' | 'pr_created' | 'error';
+export type TaskOrderState = Record<TaskStatusKey, string[]>; // CORRECT
+
+// WRONG — Record<Task, string[]> breaks when Task is a discriminated union
+```
+
+**When adding a new domain type with lifecycle:** define the discriminated union first, then write the `rowToXxx()` mapper that assembles the correct variant from the flat DB row. DB schema stays flat — the union is TypeScript-only.
+
+### 4. Red-Green TDD
+
+Write a failing test before writing implementation for every new or refactored function. Tests live co-located next to source.
+
+**Test runner:** `cd apps/web && npm test` (Vitest). Individual file: `cd apps/web && npx vitest run path/to/file.test.ts`.
+
+**File co-location pattern:** `api/_lib/db/tasks.ts` → `api/_lib/db/tasks.test.ts`
+
+**Mocking pattern for DB layer** (copy from `api/_lib/db/triage.test.ts`):
+```typescript
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const mockExecute = vi.fn();
+vi.mock('./client.js', () => ({
+  getClient: () => ({ execute: mockExecute }),
+}));
+
+import { rowToTask, buildSyncState } from './tasks.js'; // functions must be exported
+```
+
+**Mocking pattern for API handlers** (copy from `api/auth/github/callback.test.ts`):
+```typescript
+vi.mock('../../_lib/db/users.js', () => ({
+  upsertOAuthUser: vi.fn(),
+  userCount: vi.fn().mockResolvedValue(0),
+}));
+vi.spyOn(globalThis, 'fetch');
+
+function mockVercelReq(overrides = {}) {
+  return { method: 'GET', query: {}, headers: {}, ...overrides } as unknown as VercelRequest;
+}
+function mockVercelRes() {
+  const json = vi.fn().mockReturnThis();
+  const status = vi.fn().mockReturnValue({ json });
+  const redirect = vi.fn();
+  const setHeader = vi.fn();
+  return { res: { json, status, redirect, setHeader } as unknown as VercelResponse, json, status, redirect, setHeader };
+}
+```
+
+**Pure functions** (no I/O) are tested with direct imports — no mocking needed. Pure functions in handler files MUST be exported to be unit-testable (see `validateOAuthState`, `determineRole`, `buildEmailFallback`, `buildUserRecord` in `api/auth/github/callback.ts`; `buildCreateTaskInput`, `buildUpdateTaskFields` in `api/_lib/db/tasks.ts`).
+
+**Going forward (Phase 5+):** All new code in `apps/web/` must have a failing test written first before implementation.
