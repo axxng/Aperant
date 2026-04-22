@@ -11,9 +11,6 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, './src/shared'),
     },
   },
-  define: {
-    'import.meta.env.VITE_MOCK_SERVICES': JSON.stringify(process.env.MOCK_SERVICES ?? 'false'),
-  },
   server: {
     proxy: {
       '/api': {
