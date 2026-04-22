@@ -175,7 +175,10 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad, onClose }: Issue
                   aria-pressed={triageData?.isTriaged ?? false}
                   aria-label={t('triage.markTriagedAriaLabel')}
                   disabled={triageLoading || triageMutation.isPending}
-                  onClick={() => triageMutation.mutate({ isTriaged: !(triageData?.isTriaged ?? false), owner, repo, number: issue!.number })}
+                  onClick={() => {
+                    if (!issue) return;
+                    triageMutation.mutate({ isTriaged: !(triageData?.isTriaged ?? false), owner, repo, number: issue.number });
+                  }}
                   className={cn(
                     'flex items-center gap-1.5',
                     triageData?.isTriaged && 'border-success/30'
@@ -205,7 +208,10 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad, onClose }: Issue
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
                     {(['critical', 'high', 'medium', 'low'] as const).map(p => (
-                      <DropdownMenuItem key={p} onSelect={() => triageMutation.mutate({ priority: p, owner, repo, number: issue!.number })}>
+                      <DropdownMenuItem key={p} onSelect={() => {
+                        if (!issue) return;
+                        triageMutation.mutate({ priority: p, owner, repo, number: issue.number });
+                      }}>
                         <span className={cn('h-1.5 w-1.5 rounded-full mr-2 flex-shrink-0', PRIORITY_DOT_CLASSES[p])} />
                         {t(`triage.priority.${p}`)}
                       </DropdownMenuItem>
@@ -214,7 +220,10 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad, onClose }: Issue
                     {triageData?.priority && (
                       <>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => triageMutation.mutate({ priority: null, owner, repo, number: issue!.number })}>
+                        <DropdownMenuItem onSelect={() => {
+                          if (!issue) return;
+                          triageMutation.mutate({ priority: null, owner, repo, number: issue.number });
+                        }}>
                           {t('triage.priorityClear')}
                         </DropdownMenuItem>
                       </>
