@@ -59,7 +59,11 @@ export async function syncTaskToGitHub(
       }
     }
 
-    // 3. Update GitHub Project board column if applicable
+    // 3. Update GitHub Project board column if applicable.
+    // githubProjectItemId is an optional field on TaskBase; only tasks synced from a GitHub Project
+    // board will have it set. The falsy check is intentional: if undefined/null the block is skipped
+    // safely. No type narrowing to pr_created is needed because any status variant can have a project
+    // item ID once it has been linked to a GitHub Project board.
     if (task.githubProjectItemId && changes.status !== undefined) {
       const projectResult = await syncProjectBoardColumn(task, changes.status);
       if (!projectResult.success) {
