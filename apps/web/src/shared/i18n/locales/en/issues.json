@@ -86,5 +86,14 @@
     "sentButton": "Sent",
     "postSuccess": "Note posted to GitHub",
     "postError": "Could not post note. Try again."
+  },
+  "promote": {
+    "promoteButton": "Promote to Backlog",
+    "viewInBacklog": "View in Backlog",
+    "successToast": "Issue promoted to backlog.",
+    "errorToast": "Failed to promote issue. Please try again.",
+    "duplicateToast": "This issue is already in the backlog.",
+    "ariaLabel": "Promote issue to Currents backlog",
+    "pendingAriaLabel": "Promoting issue to backlog…"
   }
 }

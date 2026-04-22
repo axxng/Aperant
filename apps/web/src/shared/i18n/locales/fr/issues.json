@@ -86,5 +86,14 @@
     "sentButton": "Envoyé",
     "postSuccess": "Note publiée sur GitHub",
     "postError": "Impossible de publier la note. Réessayez."
+  },
+  "promote": {
+    "promoteButton": "Promouvoir dans le backlog",
+    "viewInBacklog": "Voir dans le backlog",
+    "successToast": "Issue promue dans le backlog.",
+    "errorToast": "Impossible de promouvoir l'issue. Réessayez.",
+    "duplicateToast": "Cette issue est déjà dans le backlog.",
+    "ariaLabel": "Promouvoir l'issue dans le backlog Currents",
+    "pendingAriaLabel": "Promotion de l'issue en cours…"
   }
 }

@@ -314,6 +314,7 @@ export function IssuesView() {
           isOpen={selectedIssueId !== null}
           onTriageLoad={handleTriageLoad}
           onClose={() => setSelectedIssueId(null)}
+          productId={productId ?? ''}
         />
       </div>
     </div>
