@@ -161,9 +161,9 @@ export function registerMockRoutes(app: Application): void {
     res.json({ issues, hasMore: false });
   });
 
-  // Mock GitHub labels
+  // Mock GitHub labels — wrap in LabelsResult shape to match production handler
   app.get('/api/github/repos/:owner/:repo/labels', (_req: Request, res: Response) => {
-    res.json(buildLabelFixtures());
+    res.json({ labels: buildLabelFixtures() });
   });
 
   // Mock batch triage — GET /api/triage/:owner/:repo?numbers=1,2,3
