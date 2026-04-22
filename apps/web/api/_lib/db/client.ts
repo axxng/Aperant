@@ -5,10 +5,14 @@ let migrated = false;
 
 export function getClient(): Client {
   if (!client) {
-    client = createClient({
-      url: process.env.TURSO_DATABASE_URL!,
-      authToken: process.env.TURSO_AUTH_TOKEN,
-    });
+    if (process.env.MOCK_SERVICES === 'true') {
+      client = createClient({ url: 'file:dev.db' });
+    } else {
+      client = createClient({
+        url: process.env.TURSO_DATABASE_URL!,
+        authToken: process.env.TURSO_AUTH_TOKEN,
+      });
+    }
   }
   return client;
 }
