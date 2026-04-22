@@ -60,7 +60,12 @@ export function App() {
   }
 
   if (!token || !user) {
-    return <LoginPage />;
+    return (
+      <>
+        <LoginPage />
+        <DevModeBanner />
+      </>
+    );
   }
 
   return <AuthenticatedApp />;
