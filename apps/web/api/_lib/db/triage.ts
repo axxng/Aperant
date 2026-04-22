@@ -37,7 +37,7 @@ export function rowToTriage(row: unknown): TriageRecord & { triageState: TriageS
   };
 }
 
-export async function getTriageRecord(repo: string, issueNumber: number): Promise<TriageRecord | null> {
+export async function getTriageRecord(repo: string, issueNumber: number): Promise<(TriageRecord & { triageState: TriageState }) | null> {
   const result = await getClient().execute({
     sql: 'SELECT * FROM issue_triage WHERE github_repo = ? AND github_issue_number = ?',
     args: [repo, issueNumber],

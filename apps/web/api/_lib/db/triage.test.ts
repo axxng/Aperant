@@ -67,3 +67,46 @@ describe('upsertTriageRecord', () => {
     expect(result.priority).toBe('high');
   });
 });
+
+describe('TriageState via rowToTriage', () => {
+  beforeEach(() => { mockExecute.mockReset(); });
+
+  it('maps is_triaged=0 to { kind: "untouched" }', async () => {
+    mockExecute.mockResolvedValueOnce({
+      rows: [{
+        github_repo: 'owner/repo', github_issue_number: 1,
+        is_triaged: 0, priority: null,
+        github_comment_id: null, comment_status: null,
+        created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00',
+      }],
+    });
+    const result = await getTriageRecord('owner/repo', 1);
+    expect(result?.triageState).toEqual({ kind: 'untouched' });
+  });
+
+  it('maps is_triaged=1 with priority to { kind: "prioritized", priority }', async () => {
+    mockExecute.mockResolvedValueOnce({
+      rows: [{
+        github_repo: 'owner/repo', github_issue_number: 1,
+        is_triaged: 1, priority: 'high',
+        github_comment_id: null, comment_status: null,
+        created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00',
+      }],
+    });
+    const result = await getTriageRecord('owner/repo', 1);
+    expect(result?.triageState).toEqual({ kind: 'prioritized', priority: 'high' });
+  });
+
+  it('maps is_triaged=1 with priority=null to { kind: "complete" }', async () => {
+    mockExecute.mockResolvedValueOnce({
+      rows: [{
+        github_repo: 'owner/repo', github_issue_number: 1,
+        is_triaged: 1, priority: null,
+        github_comment_id: null, comment_status: null,
+        created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00',
+      }],
+    });
+    const result = await getTriageRecord('owner/repo', 1);
+    expect(result?.triageState).toEqual({ kind: 'complete' });
+  });
+});

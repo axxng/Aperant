@@ -87,3 +87,41 @@ describe('githubFetch', () => {
     expect(result.status).toBe(200);
   });
 });
+
+import { mapGitHubPR, mapGitHubIssue } from './github.js';
+
+describe('mapGitHubPR', () => {
+  it('throws ZodError when required field "number" is missing', () => {
+    expect(() => mapGitHubPR({ title: 'test' })).toThrow();
+  });
+  it('maps valid raw PR to GitHubPR shape', () => {
+    const raw = {
+      number: 1, title: 'Test PR', state: 'open',
+      head: { ref: 'feat/x' }, base: { ref: 'main' },
+      created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00',
+      html_url: 'https://github.com/owner/repo/pull/1',
+    };
+    const result = mapGitHubPR(raw);
+    expect(result.number).toBe(1);
+    expect(result.headRefName).toBe('feat/x');
+  });
+});
+
+describe('mapGitHubIssue', () => {
+  it('throws ZodError when required field "id" is missing', () => {
+    const mapper = mapGitHubIssue('owner', 'repo');
+    expect(() => mapper({ title: 'test' })).toThrow();
+  });
+  it('includes repoFullName derived from owner/repo params', () => {
+    const raw = {
+      id: 1, number: 42, title: 'Test Issue', state: 'open',
+      user: { login: 'alice' },
+      created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00',
+      url: 'https://api.github.com/repos/myorg/myrepo/issues/42',
+      html_url: 'https://github.com/myorg/myrepo/issues/42',
+      comments: 0,
+    };
+    const result = mapGitHubIssue('myorg', 'myrepo')(raw);
+    expect(result.repoFullName).toBe('myorg/myrepo');
+  });
+});

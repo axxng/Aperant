@@ -1,4 +1,5 @@
 import type { GitHubPR, PRFile } from '../../src/shared/types/pr.js';
+import { gitHubApiIssueSchema, gitHubApiPRSchema } from './validation.js';
 
 export class GitHubRateLimitError extends Error {
   readonly retryAfter: number;
@@ -75,48 +76,54 @@ export async function githubGraphQL(query: string, variables: Record<string, any
   return data.data;
 }
 
+// === Pure domain logic ===
+
 // Helper: map raw GitHub API PR to our GitHubPR type
-export function mapGitHubPR(pr: any): GitHubPR {
+export function mapGitHubPR(rawPr: unknown): GitHubPR {
+  const pr = gitHubApiPRSchema.parse(rawPr);
   return {
     number: pr.number,
     title: pr.title,
     body: pr.body || '',
     state: pr.merged_at ? 'merged' : pr.state,
-    author: { login: pr.user?.login, avatarUrl: pr.user?.avatar_url },
-    headRefName: pr.head?.ref,
-    baseRefName: pr.base?.ref,
-    additions: pr.additions ?? 0,
-    deletions: pr.deletions ?? 0,
-    changedFiles: pr.changed_files ?? 0,
-    labels: pr.labels?.map((l: any) => ({ name: l.name, color: l.color })) || [],
-    assignees: pr.assignees?.map((a: any) => ({ login: a.login })) || [],
+    author: { login: pr.user?.login ?? '', avatarUrl: pr.user?.avatar_url },
+    headRefName: pr.head.ref,
+    baseRefName: pr.base.ref,
+    additions: pr.additions,
+    deletions: pr.deletions,
+    changedFiles: pr.changed_files,
+    labels: pr.labels.map((l) => ({ name: l.name, color: l.color })),
+    assignees: pr.assignees.map((a) => ({ login: a.login })),
     createdAt: pr.created_at,
     updatedAt: pr.updated_at,
     htmlUrl: pr.html_url,
-    draft: pr.draft || false,
+    draft: pr.draft,
   };
 }
 
 // Helper: map raw GitHub API issue to our GitHubIssue type
 export function mapGitHubIssue(owner: string, repo: string) {
-  return (issue: any) => ({
-    id: issue.id,
-    number: issue.number,
-    title: issue.title,
-    body: issue.body,
-    state: issue.state,
-    labels: issue.labels?.map((l: any) => ({ id: l.id, name: l.name, color: l.color, description: l.description })) || [],
-    assignees: issue.assignees?.map((a: any) => ({ login: a.login, avatarUrl: a.avatar_url })) || [],
-    author: { login: issue.user?.login, avatarUrl: issue.user?.avatar_url },
-    milestone: issue.milestone ? { id: issue.milestone.id, title: issue.milestone.title, state: issue.milestone.state } : undefined,
-    createdAt: issue.created_at,
-    updatedAt: issue.updated_at,
-    closedAt: issue.closed_at,
-    commentsCount: issue.comments || 0,
-    url: issue.url,
-    htmlUrl: issue.html_url,
-    repoFullName: `${owner}/${repo}`,
-  });
+  return (rawIssue: unknown) => {
+    const issue = gitHubApiIssueSchema.parse(rawIssue);
+    return {
+      id: issue.id,
+      number: issue.number,
+      title: issue.title,
+      body: issue.body,
+      state: issue.state,
+      labels: issue.labels.map((l) => ({ id: l.id, name: l.name, color: l.color, description: l.description })),
+      assignees: issue.assignees.map((a) => ({ login: a.login, avatarUrl: a.avatar_url })),
+      author: { login: issue.user.login, avatarUrl: issue.user.avatar_url },
+      milestone: issue.milestone ? { id: issue.milestone.id, title: issue.milestone.title, state: issue.milestone.state } : undefined,
+      createdAt: issue.created_at,
+      updatedAt: issue.updated_at,
+      closedAt: issue.closed_at,
+      commentsCount: issue.comments,
+      url: issue.url,
+      htmlUrl: issue.html_url,
+      repoFullName: `${owner}/${repo}`,
+    };
+  };
 }
 
 // GraphQL queries for GitHub Projects v2
