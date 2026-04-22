@@ -6,7 +6,7 @@ vi.mock('./client.js', () => ({
   getClient: () => ({ execute: mockExecute }),
 }));
 
-import { getTriageRecord, upsertTriageRecord } from './triage.js';
+import { getTriageRecord, upsertTriageRecord, getTriageRecordsBatch } from './triage.js';
 
 describe('getTriageRecord', () => {
   beforeEach(() => { mockExecute.mockReset(); });
@@ -71,6 +71,41 @@ describe('upsertTriageRecord', () => {
     }));
     expect(result.isTriaged).toBe(true);
     expect(result.priority).toBe('high');
+  });
+});
+
+describe('getTriageRecordsBatch', () => {
+  beforeEach(() => { mockExecute.mockReset(); });
+
+  it('returns [] immediately when issueNumbers is empty (no DB call)', async () => {
+    const result = await getTriageRecordsBatch('owner/repo', []);
+    expect(result).toEqual([]);
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  it('queries with repo and all issue numbers as args and maps results', async () => {
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { github_issue_number: 1, is_triaged: 1, priority: 'high' },
+        { github_issue_number: 2, is_triaged: 0, priority: null },
+      ],
+    });
+    const result = await getTriageRecordsBatch('owner/repo', [1, 2, 5]);
+    expect(mockExecute).toHaveBeenCalledWith(expect.objectContaining({
+      sql: expect.stringContaining('github_issue_number IN'),
+      args: ['owner/repo', 1, 2, 5],
+    }));
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({ issueNumber: 1, isTriaged: true, priority: 'high' });
+    expect(result[1]).toEqual({ issueNumber: 2, isTriaged: false, priority: null });
+  });
+
+  it('maps is_triaged=0 with non-null priority as isTriaged=false', async () => {
+    mockExecute.mockResolvedValueOnce({
+      rows: [{ github_issue_number: 3, is_triaged: 0, priority: 'medium' }],
+    });
+    const result = await getTriageRecordsBatch('owner/repo', [3]);
+    expect(result[0]).toEqual({ issueNumber: 3, isTriaged: false, priority: 'medium' });
   });
 });
 
