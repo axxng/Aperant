@@ -61,7 +61,7 @@ export const useAuthStore = create<AuthState>()(
           }
         },
       }),
-      { name: 'aperant-auth' }
+      { name: 'currents-auth' }
     ),
     { name: 'auth-store' }
   )

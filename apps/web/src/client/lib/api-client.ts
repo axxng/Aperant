@@ -7,7 +7,7 @@ const API_BASE = '/api';
 /** Retrieve the current auth token from persisted Zustand store */
 function getAuthToken(): string | null {
   try {
-    const raw = localStorage.getItem('aperant-auth');
+    const raw = localStorage.getItem('currents-auth');
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed?.state?.token ?? null;
