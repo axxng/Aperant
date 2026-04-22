@@ -18,6 +18,7 @@ import {
 import { useToast } from '../hooks/useToast';
 import { cn } from '../lib/utils';
 import { authenticatedFetch } from '../lib/api-client';
+import { useTaskStore } from '../stores/task-store';
 import type { GitHubIssue } from '@shared/types/github';
 
 const PRIORITY_DOT_CLASSES: Record<string, string> = {
@@ -66,6 +67,7 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad, onClose, product
 
   const queryClient = useQueryClient();
   const { error: toastError, success: toastSuccess } = useToast();
+  const { loadTasks } = useTaskStore();
 
   // D-07: lazy fetch — fires when issue prop changes (panel opens for a new issue)
   // staleTime: 0 — always fetch fresh when panel opens (triage changes matter)
@@ -191,6 +193,7 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad, onClose, product
         toastError(t('promote.duplicateToast'));
       } else {
         toastSuccess(t('promote.successToast'));
+        loadTasks(productId);
       }
     },
     onError: () => {
