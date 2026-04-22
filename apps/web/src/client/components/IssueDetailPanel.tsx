@@ -453,8 +453,8 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad, onClose, product
 
             {/* Promote to Backlog — PROMOTE-01, PROMOTE-03, PROMOTE-04, PROMOTE-05 */}
             {existingTask ? (
-              <Badge variant="success" className="cursor-pointer gap-1 text-xs" asChild>
-                <a href={`/products/${productId}`}>
+              <Badge variant="success" className="cursor-pointer gap-1 text-xs">
+                <a href={`/products/${productId}`} className="inline-flex items-center gap-1">
                   <ExternalLink className="h-3 w-3" />
                   {t('promote.viewInBacklog')}
                 </a>

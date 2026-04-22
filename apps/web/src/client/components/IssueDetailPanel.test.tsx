@@ -114,7 +114,7 @@ const baseIssue = {
   labels: [], assignees: [], author: { login: 'alice' },
   createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-02T00:00:00Z',
   commentsCount: 0, url: 'https://api.github.com/repos/org/repo/issues/42',
-  htmlUrl: 'https://github.com/org/repo/issues/42', repoFullName: 'org/repo', body: null,
+  htmlUrl: 'https://github.com/org/repo/issues/42', repoFullName: 'org/repo', body: undefined,
 };
 const closedIssue = { ...baseIssue, state: 'closed' as const };
 
