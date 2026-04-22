@@ -203,7 +203,7 @@ export function IssuesView() {
   if (!repoSource) {
     return (
       <div className="flex flex-col h-full">
-        <TabSwitcher productId={productId ?? ''} tNav={tNav} t={t} />
+        <TabSwitcher productId={productId ?? ''} />
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center space-y-2">
             <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto" />
@@ -219,7 +219,7 @@ export function IssuesView() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Tab switcher: Kanban | Issues */}
-      <TabSwitcher productId={productId ?? ''} tNav={tNav} t={t} />
+      <TabSwitcher productId={productId ?? ''} />
 
       {/* Filter bar */}
       <IssuesFilterBar
@@ -325,11 +325,11 @@ export function IssuesView() {
 
 interface TabSwitcherProps {
   productId: string;
-  tNav: (key: string) => string;
-  t: (key: string) => string;
 }
 
-function TabSwitcher({ productId, tNav, t }: TabSwitcherProps) {
+export function TabSwitcher({ productId }: TabSwitcherProps) {
+  const { t } = useTranslation('issues');
+  const { t: tNav } = useTranslation('navigation');
   return (
     <div className="flex items-center border-b border-border px-4 flex-shrink-0">
       {/* Kanban tab — 'end' prop ensures it only matches /products/:id exactly,

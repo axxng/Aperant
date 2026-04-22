@@ -12,7 +12,7 @@ import { ProductSettings } from './components/ProductSettings';
 import { ToastContainer } from './components/ToastContainer';
 import { DevModeBanner } from './components/DevModeBanner';
 import { LoginPage } from './components/LoginPage';
-import { IssuesView } from './components/IssuesView'; // IssuesView — created in plan 02-07
+import { IssuesView, TabSwitcher } from './components/IssuesView'; // IssuesView — created in plan 02-07
 import { AllIssuesView } from './components/AllIssuesView'; // AllIssuesView — Phase 4
 import { useProductStore } from './stores/product-store';
 import { useTaskStore } from './stores/task-store';
@@ -177,12 +177,15 @@ function ProductView({ onNewTask, onTaskClick }: { onNewTask: () => void; onTask
   }, [productId, loadTasks, setActiveProduct]);
 
   return (
-    <KanbanBoard
-      tasks={tasks}
-      onTaskClick={onTaskClick}
-      onNewTaskClick={onNewTask}
-      onRefresh={() => productId && loadTasks(productId)}
-      isRefreshing={isLoading}
-    />
+    <div className="flex flex-col h-full overflow-hidden">
+      <TabSwitcher productId={productId ?? ''} />
+      <KanbanBoard
+        tasks={tasks}
+        onTaskClick={onTaskClick}
+        onNewTaskClick={onNewTask}
+        onRefresh={() => productId && loadTasks(productId)}
+        isRefreshing={isLoading}
+      />
+    </div>
   );
 }
