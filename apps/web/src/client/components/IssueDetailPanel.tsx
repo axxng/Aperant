@@ -16,6 +16,7 @@ import {
 } from './ui/dropdown-menu';
 import { useToast } from '../hooks/useToast';
 import { cn } from '../lib/utils';
+import { authenticatedFetch } from '../lib/api-client';
 import type { GitHubIssue } from '@shared/types/github';
 
 const PRIORITY_DOT_CLASSES: Record<string, string> = {
@@ -51,10 +52,7 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad }: IssueDetailPan
     queryKey: ['triage', owner, repo, issue?.number],
     queryFn: async () => {
       if (!owner || !repo || !issue) throw new Error('no issue');
-      const res = await fetch(
-        `/api/triage/${owner}/${repo}/${issue.number}`,
-        { credentials: 'include' }
-      );
+      const res = await authenticatedFetch(`/triage/${owner}/${repo}/${issue.number}`);
       if (!res.ok) throw new Error('triage fetch failed');
       return res.json() as Promise<{ isTriaged: boolean; priority: string | null }>;
     },
@@ -65,10 +63,8 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad }: IssueDetailPan
   // D-08: optimistic mutation — update UI before server responds; rollback on error
   const triageMutation = useMutation({
     mutationFn: async (updates: { isTriaged?: boolean; priority?: string | null }) => {
-      const res = await fetch(`/api/triage/${owner}/${repo}/${issue!.number}`, {
+      const res = await authenticatedFetch(`/triage/${owner}/${repo}/${issue!.number}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(updates),
       });
       if (!res.ok) throw new Error('triage save failed');
