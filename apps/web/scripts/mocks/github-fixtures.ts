@@ -165,4 +165,13 @@ export function registerMockRoutes(app: Application): void {
   app.get('/api/github/repos/:owner/:repo/labels', (_req: Request, res: Response) => {
     res.json(buildLabelFixtures());
   });
+
+  // Mock batch triage — GET /api/triage/:owner/:repo?numbers=1,2,3
+  // Returns empty triage records (mock dev env starts with no priorities set)
+  app.get('/api/triage/:owner/:repo', (req: Request, res: Response) => {
+    const numbers = typeof req.query.numbers === 'string'
+      ? req.query.numbers.split(',').map(Number).filter(n => !isNaN(n) && n > 0)
+      : [];
+    res.json({ records: numbers.map(issueNumber => ({ issueNumber, isTriaged: false, priority: null })) });
+  });
 }
