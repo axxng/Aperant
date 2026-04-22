@@ -151,6 +151,7 @@ export function IssuesView() {
       if (e.key === 'j' || e.key === 'k') {
         e.preventDefault();
         const currentIndex = filteredIssues.findIndex(i => i.id === selectedIssueId);
+        if (currentIndex === -1) return; // selected issue filtered out — do nothing
         if (e.key === 'j' && currentIndex < filteredIssues.length - 1) {
           setSelectedIssueId(filteredIssues[currentIndex + 1].id);
         } else if (e.key === 'k' && currentIndex > 0) {
