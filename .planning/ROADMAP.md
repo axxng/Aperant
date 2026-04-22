@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Cross-Repo Unified View** - Server-side fan-out aggregating all repos into one list with partial-failure handling (completed 2026-04-22)
 - [x] **Phase 5: Triage Actions** - Internal priority, triaged toggle, keyboard navigation, and closed-issue warning (completed 2026-04-22)
 - [x] **Phase 6: Notes** - Idempotent note posting as GitHub comments with success/failure feedback (completed 2026-04-22)
-- [ ] **Phase 7: Promote to Backlog** - One-action promotion to Kanban task with live write-back and duplicate guard
+- [x] **Phase 7: Promote to Backlog** - One-action promotion to Kanban task with live write-back and duplicate guard (completed 2026-04-22)
 
 ## Phase Details
 
@@ -168,10 +168,10 @@ Plans:
 **Plans**: 4 plans
 **UI hint**: yes
 Plans:
-- [ ] 07-01-PLAN.md — Wave 1 (TDD): Wave 0 RED stubs — by-github-issue.ts stub + by-github-issue.test.ts + index.test.ts PROMOTE-05 stub + IssueDetailPanel.test.tsx PROMOTE-01/03/04/05 stubs + useMutation mock % 3 fix
-- [ ] 07-02-PLAN.md — Wave 2 (Backend GREEN): by-github-issue.ts full 4-step GET handler + index.ts POST 409 UNIQUE constraint guard
-- [ ] 07-03-PLAN.md — Wave 2 (Frontend GREEN): IssueDetailPanel productId prop + triagePriorityToTaskPriority export + existingTask query + promoteMutation + conditional render + IssuesView productId pass-down + en/fr i18n promote keys
-- [ ] 07-04-PLAN.md — Wave 3: full suite gate + human verification smoke test (PROMOTE-01..05)
+- [x] 07-01-PLAN.md — Wave 1 (TDD): Wave 0 RED stubs — by-github-issue.ts stub + by-github-issue.test.ts + index.test.ts PROMOTE-05 stub + IssueDetailPanel.test.tsx PROMOTE-01/03/04/05 stubs + useMutation mock % 3 fix
+- [x] 07-02-PLAN.md — Wave 2 (Backend GREEN): by-github-issue.ts full 4-step GET handler + index.ts POST 409 UNIQUE constraint guard
+- [x] 07-03-PLAN.md — Wave 2 (Frontend GREEN): IssueDetailPanel productId prop + triagePriorityToTaskPriority export + existingTask query + promoteMutation + conditional render + IssuesView productId pass-down + en/fr i18n promote keys
+- [x] 07-04-PLAN.md — Wave 3: full suite gate + human verification smoke test (PROMOTE-01..05)
 
 ## Progress
 
