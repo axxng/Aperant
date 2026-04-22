@@ -49,10 +49,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const message = err instanceof Error ? err.message : String(err);
         if (message.includes('UNIQUE constraint failed')) {
           // Return existing task so client can show "View in Backlog" badge (PROMOTE-05)
-          const existing = await getTaskByGitHubIssue(
-            result.data.githubRepo!,
-            result.data.githubIssueNumber!
-          );
+          const existing =
+            result.data.githubRepo != null && result.data.githubIssueNumber != null
+              ? await getTaskByGitHubIssue(result.data.githubRepo, result.data.githubIssueNumber)
+              : null;
           return res.status(409).json({
             error: 'This issue is already in the backlog.',
             existingTask: existing,

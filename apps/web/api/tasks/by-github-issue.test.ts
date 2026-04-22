@@ -59,4 +59,32 @@ describe('GET /api/tasks/by-github-issue', () => {
     await handler(mockVercelReq(), res);
     expect(status).toHaveBeenCalledWith(403);
   });
+
+  it('returns 400 when repo param is missing', async () => {
+    const { res, status, json } = mockVercelRes();
+    await handler(mockVercelReq({ query: { number: '42' } }), res);
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ error: 'Invalid query parameters' });
+  });
+
+  it('returns 400 when number param is missing', async () => {
+    const { res, status, json } = mockVercelRes();
+    await handler(mockVercelReq({ query: { repo: 'org/repo' } }), res);
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ error: 'Invalid query parameters' });
+  });
+
+  it('returns 400 when repo param has invalid format', async () => {
+    const { res, status, json } = mockVercelRes();
+    await handler(mockVercelReq({ query: { repo: 'not-a-valid-repo-format', number: '42' } }), res);
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ error: 'Invalid query parameters' });
+  });
+
+  it('returns 400 when number param is not a positive integer', async () => {
+    const { res, status, json } = mockVercelRes();
+    await handler(mockVercelReq({ query: { repo: 'org/repo', number: '-5' } }), res);
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ error: 'Invalid query parameters' });
+  });
 });
