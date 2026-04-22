@@ -42,10 +42,12 @@ describe('getTriageRecord', () => {
 describe('upsertTriageRecord', () => {
   beforeEach(() => { mockExecute.mockReset(); });
 
-  it('calls execute with ON CONFLICT upsert SQL', async () => {
-    // First execute: the upsert INSERT
+  it('calls two execute steps: INSERT DO NOTHING then dynamic UPDATE then SELECT', async () => {
+    // Step 1: INSERT DO NOTHING (ensure row exists)
     mockExecute.mockResolvedValueOnce({});
-    // Second execute: the SELECT after upsert to return updated record
+    // Step 2: dynamic UPDATE
+    mockExecute.mockResolvedValueOnce({});
+    // Step 3: SELECT after update to return updated record
     mockExecute.mockResolvedValueOnce({
       rows: [{
         github_repo: 'owner/repo',
@@ -59,9 +61,13 @@ describe('upsertTriageRecord', () => {
       }],
     });
     const result = await upsertTriageRecord('owner/repo', 1, { isTriaged: true, priority: 'high' });
-    // Verify INSERT...ON CONFLICT SQL was called
-    expect(mockExecute).toHaveBeenCalledWith(expect.objectContaining({
-      sql: expect.stringContaining('ON CONFLICT'),
+    // Verify INSERT with DO NOTHING was called first
+    expect(mockExecute).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      sql: expect.stringContaining('DO NOTHING'),
+    }));
+    // Verify dynamic UPDATE was called with both fields
+    expect(mockExecute).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      sql: expect.stringContaining('UPDATE issue_triage'),
     }));
     expect(result.isTriaged).toBe(true);
     expect(result.priority).toBe('high');

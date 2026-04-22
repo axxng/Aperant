@@ -51,24 +51,33 @@ export async function upsertTriageRecord(
   issueNumber: number,
   updates: { isTriaged?: boolean; priority?: 'critical' | 'high' | 'medium' | 'low' | null }
 ): Promise<TriageRecord & { triageState: TriageState }> {
-  // COALESCE preserves existing value when field is not in the update payload
-  await getClient().execute({
+  const client = getClient();
+
+  // Ensure row exists with safe defaults — avoids NOT NULL constraint on is_triaged during INSERT
+  await client.execute({
     sql: `INSERT INTO issue_triage (github_repo, github_issue_number, is_triaged, priority, updated_at)
-          VALUES (?, ?, ?, ?, datetime('now'))
-          ON CONFLICT(github_repo, github_issue_number) DO UPDATE SET
-            is_triaged = COALESCE(excluded.is_triaged, is_triaged),
-            priority = COALESCE(excluded.priority, priority),
-            updated_at = datetime('now')`,
-    args: [
-      repo,
-      issueNumber,
-      updates.isTriaged !== undefined ? (updates.isTriaged ? 1 : 0) : null,
-      updates.priority !== undefined ? updates.priority : null,
-    ],
+          VALUES (?, ?, 0, NULL, datetime('now'))
+          ON CONFLICT(github_repo, github_issue_number) DO NOTHING`,
+    args: [repo, issueNumber],
   });
 
-  // Fetch and return the updated record
+  // Build dynamic UPDATE for only the fields present in the payload.
+  // 'priority' in updates handles explicit null (clear) correctly — COALESCE cannot.
+  const sets: string[] = ["updated_at = datetime('now')"];
+  const args: (string | number | null)[] = [];
+  if (updates.isTriaged !== undefined) {
+    sets.push('is_triaged = ?');
+    args.push(updates.isTriaged ? 1 : 0);
+  }
+  if ('priority' in updates) {
+    sets.push('priority = ?');
+    args.push(updates.priority ?? null);
+  }
+  await client.execute({
+    sql: `UPDATE issue_triage SET ${sets.join(', ')} WHERE github_repo = ? AND github_issue_number = ?`,
+    args: [...args, repo, issueNumber],
+  });
+
   const record = await getTriageRecord(repo, issueNumber);
-  // record will always exist after upsert
   return record!;
 }
