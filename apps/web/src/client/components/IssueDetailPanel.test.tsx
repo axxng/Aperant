@@ -18,6 +18,7 @@ vi.mock('react-i18next', () => ({
       if (key === 'triage.priorityClear') return 'Clear priority';
       if (key === 'triage.markTriagedAriaLabel') return 'Toggle triaged status';
       if (key === 'triage.priorityAriaLabel') return 'Set priority';
+      if (key === 'detail.closePanel') return 'Close panel';
       return key;
     },
   }),
@@ -46,6 +47,7 @@ vi.mock('lucide-react', () => ({
   CheckCircle2: ({ 'aria-label': al }: { 'aria-label'?: string }) => <svg data-testid="check-circle-2" aria-label={al} />,
   Circle: () => <svg data-testid="circle" />,
   AlertTriangle: () => <svg data-testid="alert-triangle" />,
+  X: () => <svg data-testid="close-icon" />,
 }));
 
 // Mock Radix DropdownMenu — render children directly for test assertions
@@ -176,5 +178,15 @@ describe('IssueDetailPanel — TRIAGE-06: closed issue warning', () => {
     render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
     expect(screen.queryByText('This issue is closed. Triage actions are still saved in Currents.')).toBeNull();
     expect(screen.queryByTestId('alert-triangle')).toBeNull();
+  });
+});
+
+describe('IssueDetailPanel — close button', () => {
+  it('calls onClose when close button is clicked', () => {
+    const onClose = vi.fn();
+    setupMocks({ isTriaged: false, priority: null });
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} onClose={onClose} />);
+    fireEvent.click(screen.getByLabelText('Close panel'));
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
