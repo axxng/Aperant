@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, startTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
@@ -96,10 +96,13 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad }: IssueDetailPan
     },
   });
 
-  // Notify parent when triageData loads/changes — enables TriageBadgeSlot without N API calls
+  // Notify parent when triageData loads/changes — enables TriageBadgeSlot without N API calls.
+  // startTransition defers the parent setState (issueTriageCache) until after the current commit
+  // finishes, preventing Radix's DropdownMenu Collection refs from being mutated mid-close
+  // (React 19 "Maximum update depth exceeded" when optimistic setQueryData fires during onSelect).
   useEffect(() => {
     if (issue && triageData) {
-      onTriageLoad?.(issue.id, triageData);
+      startTransition(() => onTriageLoad?.(issue.id, triageData));
     }
   }, [issue, triageData, onTriageLoad]);
 
