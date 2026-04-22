@@ -5,7 +5,7 @@ milestone_name: milestone
 status: ready_to_plan
 stopped_at: Phase 06 UI-SPEC approved
 last_updated: "2026-04-22T13:49:49.233Z"
-last_activity: 2026-04-22 -- Phase --phase execution started
+last_activity: 2026-04-22 -- Phase 06 execution completed
 progress:
   total_phases: 10
   completed_phases: 8
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** A team can run a full triage session — browse issues from all connected repos, assign priority, leave notes, and promote the right ones to the backlog — entirely inside Currents.
-**Current focus:** Phase --phase — 06
+**Current focus:** Phase 07 — Promote to Backlog
 
 ## Current Position
 
@@ -30,7 +30,7 @@ Plan: Not started
 Status: Ready to plan
 Last activity: 2026-04-22
 
-Progress: [██████░░░░] 63%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 

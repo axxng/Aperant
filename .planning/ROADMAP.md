@@ -15,9 +15,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation** - Rate-limit safety, DB migration, and triage API routes — prerequisites for all GitHub calls (completed 2026-04-21)
 - [x] **Phase 2: Single-Repo Issues Browser** - Per-product issues list with filters, search, pagination, and detail panel (completed 2026-04-21)
 - [x] **Phase 3: GitHub OAuth Login** - Replace email OTP with GitHub OAuth; per-user tokens; remove PAT setting (completed 2026-04-21)
-- [ ] **Phase 4: Cross-Repo Unified View** - Server-side fan-out aggregating all repos into one list with partial-failure handling
+- [x] **Phase 4: Cross-Repo Unified View** - Server-side fan-out aggregating all repos into one list with partial-failure handling (completed 2026-04-22)
 - [x] **Phase 5: Triage Actions** - Internal priority, triaged toggle, keyboard navigation, and closed-issue warning (completed 2026-04-22)
-- [ ] **Phase 6: Notes** - Idempotent note posting as GitHub comments with success/failure feedback
+- [x] **Phase 6: Notes** - Idempotent note posting as GitHub comments with success/failure feedback (completed 2026-04-22)
 - [ ] **Phase 7: Promote to Backlog** - One-action promotion to Kanban task with live write-back and duplicate guard
 
 ## Phase Details
@@ -178,11 +178,11 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 1. Foundation | 3/3 | Complete    | 2026-04-21 |
 | 2. Single-Repo Issues Browser | 7/7 | Complete    | 2026-04-21 |
 | 3. GitHub OAuth Login | 6/6 | Complete    | 2026-04-21 |
-| 4. Cross-Repo Unified View | 0/4 | Not started | - |
+| 4. Cross-Repo Unified View | 4/4 | Complete    | 2026-04-22 |
 | 04.1. Engineering Principles Refactor | 5/5 | Complete | 2026-04-22 |
 | 04.2. Fake Data and Mocked Services | 5/5 | Complete    | 2026-04-22 |
 | 5. Triage Actions | 6/6 | Complete | 2026-04-22 |
-| 6. Notes | 0/4 | Not started | - |
+| 6. Notes | 4/4 | Complete    | 2026-04-22 |
 | 7. Promote to Backlog | 0/TBD | Not started | - |
 
 ### Phase 8: rename from "Aperant" to "Currents"
