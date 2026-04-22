@@ -53,33 +53,32 @@ export async function upsertTriageRecord(
 ): Promise<TriageRecord & { triageState: TriageState }> {
   const client = getClient();
 
-  // Ensure row exists with safe defaults — avoids NOT NULL constraint on is_triaged during INSERT
+  // Determine values to upsert — for partial updates we need the existing row or defaults.
+  // Build a single atomic INSERT ... ON CONFLICT DO UPDATE to avoid race conditions between
+  // a bare INSERT-then-UPDATE pattern where concurrent requests can interleave.
+  const isTriagedVal = updates.isTriaged !== undefined ? (updates.isTriaged ? 1 : 0) : 0;
+  const priorityVal = 'priority' in updates ? (updates.priority ?? null) : null;
+
+  // If only partial fields are supplied, we need to preserve the existing values.
+  // Use COALESCE on individual fields when the update does not include them.
+  const isTriagedExpr = updates.isTriaged !== undefined ? 'excluded.is_triaged' : 'issue_triage.is_triaged';
+  const priorityExpr = 'priority' in updates ? 'excluded.priority' : 'issue_triage.priority';
+
   await client.execute({
     sql: `INSERT INTO issue_triage (github_repo, github_issue_number, is_triaged, priority, updated_at)
-          VALUES (?, ?, 0, NULL, datetime('now'))
-          ON CONFLICT(github_repo, github_issue_number) DO NOTHING`,
-    args: [repo, issueNumber],
-  });
-
-  // Build dynamic UPDATE for only the fields present in the payload.
-  // 'priority' in updates handles explicit null (clear) correctly — COALESCE cannot.
-  const sets: string[] = ["updated_at = datetime('now')"];
-  const args: (string | number | null)[] = [];
-  if (updates.isTriaged !== undefined) {
-    sets.push('is_triaged = ?');
-    args.push(updates.isTriaged ? 1 : 0);
-  }
-  if ('priority' in updates) {
-    sets.push('priority = ?');
-    args.push(updates.priority ?? null);
-  }
-  await client.execute({
-    sql: `UPDATE issue_triage SET ${sets.join(', ')} WHERE github_repo = ? AND github_issue_number = ?`,
-    args: [...args, repo, issueNumber],
+          VALUES (?, ?, ?, ?, datetime('now'))
+          ON CONFLICT(github_repo, github_issue_number) DO UPDATE SET
+            is_triaged = ${isTriagedExpr},
+            priority   = ${priorityExpr},
+            updated_at = datetime('now')`,
+    args: [repo, issueNumber, isTriagedVal, priorityVal],
   });
 
   const record = await getTriageRecord(repo, issueNumber);
-  return record!;
+  if (!record) {
+    throw new Error(`Triage record for ${repo}#${issueNumber} not found after upsert`);
+  }
+  return record;
 }
 
 export async function getTriageRecordsBatch(
