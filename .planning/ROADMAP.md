@@ -189,7 +189,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 5. Triage Actions | 6/6 | Complete | 2026-04-22 |
 | 6. Notes | 4/4 | Complete    | 2026-04-22 |
 | 7. Promote to Backlog | 4/4 | Complete    | 2026-04-22 |
-| 8. Rename to Currents | 0/2 | Not started | - |
+| 8. Rename to Currents | 2/2 | Complete    | 2026-04-23 |
 
 ### Phase 8: Rename from "Aperant" to "Currents"
 
@@ -199,5 +199,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 **Plans:** 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Code files: auth-store.ts localStorage key + api-client.ts localStorage key + package.json name + index.html title + globals.css comment
-- [ ] 08-02-PLAN.md — i18n + docs: 6 locale files (en/fr common, auth, settings) + README.md + SPEC.md + npm install lockfile regeneration + full test suite gate
+- [x] 08-01-PLAN.md — Code files: auth-store.ts localStorage key + api-client.ts localStorage key + package.json name + index.html title + globals.css comment
+- [x] 08-02-PLAN.md — i18n + docs: 6 locale files (en/fr common, auth, settings) + README.md + SPEC.md + npm install lockfile regeneration + full test suite gate
