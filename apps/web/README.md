@@ -1,8 +1,8 @@
-# Aperant Web
+# Currents Web
 
 A multi-product backlog management platform with consolidated and per-product Kanban views, GitHub issue sync, and OTP authentication — all from the browser.
 
-This is the web version of the [Aperant desktop app](../desktop/), deployed on Vercel with serverless API functions and Turso (cloud SQLite).
+This is the web version of the [Currents desktop app](../desktop/), deployed on Vercel with serverless API functions and Turso (cloud SQLite).
 
 ## Deployment
 
@@ -17,13 +17,13 @@ This is the web version of the [Aperant desktop app](../desktop/), deployed on V
 curl -sSfL https://get.tur.so/install.sh | bash
 
 # Create database
-turso db create aperant
+turso db create currents
 
 # Get connection URL
-turso db show aperant --url
+turso db show currents --url
 
 # Create auth token
-turso db tokens create aperant
+turso db tokens create currents
 ```
 
 ### 2. Connect GitHub to Vercel
@@ -39,7 +39,7 @@ In Vercel Dashboard → Project → Settings → Environment Variables:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `TURSO_DATABASE_URL` | Yes | Turso connection URL (e.g., `libsql://aperant-yourorg.turso.io`) |
+| `TURSO_DATABASE_URL` | Yes | Turso connection URL (e.g., `libsql://currents-yourorg.turso.io`) |
 | `TURSO_AUTH_TOKEN` | Yes | Turso database auth token |
 | `JWT_SECRET` | Yes | Random 32-byte hex for JWT signing. Generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 | `ADMIN_EMAIL` | Yes | Email for the initial admin account (auto-created on first request) |

@@ -1,10 +1,10 @@
-# Aperant Web Platform — Feature Spec
+# Currents Web Platform — Feature Spec
 
-> **Purpose:** Complete reference for everything built in the web version of the Aperant desktop app. Use this to review features, find code, and plan future work.
+> **Purpose:** Complete reference for everything built in the web version of the Currents desktop app. Use this to review features, find code, and plan future work.
 
 ## Overview
 
-Aperant Web is a multi-product backlog management platform that brings the desktop Electron app's task and product management features to the browser. Multiple team members manage tasks across GitHub repositories through a shared web interface. Vercel serverless functions + Turso (cloud SQLite) replace Electron IPC, and a React SPA replaces the Electron renderer.
+Currents Web is a GitHub Issues triage platform that brings the desktop Electron app's task and product management features to the browser. Multiple team members manage tasks across GitHub repositories through a shared web interface. Vercel serverless functions + Turso (cloud SQLite) replace Electron IPC, and a React SPA replaces the Electron renderer.
 
 **Architecture:**
 ```
@@ -242,8 +242,8 @@ Turso (cloud SQLite) tables (core release):
 
 1. **Create a Turso database:**
    ```bash
-   turso db create aperant-web
-   turso db tokens create aperant-web
+   turso db create currents
+   turso db tokens create currents
    ```
 
 2. **Link your GitHub repo to Vercel** — Import the repository in the Vercel dashboard, set the root directory to `apps/web`.
@@ -252,8 +252,8 @@ Turso (cloud SQLite) tables (core release):
 
 | Variable | Required For | How to Get |
 |----------|-------------|------------|
-| `TURSO_DATABASE_URL` | Database connection | `turso db show aperant-web --url` |
-| `TURSO_AUTH_TOKEN` | Database authentication | `turso db tokens create aperant-web` |
+| `TURSO_DATABASE_URL` | Database connection | `turso db show currents --url` |
+| `TURSO_AUTH_TOKEN` | Database authentication | `turso db tokens create currents` |
 | `ADMIN_EMAIL` | First admin bootstrap (creates admin user when zero users exist) | Your email address |
 | `GITHUB_TOKEN` | GitHub issue sync, branch listing | GitHub Settings → Developer Settings → PATs or Settings UI |
 | `JWT_SECRET` | Token persistence across deployments (random fallback logs warning) | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
