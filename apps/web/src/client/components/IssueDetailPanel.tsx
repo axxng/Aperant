@@ -1,4 +1,4 @@
-import { useEffect, startTransition } from 'react';
+import { useEffect, startTransition, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { ExternalLink, CheckCircle2, Circle, AlertTriangle, X } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import { Textarea } from './ui/textarea';
 import { ScrollArea } from './ui/scroll-area';
 import {
   DropdownMenu,
@@ -46,7 +47,7 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad, onClose }: Issue
   const [owner, repo] = (issue?.repoFullName ?? '/').split('/');
 
   const queryClient = useQueryClient();
-  const { error: toastError } = useToast();
+  const { error: toastError, success: toastSuccess } = useToast();
 
   // D-07: lazy fetch — fires when issue prop changes (panel opens for a new issue)
   // staleTime: 0 — always fetch fresh when panel opens (triage changes matter)
@@ -94,6 +95,36 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad, onClose }: Issue
     },
     onSettled: (_data, _err, vars) => {
       queryClient.invalidateQueries({ queryKey: ['triage', vars.owner, vars.repo, vars.number] });
+    },
+  });
+
+  // Note section state (D-02: ephemeral only — text not stored in DB)
+  const [noteText, setNoteText] = useState('');
+  const [sent, setSent] = useState(false);
+
+  // Note mutation — no optimistic update (no cache to roll back, unlike triageMutation)
+  const noteMutation = useMutation({
+    mutationFn: async (vars: { body: string; owner: string; repo: string; number: number }) => {
+      const res = await authenticatedFetch(
+        `/github/repos/${vars.owner}/${vars.repo}/issues/${vars.number}/comment`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ body: vars.body }),
+        }
+      );
+      if (!res.ok) throw new Error('comment post failed');
+      return res.json();
+    },
+    onSuccess: () => {
+      setNoteText('');
+      setSent(true);
+      toastSuccess(t('notes.postSuccess'));
+      setTimeout(() => setSent(false), 2000);
+    },
+    onError: () => {
+      // D-05: noteText is NOT cleared so user can retry without retyping
+      toastError(t('notes.postError'));
     },
   });
 
@@ -233,7 +264,45 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad, onClose }: Issue
               </div>
             </div>
 
-            {/* Divider after TriageSection — matches existing divider pattern in the panel */}
+            {/* Note section — D-01: between triage controls and meta divider */}
+            <div className="border-t border-border" />
+
+            <div className="flex flex-col gap-2">
+              <label htmlFor="note-textarea" className="text-xs text-muted-foreground">
+                {t('notes.sectionLabel')}
+              </label>
+              <Textarea
+                id="note-textarea"
+                rows={4}
+                placeholder={t('notes.placeholder')}
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                disabled={noteMutation.isPending}
+                onKeyDown={(e) => {
+                  if (e.ctrlKey && e.key === 'Enter' && noteText.trim() && !noteMutation.isPending) {
+                    noteMutation.mutate({ body: noteText, owner, repo, number: issue.number });
+                  }
+                }}
+              />
+              <div aria-live="polite" className="flex justify-end">
+                <Button
+                  variant={sent ? 'success' : 'default'}
+                  size="default"
+                  disabled={!noteText.trim() || noteMutation.isPending || sent}
+                  onClick={() => {
+                    if (!issue) return;
+                    noteMutation.mutate({ body: noteText, owner, repo, number: issue.number });
+                  }}
+                >
+                  {sent
+                    ? <><CheckCircle2 className="h-4 w-4 mr-1.5" />{t('notes.sentButton')}</>
+                    : t('notes.postButton')
+                  }
+                </Button>
+              </div>
+            </div>
+
+            {/* Divider */}
             <div className="border-t border-border" />
 
             {/* Meta: labels + assignees + created date */}

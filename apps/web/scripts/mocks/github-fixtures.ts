@@ -2,7 +2,7 @@ import type { Application, Request, Response } from 'express';
 import { createToken } from '../../api/_lib/auth/jwt.js';
 import { upsertOAuthUser, userCount } from '../../api/_lib/db/users.js';
 import { ensureDb } from '../../api/_lib/db/client.js';
-import { getTriageRecordsBatch } from '../../api/_lib/db/triage.js';
+import { getTriageRecordsBatch, upsertTriageRecord } from '../../api/_lib/db/triage.js';
 
 // ===== Pure fixture builders (exported for unit testing) =====
 
@@ -183,4 +183,31 @@ export function registerMockRoutes(app: Application): void {
       res.status(500).json({ error: 'Mock triage error' });
     }
   });
+
+  // Mock POST comment — saves idempotency guard to dev.db so mock matches real server behaviour
+  app.post(
+    '/api/github/repos/:owner/:repo/issues/:number/comment',
+    async (req: Request, res: Response) => {
+      try {
+        await ensureDb();
+        const { owner, repo, number } = req.params;
+        const { body } = req.body as { body: string };
+        const commentId = Date.now();
+        const repoFull = `${owner}/${repo}`;
+        const issueNumber = parseInt(number, 10);
+        await upsertTriageRecord(repoFull, issueNumber, {
+          githubCommentId: commentId,
+          commentStatus: 'posted',
+        });
+        res.json({
+          id: commentId,
+          html_url: `https://github.com/${owner}/${repo}/issues/${number}#issuecomment-${commentId}`,
+          body,
+        });
+      } catch (err) {
+        console.error('[mock] comment post error:', err);
+        res.status(500).json({ error: 'Mock comment error' });
+      }
+    }
+  );
 }

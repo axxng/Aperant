@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 
 // Mock react-i18next — keys returned as-is so tests match by key or stub value
 vi.mock('react-i18next', () => ({
@@ -125,7 +125,7 @@ function setupMocks(triageData: { isTriaged: boolean; priority: string | null } 
   return { mutate, mockQueryClient };
 }
 
-beforeEach(() => { vi.clearAllMocks(); });
+beforeEach(() => { vi.clearAllMocks(); noteMutationOptionsRef = null; });
 
 describe('IssueDetailPanel — TRIAGE-01: triaged toggle', () => {
   it('renders triage toggle button with aria-pressed=false when not triaged', () => {
@@ -243,15 +243,86 @@ describe('IssueDetailPanel — close button', () => {
   });
 });
 
+function setupNoteMocks(triageData: { isTriaged: boolean; priority: string | null } | null = null) {
+  const mockQueryClient = {
+    cancelQueries: vi.fn(),
+    getQueryData: vi.fn().mockReturnValue(triageData),
+    setQueryData: vi.fn(),
+    invalidateQueries: vi.fn(),
+  };
+  vi.mocked(useQueryClient).mockReturnValue(mockQueryClient as any);
+  vi.mocked(useQuery).mockReturnValue({ data: triageData, isLoading: false, isError: false } as any);
+  const triageMutate = vi.fn();
+  const noteMutate = vi.fn();
+  // useMutation is called twice per render: first call = triageMutation, second = noteMutation.
+  // Use mockImplementation with a counter so re-renders keep returning the right mocks.
+  let callCount = 0;
+  vi.mocked(useMutation).mockImplementation((options: any) => {
+    callCount++;
+    if (callCount % 2 === 1) {
+      // Odd calls = triageMutation
+      return { mutate: triageMutate, isPending: false } as any;
+    }
+    // Even calls = noteMutation — store options so tests can invoke callbacks
+    noteMutationOptionsRef = options;
+    return { mutate: noteMutate, isPending: false } as any;
+  });
+  return { triageMutate, noteMutate, mockQueryClient };
+}
+
+// Ref to capture noteMutation options across re-renders
+let noteMutationOptionsRef: any = null;
+
 describe('IssueDetailPanel — NOTES-01: note textarea renders', () => {
-  it('renders note textarea with placeholder', () => { expect(true).toBe(false); });
-  it('Post Note button is disabled when textarea is empty', () => { expect(true).toBe(false); });
-  it('Post Note button is enabled when textarea has text', () => { expect(true).toBe(false); });
-  it('calls noteMutation.mutate with correct args on button click', () => { expect(true).toBe(false); });
+  it('renders note textarea with placeholder', () => {
+    setupNoteMocks({ isTriaged: false, priority: null });
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    expect(screen.getByPlaceholderText('Write a note to post as a GitHub comment…')).toBeInTheDocument();
+  });
+
+  it('Post Note button is disabled when textarea is empty', () => {
+    setupNoteMocks({ isTriaged: false, priority: null });
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    expect(screen.getByText('Post Note')).toBeDisabled();
+  });
+
+  it('Post Note button is enabled when textarea has text', () => {
+    setupNoteMocks({ isTriaged: false, priority: null });
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    fireEvent.change(screen.getByPlaceholderText('Write a note to post as a GitHub comment…'), { target: { value: 'hello' } });
+    expect(screen.getByText('Post Note')).not.toBeDisabled();
+  });
+
+  it('calls noteMutation.mutate with correct args on button click', () => {
+    const { noteMutate } = setupNoteMocks({ isTriaged: false, priority: null });
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    fireEvent.change(screen.getByPlaceholderText('Write a note to post as a GitHub comment…'), { target: { value: 'my note' } });
+    fireEvent.click(screen.getByText('Post Note'));
+    expect(noteMutate).toHaveBeenCalledWith({ body: 'my note', owner: 'org', repo: 'repo', number: 42 });
+  });
 });
 
 describe('IssueDetailPanel — NOTES-03: post feedback', () => {
-  it('onSuccess clears textarea and shows success toast', () => { expect(true).toBe(false); });
-  it('onSuccess shows Sent button state', () => { expect(true).toBe(false); });
-  it('onError preserves textarea text and shows error toast', () => { expect(true).toBe(false); });
+  it('onSuccess clears textarea and shows success toast', () => {
+    setupNoteMocks({ isTriaged: false, priority: null });
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    act(() => { noteMutationOptionsRef?.onSuccess?.(); });
+    expect(mockToastSuccess).toHaveBeenCalledWith('Note posted to GitHub');
+  });
+
+  it('onSuccess shows Sent button state', () => {
+    setupNoteMocks({ isTriaged: false, priority: null });
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    act(() => { noteMutationOptionsRef?.onSuccess?.(); });
+    expect(screen.getByText('Sent')).toBeInTheDocument();
+  });
+
+  it('onError preserves textarea text and shows error toast', () => {
+    setupNoteMocks({ isTriaged: false, priority: null });
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    fireEvent.change(screen.getByPlaceholderText('Write a note to post as a GitHub comment…'), { target: { value: 'keep this' } });
+    act(() => { noteMutationOptionsRef?.onError?.(); });
+    expect(screen.getByPlaceholderText('Write a note to post as a GitHub comment…')).toHaveValue('keep this');
+    expect(mockToastError).toHaveBeenCalledWith('Could not post note. Try again.');
+  });
 });
