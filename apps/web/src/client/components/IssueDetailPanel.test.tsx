@@ -36,9 +36,10 @@ vi.mock('@tanstack/react-query', () => ({
   })),
 }));
 
-// Mock useToast — capture error calls
+// Stable mock for useToast so TRIAGE-03 tests can assert on toast calls
+const mockToastError = vi.fn();
 vi.mock('../hooks/useToast', () => ({
-  useToast: () => ({ error: vi.fn(), success: vi.fn() }),
+  useToast: () => ({ error: mockToastError, success: vi.fn() }),
 }));
 
 // Mock lucide-react icons used in TriageSection
@@ -160,9 +161,40 @@ describe('IssueDetailPanel — TRIAGE-02: priority selector', () => {
 });
 
 describe('IssueDetailPanel — TRIAGE-03: optimistic updates', () => {
-  it.todo('onMutate calls queryClient.setQueryData with merged update before server responds');
-  it.todo('onError restores previous query data via queryClient.setQueryData');
-  it.todo('onError calls toast error after rollback');
+  it('onMutate calls queryClient.setQueryData with merged update before server responds', async () => {
+    const { mockQueryClient } = setupMocks({ isTriaged: false, priority: null });
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    const [mutationOptions] = vi.mocked(useMutation).mock.calls[0] as any[];
+    const vars = { isTriaged: true, owner: 'org', repo: 'repo', number: 42 };
+    await mutationOptions.onMutate?.(vars);
+    expect(mockQueryClient.setQueryData).toHaveBeenCalledWith(
+      ['triage', 'org', 'repo', 42],
+      expect.any(Function)
+    );
+  });
+
+  it('onError restores previous query data via queryClient.setQueryData', () => {
+    const { mockQueryClient } = setupMocks({ isTriaged: true, priority: null });
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    const [mutationOptions] = vi.mocked(useMutation).mock.calls[0] as any[];
+    const vars = { isTriaged: false, owner: 'org', repo: 'repo', number: 42 };
+    const context = { previous: { isTriaged: true, priority: null }, vars };
+    mutationOptions.onError?.(new Error('fail'), vars, context);
+    expect(mockQueryClient.setQueryData).toHaveBeenCalledWith(
+      ['triage', 'org', 'repo', 42],
+      context.previous
+    );
+  });
+
+  it('onError calls toast error after rollback', () => {
+    setupMocks({ isTriaged: true, priority: null });
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    const [mutationOptions] = vi.mocked(useMutation).mock.calls[0] as any[];
+    const vars = { isTriaged: false, owner: 'org', repo: 'repo', number: 42 };
+    const context = { previous: { isTriaged: true, priority: null }, vars };
+    mutationOptions.onError?.(new Error('fail'), vars, context);
+    expect(mockToastError).toHaveBeenCalledWith('Could not save triage state. Changes have been reverted.');
+  });
 });
 
 describe('IssueDetailPanel — TRIAGE-06: closed issue warning', () => {
