@@ -10,6 +10,7 @@ import { TaskEditDialog } from './components/TaskEditDialog';
 import { Settings } from './components/Settings';
 import { ProductSettings } from './components/ProductSettings';
 import { ToastContainer } from './components/ToastContainer';
+import { DevModeBanner } from './components/DevModeBanner';
 import { LoginPage } from './components/LoginPage';
 import { IssuesView } from './components/IssuesView'; // IssuesView — created in plan 02-07
 import { AllIssuesView } from './components/AllIssuesView'; // AllIssuesView — Phase 4
@@ -130,6 +131,7 @@ function AuthenticatedApp() {
         productColor={editProduct?.color}
       />
       <ToastContainer />
+      <DevModeBanner />
     </TooltipProvider>
     </QueryClientProvider>
   );

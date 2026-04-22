@@ -542,3 +542,57 @@ function mockVercelRes() {
 **Pure functions** (no I/O) are tested with direct imports — no mocking needed. Pure functions in handler files MUST be exported to be unit-testable (see `validateOAuthState`, `determineRole`, `buildEmailFallback`, `buildUserRecord` in `api/auth/github/callback.ts`; `buildCreateTaskInput`, `buildUpdateTaskFields` in `api/_lib/db/tasks.ts`).
 
 **Going forward (Phase 5+):** All new code in `apps/web/` must have a failing test written first before implementation.
+
+### 5. Mocked Services for Dev Env
+
+Every external service that `apps/web/` depends on (DB, GitHub OAuth, GitHub API) must have a local dev mock available behind a `MOCK_SERVICES=true` env-var gate. This enables a complete development workflow without real Turso credentials, a GitHub OAuth app, or any external service account.
+
+**How to activate mock mode:**
+1. Add `MOCK_SERVICES=true` and `VITE_MOCK_SERVICES=true` to `apps/web/.env.local`
+2. Set `JWT_SECRET=any-long-random-string` in `.env.local` (required for stable mock OAuth tokens)
+3. Run `cd apps/web && npx tsx scripts/seed.ts` to populate `dev.db` with fake data
+4. Start the dev server: `cd apps/web && npx tsx scripts/dev-server.ts`
+
+**CRITICAL: `MOCK_SERVICES=true` MUST NOT be set in production (Vercel). It bypasses GitHub OAuth entirely.**
+
+**How each service is mocked:**
+
+| Service | Mock mechanism | Files |
+|---------|---------------|-------|
+| DB (Turso) | `getClient()` switches to `file:dev.db` | `api/_lib/db/client.ts` |
+| GitHub API | Express middleware intercepts `/api/github/*` | `scripts/mocks/github-fixtures.ts` |
+| GitHub OAuth | Mock callback issues JWT for seeded admin user | `scripts/mocks/github-fixtures.ts` |
+
+```typescript
+// CORRECT — getClient() gates on MOCK_SERVICES
+export function getClient(): Client {
+  if (!client) {
+    if (process.env.MOCK_SERVICES === 'true') {
+      client = createClient({ url: 'file:dev.db' });  // local SQLite
+    } else {
+      client = createClient({
+        url: process.env.TURSO_DATABASE_URL!,         // real Turso
+        authToken: process.env.TURSO_AUTH_TOKEN,
+      });
+    }
+  }
+  return client;
+}
+
+// WRONG — hardcoded Turso URL with no mock fallback
+export function getClient(): Client {
+  if (!client) {
+    client = createClient({
+      url: process.env.TURSO_DATABASE_URL!,  // crashes in dev without Turso credentials
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
+  }
+  return client;
+}
+```
+
+**When adding a new external service in future phases:**
+- Add a `MOCK_SERVICES=true` branch in the service's client initialisation
+- Register a mock route or stub in `scripts/mocks/` (do NOT modify real `api/` handlers)
+- Update `apps/web/.env.example` with the new env var + a usage note
+- Update this CLAUDE.md principle section with the new service in the table above
