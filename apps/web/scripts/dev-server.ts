@@ -54,6 +54,13 @@ function toExpressRoute(route: string): string {
 }
 
 async function main() {
+  // Register mock middleware FIRST — before real routes (first-match wins in Express)
+  if (process.env.MOCK_SERVICES === 'true') {
+    const { registerMockRoutes } = await import('./mocks/github-fixtures.js');
+    registerMockRoutes(app);
+    console.log('[mock] GitHub fixture middleware registered');
+  }
+
   const routes = collectRoutes(API_DIR);
 
   for (const { filePath, route } of routes) {
