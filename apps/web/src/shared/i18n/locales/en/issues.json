@@ -78,5 +78,13 @@
       "medium": "Medium",
       "low": "Low"
     }
+  },
+  "notes": {
+    "sectionLabel": "Add a note",
+    "placeholder": "Write a note to post as a GitHub comment…",
+    "postButton": "Post Note",
+    "sentButton": "Sent",
+    "postSuccess": "Note posted to GitHub",
+    "postError": "Could not post note. Try again."
   }
 }

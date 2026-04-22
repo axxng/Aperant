@@ -78,5 +78,13 @@
       "medium": "Moyenne",
       "low": "Faible"
     }
+  },
+  "notes": {
+    "sectionLabel": "Ajouter une note",
+    "placeholder": "Rédigez une note à publier en tant que commentaire GitHub…",
+    "postButton": "Publier la note",
+    "sentButton": "Envoyé",
+    "postSuccess": "Note publiée sur GitHub",
+    "postError": "Impossible de publier la note. Réessayez."
   }
 }
