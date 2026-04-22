@@ -1,10 +1,11 @@
 ---
 phase: 6
 slug: notes
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-04-22
+reviewed_at: 2026-04-22
 ---
 
 # Phase 6 — UI Design Contract: Notes
@@ -59,11 +60,11 @@ Source: `globals.css` `@theme` block, `button.tsx`, `IssueDetailPanel.tsx` usage
 | Body | 14px (text-sm) | 400 (regular) | 1.5 |
 | Label / metadata | 12px (text-xs) | 400 (regular) | 1.4 |
 | Heading (issue title) | 16px (text-base) | 600 (semibold) | 1.3 |
-| Section label | 12px (text-xs) | 500 (medium) | 1.4 |
+| Section label | 12px (text-xs) | 400 (regular) | 1.4 |
 
 Notes:
 - Textarea placeholder text: 14px, weight 400, color `text-muted-foreground`
-- "Post Note" button label: 14px (text-sm), weight 500 — inherits from `buttonVariants` default
+- "Post Note" button label: 14px (text-sm), weight 400 — inherits from `buttonVariants` default
 - "Sent" confirmation text inside button: same as above, transient 2-second display
 
 ---
@@ -138,7 +139,7 @@ The note section inserts **between the triage controls row and the meta divider*
 
 ──────────  (border-t border-border)
 
-[Note section label: "Add a note" — text-xs text-muted-foreground font-medium]
+[Note section label: "Add a note" — text-xs text-muted-foreground font-normal]
 [Textarea — rows=4, placeholder="Write a note to post as a GitHub comment…", resize-none]
 [Post Note button — right-aligned, default size, primary variant]
 [  → disabled when: textarea is empty OR mutation is pending  ]
