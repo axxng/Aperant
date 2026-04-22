@@ -65,6 +65,7 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad }: IssueDetailPan
     mutationFn: async (updates: { isTriaged?: boolean; priority?: string | null }) => {
       const res = await authenticatedFetch(`/triage/${owner}/${repo}/${issue!.number}`, {
         method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
       });
       if (!res.ok) throw new Error('triage save failed');
