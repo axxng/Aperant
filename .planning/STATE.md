@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed Phase 04.1 Plan 03 — Wave 2 GREEN: GitHub API Zod schemas, safe mappers, TriageState tests"
-last_updated: "2026-04-22T02:02:10.930Z"
+stopped_at: "Completed Phase 04.1 Plan 04 — Wave 3 GREEN: all 26 handlers reshaped to 4-step shape, pure functions extracted"
+last_updated: "2026-04-22T02:10:40.066Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 25
-  completed_plans: 23
-  percent: 92
+  completed_plans: 24
+  percent: 96
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: Not started
 Status: Ready to execute (5 plans planned)
 Last activity: 2026-04-22
 
-Progress: [█████████░] 92%
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Progress: [█████████░] 92%
 | Phase 04.1 P01 | 2min | 2 tasks | 2 files |
 | Phase 04.1 P02 | 20min | 2 tasks | 14 files |
 | Phase 04.1 P03 | 152 | 2 tasks | 5 files |
+| Phase 04.1 P04 | 6min | 2 tasks | 22 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,8 @@ Recent decisions affecting current work:
 - 04.1-02: TaskStatus retained as alias = TaskStatusKey for backward compat; updateTaskSyncState() internal helper prevents client setting sync state via PATCH API
 - author.login fallback to empty string when PR user is null — GitHubPR type requires string not string|undefined
 - getTriageRecord return type updated to expose triageState field — needed for test assertions and callers
+- triage/[number].ts switched from safeParse to parse for path params — programmer errors should be 500 not 400
+- settings/[key].ts uses z.enum(VALID_KEYS).parse() replacing manual includes check for Zod error semantics at parse step
 
 ### Pending Todos
 
@@ -104,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-22T02:02:10.927Z
-Stopped at: Completed Phase 04.1 Plan 03 — Wave 2 GREEN: GitHub API Zod schemas, safe mappers, TriageState tests
+Last session: 2026-04-22T02:10:40.063Z
+Stopped at: Completed Phase 04.1 Plan 04 — Wave 3 GREEN: all 26 handlers reshaped to 4-step shape, pure functions extracted
 Resume file: None
