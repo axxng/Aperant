@@ -59,5 +59,23 @@
     "productBadge": {
       "tooltip": "De {{productName}}"
     }
+  },
+  "triage": {
+    "markTriaged": "Triage effectué",
+    "markTriagedAriaLabel": "Basculer le statut de triage",
+    "triaged": "Traité",
+    "triagedAriaLabel": "Basculer le statut de triage",
+    "priorityNone": "Priorité : Aucune",
+    "prioritySet": "Priorité : {{priority}}",
+    "priorityAriaLabel": "Définir la priorité",
+    "priorityClear": "Effacer la priorité",
+    "closedWarning": "Cette issue est fermée. Les actions de triage sont toujours enregistrées dans Currents.",
+    "saveError": "Impossible de sauvegarder le triage. Les modifications ont été annulées.",
+    "priority": {
+      "critical": "Critique",
+      "high": "Haute",
+      "medium": "Moyenne",
+      "low": "Faible"
+    }
   }
 }

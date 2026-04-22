@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CheckCircle2 } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { cn } from '../lib/utils';
@@ -10,18 +11,32 @@ interface ProductBadgeInfo {
   name: string;    // product.name, truncated in render via max-w-[80px] truncate
 }
 
+interface TriageStateDisplay {
+  isTriaged: boolean;
+  priority: 'critical' | 'high' | 'medium' | 'low' | null;
+}
+
 interface IssueListRowProps {
   issue: GitHubIssue;
   isSelected: boolean;
   onClick: () => void;
   productBadge?: ProductBadgeInfo;   // NEW — optional; absent = single-repo IssuesView unchanged
+  triageState?: TriageStateDisplay;  // optional; mirrors productBadge pattern
 }
+
+const PRIORITY_PILL_CLASSES: Record<string, string> = {
+  critical: 'bg-destructive/10 text-destructive',
+  high:     'bg-orange-500/10 text-orange-500',
+  medium:   'bg-yellow-400/10 text-yellow-600 dark:text-yellow-400',
+  low:      'bg-muted text-muted-foreground',
+};
 
 export const IssueListRow = memo(function IssueListRow({
   issue,
   isSelected,
   onClick,
   productBadge,
+  triageState,
 }: IssueListRowProps) {
   const { t } = useTranslation('issues');
 
@@ -104,6 +119,30 @@ export const IssueListRow = memo(function IssueListRow({
           <span className="text-[11px] text-muted-foreground truncate max-w-[80px]">
             {productBadge.name}
           </span>
+        </div>
+      )}
+
+      {/* TriageBadge slot — D-03, D-04: checkmark + priority pill (TRIAGE-04) */}
+      {triageState && (triageState.isTriaged || triageState.priority) && (
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {/* Priority pill — shown when priority set (D-04); always shows label text, never color-only */}
+          {triageState.priority && (
+            <span
+              className={cn(
+                'inline-flex items-center rounded-md px-1.5 py-0 text-[11px] font-semibold h-5',
+                PRIORITY_PILL_CLASSES[triageState.priority]
+              )}
+            >
+              {triageState.priority.charAt(0).toUpperCase() + triageState.priority.slice(1)}
+            </span>
+          )}
+          {/* Checkmark — shown when triaged (D-03) */}
+          {triageState.isTriaged && (
+            <CheckCircle2
+              className="h-3.5 w-3.5 text-success flex-shrink-0"
+              aria-label={t('triage.triaged')}
+            />
+          )}
         </div>
       )}
     </div>

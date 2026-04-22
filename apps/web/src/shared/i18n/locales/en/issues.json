@@ -59,5 +59,23 @@
     "productBadge": {
       "tooltip": "From {{productName}}"
     }
+  },
+  "triage": {
+    "markTriaged": "Triaged",
+    "markTriagedAriaLabel": "Toggle triaged status",
+    "triaged": "Triaged",
+    "triagedAriaLabel": "Toggle triaged status",
+    "priorityNone": "Priority: None",
+    "prioritySet": "Priority: {{priority}}",
+    "priorityAriaLabel": "Set priority",
+    "priorityClear": "Clear priority",
+    "closedWarning": "This issue is closed. Triage actions are still saved in Currents.",
+    "saveError": "Could not save triage state. Changes have been reverted.",
+    "priority": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    }
   }
 }
