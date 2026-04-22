@@ -61,17 +61,23 @@ const ISSUE_TITLES = [
   'Add filter persistence across page reload',
 ];
 
+function repoIdBase(owner: string, repo: string): number {
+  const str = `${owner}/${repo}`;
+  return (str.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 900 + 100) * 1000;
+}
+
 export function buildIssueFixtures(owner: string, repo: string): IssueFixture[] {
   const issues: IssueFixture[] = [];
   const now = new Date().toISOString();
   const past = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const idBase = repoIdBase(owner, repo);
 
   for (let i = 0; i < 20; i++) {
     const isOpen = i < 15; // 15 open + 5 closed
     const issueNumber = i + 1;
     const labelSubset = LABELS.slice(0, (i % 3) + 1); // 1–3 labels per issue
     issues.push({
-      id: 10000 + issueNumber,
+      id: idBase + issueNumber,
       number: issueNumber,
       title: ISSUE_TITLES[i % ISSUE_TITLES.length]!,
       body: `Issue body for #${issueNumber} in ${owner}/${repo}. Describes the problem or feature in detail.`,
