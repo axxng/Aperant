@@ -131,12 +131,14 @@ Plans:
   3. Issues that have been triaged display a visual badge on their card in the issue list
   4. User can move through issues in the triage panel using `j` (next) and `k` (previous) keyboard shortcuts
   5. When the user attempts to triage or act on a closed GitHub issue, a warning is shown before the action proceeds
-**Plans**: 4 plans
+**Plans**: 6 plans
 Plans:
 - [x] 05-01-PLAN.md — Wave 0 TDD stubs: IssueDetailPanel.test.tsx (TRIAGE-01, 02, 03, 06) + IssuesView.test.tsx (TRIAGE-05) + extend IssueListRow.test.tsx (TRIAGE-04) (completed 2026-04-22)
 - [x] 05-02-PLAN.md — Wave 1a: IssueListRow TriageBadgeSlot (triageState prop + checkmark + priority pill) + en/fr triage i18n keys (completed 2026-04-22)
 - [x] 05-03-PLAN.md — Wave 1b: IssueDetailPanel TriageSection (useQuery lazy fetch + useMutation optimistic + ClosedIssueWarning + TriagedToggle + PrioritySelector) (completed 2026-04-22)
 - [x] 05-04-PLAN.md — Wave 2: j/k keyboard nav in IssuesView + AllIssuesView + triageState cache passthrough + human verification (completed 2026-04-22)
+- [x] 05-05-PLAN.md — UAT gap closure: X close button, Escape handler, j/k direction fix, mock state filter, stale closure fix (completed 2026-04-22)
+- [ ] 05-06-PLAN.md — GAP-1 fix: batch triage pre-fetch (getTriageRecordsBatch + batch API endpoint + useEffect in IssuesView + AllIssuesView)
 
 ### Phase 6: Notes
 **Goal**: Users can write and post an internal note on any issue that is added as a comment on the GitHub issue, with no risk of duplicates on retry
@@ -175,6 +177,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 4. Cross-Repo Unified View | 0/4 | Not started | - |
 | 04.1. Engineering Principles Refactor | 5/5 | Complete | 2026-04-22 |
 | 04.2. Fake Data and Mocked Services | 5/5 | Complete    | 2026-04-22 |
-| 5. Triage Actions | 0/4 | Not started | - |
+| 5. Triage Actions | 5/6 | In progress (gap closure) | - |
 | 6. Notes | 0/TBD | Not started | - |
 | 7. Promote to Backlog | 0/TBD | Not started | - |
