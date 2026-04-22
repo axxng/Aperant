@@ -58,6 +58,12 @@ export async function githubFetch(url: string, options: RequestInit = {}): Promi
   return response;
 }
 
+// Known limitation: the response from githubGraphQL is returned as untyped `any`.
+// Each call site (github-writeback.ts, github-sync.ts, github/projects/) accesses nested
+// properties without schema validation. A future improvement should define Zod schemas in
+// validation.ts for each GraphQL response shape (project info, project items) and parse
+// via `schema.parse(data.data)` at each call site or via a generic type parameter here.
+// Deferred because each query has a distinct response shape requiring separate schema definitions.
 export async function githubGraphQL(query: string, variables: Record<string, any> = {}): Promise<any> {
   const token = process.env.GITHUB_TOKEN;
   if (!token) throw new Error('GITHUB_TOKEN env var not set');
