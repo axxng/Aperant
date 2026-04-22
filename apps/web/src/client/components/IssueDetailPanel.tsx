@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ExternalLink, CheckCircle2, Circle, AlertTriangle } from 'lucide-react';
+import { ExternalLink, CheckCircle2, Circle, AlertTriangle, X } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
@@ -35,9 +35,11 @@ interface IssueDetailPanelProps {
    * Solves RESEARCH.md Open Question #1 without prop-drilling or context.
    */
   onTriageLoad?: (issueId: number, triageState: { isTriaged: boolean; priority: string | null }) => void;
+  /** Called when the user clicks the X close button. Parent should set selectedIssueId(null). */
+  onClose?: () => void;
 }
 
-export function IssueDetailPanel({ issue, isOpen, onTriageLoad }: IssueDetailPanelProps) {
+export function IssueDetailPanel({ issue, isOpen, onTriageLoad, onClose }: IssueDetailPanelProps) {
   const { t } = useTranslation('issues');
 
   // Derive owner/repo from issue.repoFullName — no new props needed (RESEARCH.md Pattern 5)
@@ -61,35 +63,37 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad }: IssueDetailPan
   });
 
   // D-08: optimistic mutation — update UI before server responds; rollback on error
+  // Gap 4 fix: mutationFn receives vars with owner/repo/number — no stale closure capture
   const triageMutation = useMutation({
-    mutationFn: async (updates: { isTriaged?: boolean; priority?: string | null }) => {
-      const res = await authenticatedFetch(`/triage/${owner}/${repo}/${issue!.number}`, {
+    mutationFn: async (vars: { isTriaged?: boolean; priority?: string | null; owner: string; repo: string; number: number }) => {
+      const res = await authenticatedFetch(`/triage/${vars.owner}/${vars.repo}/${vars.number}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
+        body: JSON.stringify({ isTriaged: vars.isTriaged, priority: vars.priority }),
       });
       if (!res.ok) throw new Error('triage save failed');
       return res.json();
     },
-    onMutate: async (updates) => {
+    onMutate: async (vars) => {
       // No await — keeps setQueryData synchronous so React batches it before Radix's ref cleanup runs.
       // Awaiting cancelQueries defers setQueryData to a microtask, which races with the DropdownMenu
       // unmount commit phase and causes "Maximum update depth exceeded" in React 19.
-      queryClient.cancelQueries({ queryKey: ['triage', owner, repo, issue?.number] });
-      const previous = queryClient.getQueryData(['triage', owner, repo, issue?.number]);
-      queryClient.setQueryData(['triage', owner, repo, issue?.number], (old: { isTriaged: boolean; priority: string | null } | undefined) => ({
+      queryClient.cancelQueries({ queryKey: ['triage', vars.owner, vars.repo, vars.number] });
+      const previous = queryClient.getQueryData(['triage', vars.owner, vars.repo, vars.number]);
+      queryClient.setQueryData(['triage', vars.owner, vars.repo, vars.number], (old: { isTriaged: boolean; priority: string | null } | undefined) => ({
         ...(old ?? { isTriaged: false, priority: null }),
-        ...updates,
+        ...(vars.isTriaged !== undefined ? { isTriaged: vars.isTriaged } : {}),
+        ...(vars.priority !== undefined ? { priority: vars.priority } : {}),
       }));
-      return { previous };
+      return { previous, vars };
     },
-    onError: (_err, _updates, context) => {
+    onError: (_err, vars, context) => {
       // CRITICAL: rollback first, THEN show error toast (RESEARCH.md Anti-Pattern)
-      queryClient.setQueryData(['triage', owner, repo, issue?.number], context?.previous);
+      queryClient.setQueryData(['triage', vars.owner, vars.repo, vars.number], context?.previous);
       toastError(t('triage.saveError'));
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['triage', owner, repo, issue?.number] });
+    onSettled: (_data, _err, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['triage', vars.owner, vars.repo, vars.number] });
     },
   });
 
@@ -124,7 +128,7 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad }: IssueDetailPan
           <div className="p-6 space-y-4">
             {/* Header: title + number + state badge */}
             <div className="space-y-2">
-              <div className="flex items-start gap-2 flex-wrap">
+              <div className="flex items-start gap-2 flex-wrap w-full">
                 <Badge
                   variant={issue.state === 'open' ? 'success' : 'muted'}
                   className="flex-shrink-0 mt-0.5"
@@ -134,6 +138,17 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad }: IssueDetailPan
                 <span className="text-xs text-muted-foreground flex-shrink-0 mt-1">
                   #{issue.number}
                 </span>
+                {onClose && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 flex-shrink-0 ml-auto -mt-0.5"
+                    aria-label={t('detail.closePanel')}
+                    onClick={onClose}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
               <h2 className="text-base font-semibold leading-tight">{issue.title}</h2>
             </div>
@@ -160,7 +175,7 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad }: IssueDetailPan
                   aria-pressed={triageData?.isTriaged ?? false}
                   aria-label={t('triage.markTriagedAriaLabel')}
                   disabled={triageLoading || triageMutation.isPending}
-                  onClick={() => triageMutation.mutate({ isTriaged: !(triageData?.isTriaged ?? false) })}
+                  onClick={() => triageMutation.mutate({ isTriaged: !(triageData?.isTriaged ?? false), owner, repo, number: issue!.number })}
                   className={cn(
                     'flex items-center gap-1.5',
                     triageData?.isTriaged && 'border-success/30'
@@ -190,7 +205,7 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad }: IssueDetailPan
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
                     {(['critical', 'high', 'medium', 'low'] as const).map(p => (
-                      <DropdownMenuItem key={p} onSelect={() => triageMutation.mutate({ priority: p })}>
+                      <DropdownMenuItem key={p} onSelect={() => triageMutation.mutate({ priority: p, owner, repo, number: issue!.number })}>
                         <span className={cn('h-1.5 w-1.5 rounded-full mr-2 flex-shrink-0', PRIORITY_DOT_CLASSES[p])} />
                         {t(`triage.priority.${p}`)}
                       </DropdownMenuItem>
@@ -199,7 +214,7 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad }: IssueDetailPan
                     {triageData?.priority && (
                       <>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => triageMutation.mutate({ priority: null })}>
+                        <DropdownMenuItem onSelect={() => triageMutation.mutate({ priority: null, owner, repo, number: issue!.number })}>
                           {t('triage.priorityClear')}
                         </DropdownMenuItem>
                       </>

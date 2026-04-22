@@ -98,7 +98,7 @@ export function AllIssuesView() {
 
   const selectedIssue = allIssues.find(i => i.id === selectedIssueId) ?? null;
 
-  // j/k keyboard navigation — D-05: identical pattern to IssuesView
+  // j/k/Escape keyboard navigation — D-05: identical pattern to IssuesView
   useEffect(() => {
     if (!selectedIssueId) return;
 
@@ -106,15 +106,17 @@ export function AllIssuesView() {
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
 
-      if (e.key === 'j' || e.key === 'k') {
-        e.preventDefault();
-        const currentIndex = filteredIssues.findIndex(i => i.id === selectedIssueId);
-        if (currentIndex === -1) return; // selected issue filtered out — do nothing
-        if (e.key === 'j' && currentIndex < filteredIssues.length - 1) {
-          setSelectedIssueId(filteredIssues[currentIndex + 1].id);
-        } else if (e.key === 'k' && currentIndex > 0) {
-          setSelectedIssueId(filteredIssues[currentIndex - 1].id);
-        }
+      if (e.key !== 'j' && e.key !== 'k' && e.key !== 'Escape') return;
+      e.preventDefault();
+      // Gap 1: Escape closes the panel
+      if (e.key === 'Escape') { setSelectedIssueId(null); return; }
+      const currentIndex = filteredIssues.findIndex(i => i.id === selectedIssueId);
+      if (currentIndex === -1) return; // selected issue filtered out — do nothing
+      // Gap 2 fix: j = previous/up (currentIndex - 1), k = next/down (currentIndex + 1)
+      if (e.key === 'j' && currentIndex > 0) {
+        setSelectedIssueId(filteredIssues[currentIndex - 1].id);
+      } else if (e.key === 'k' && currentIndex < filteredIssues.length - 1) {
+        setSelectedIssueId(filteredIssues[currentIndex + 1].id);
       }
     }
 
@@ -251,6 +253,7 @@ export function AllIssuesView() {
           issue={selectedIssue}
           isOpen={selectedIssueId !== null}
           onTriageLoad={handleTriageLoad}
+          onClose={() => setSelectedIssueId(null)}
         />
       </div>
     </div>
