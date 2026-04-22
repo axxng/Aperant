@@ -95,7 +95,7 @@ Plans:
 
 ### Phase 04.1: Engineering Principles Refactor: parse-dont-validate, functional core imperative shell, FSM illegal state, red-green TDD (INSERTED)
 
-**Goal:** Refactor the existing codebase to enforce four core engineering principles — parse-don't-validate, functional core/imperative shell, FSM for illegal state elimination, and red-green TDD — then codify these as standing standards in apps/web/SPEC.md so all future phases inherit them automatically
+**Goal:** Refactor the existing codebase to enforce four core engineering principles — parse-don't-validate, functional core/imperative shell, FSM for illegal state elimination, and red-green TDD — then codify these as standing standards in root CLAUDE.md so all future phases inherit them automatically
 **Requirements**: TBD (cross-cutting refactor — covers decisions D-01 through D-09)
 **Depends on:** Phase 4
 **Plans:** 5 plans
@@ -105,7 +105,7 @@ Plans:
 - [ ] 04.1-02-PLAN.md — Type foundation: Task discriminated union + GithubSyncState + TriageState + Zod DB row schemas + rowToTask/rowToTriage/rowToProduct Zod parse + cascade TypeScript fixes
 - [ ] 04.1-03-PLAN.md — GitHub API boundary: gitHubApiIssueSchema + gitHubApiPRSchema + oauthTokenResponseSchema + gitHubUserSchema in validation.ts; mapGitHubPR/mapGitHubIssue Zod parse; extend github.test.ts + triage.test.ts
 - [ ] 04.1-04-PLAN.md — Handler 4-step shape sweep: callback.ts pure function extraction + 26 handlers reshaped + callback.test.ts pure function tests
-- [ ] 04.1-05-PLAN.md — Engineering Principles codification in apps/web/SPEC.md
+- [ ] 04.1-05-PLAN.md — Engineering Principles codification in root CLAUDE.md
 
 ### Phase 5: Triage Actions
 **Goal**: Users can assign internal priority and mark issues as triaged directly inside Currents, with keyboard shortcuts and safety warnings — without touching the GitHub issue
