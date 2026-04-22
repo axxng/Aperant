@@ -165,8 +165,13 @@ Plans:
   3. An already-promoted issue shows a "View in Backlog" badge linking to the Kanban task instead of the promote button
   4. When promoting, the issue's internal triage priority pre-populates the task priority field
   5. Attempting to promote the same GitHub issue a second time is blocked with a clear message — no duplicate tasks are created
-**Plans**: TBD
+**Plans**: 4 plans
 **UI hint**: yes
+Plans:
+- [ ] 07-01-PLAN.md — Wave 1 (TDD): Wave 0 RED stubs — by-github-issue.ts stub + by-github-issue.test.ts + index.test.ts PROMOTE-05 stub + IssueDetailPanel.test.tsx PROMOTE-01/03/04/05 stubs + useMutation mock % 3 fix
+- [ ] 07-02-PLAN.md — Wave 2 (Backend GREEN): by-github-issue.ts full 4-step GET handler + index.ts POST 409 UNIQUE constraint guard
+- [ ] 07-03-PLAN.md — Wave 2 (Frontend GREEN): IssueDetailPanel productId prop + triagePriorityToTaskPriority export + existingTask query + promoteMutation + conditional render + IssuesView productId pass-down + en/fr i18n promote keys
+- [ ] 07-04-PLAN.md — Wave 3: full suite gate + human verification smoke test (PROMOTE-01..05)
 
 ## Progress
 
@@ -183,7 +188,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 04.2. Fake Data and Mocked Services | 5/5 | Complete    | 2026-04-22 |
 | 5. Triage Actions | 6/6 | Complete | 2026-04-22 |
 | 6. Notes | 4/4 | Complete    | 2026-04-22 |
-| 7. Promote to Backlog | 0/TBD | Not started | - |
+| 7. Promote to Backlog | 0/4 | Not started | - |
 
 ### Phase 8: rename from "Aperant" to "Currents"
 
