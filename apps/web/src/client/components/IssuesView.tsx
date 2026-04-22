@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
@@ -30,6 +30,21 @@ export function IssuesView() {
   const { t: tNav } = useTranslation('navigation');
   const { products, setActiveProduct } = useProductStore();
   const [selectedIssueId, setSelectedIssueId] = useState<number | null>(null);
+
+  // issueTriageCache — stores triage state per issue.id; populated via onTriageLoad callback
+  // Enables TriageBadgeSlot to update immediately after panel action without N API calls on load (D-07)
+  const [issueTriageCache, setIssueTriageCache] = useState<
+    Map<number, { isTriaged: boolean; priority: string | null }>
+  >(new Map());
+
+  // handleTriageLoad — called by IssueDetailPanel when triage data loads or changes
+  // useCallback prevents re-creation on every render (stable ref for IssueDetailPanel dep array)
+  const handleTriageLoad = useCallback(
+    (issueId: number, triageState: { isTriaged: boolean; priority: string | null }) => {
+      setIssueTriageCache(prev => new Map(prev).set(issueId, triageState));
+    },
+    []
+  );
 
   // Sync active product so sidebar and breadcrumbs reflect current product (Pitfall 3 avoidance)
   useEffect(() => {
@@ -119,6 +134,31 @@ export function IssuesView() {
 
   const selectedIssue = allIssues.find(i => i.id === selectedIssueId) ?? null;
 
+  // j/k keyboard navigation — D-05: only active when panel is open (selectedIssueId !== null)
+  // RESEARCH.md Pitfall 2: cleanup removeEventListener is MANDATORY to prevent stacking
+  useEffect(() => {
+    if (!selectedIssueId) return; // panel closed — j/k inactive
+
+    function handleKeyDown(e: KeyboardEvent) {
+      // RESEARCH.md Pitfall 5: never hijack focus from form elements (accessibility)
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+
+      if (e.key === 'j' || e.key === 'k') {
+        e.preventDefault();
+        const currentIndex = filteredIssues.findIndex(i => i.id === selectedIssueId);
+        if (e.key === 'j' && currentIndex < filteredIssues.length - 1) {
+          setSelectedIssueId(filteredIssues[currentIndex + 1].id);
+        } else if (e.key === 'k' && currentIndex > 0) {
+          setSelectedIssueId(filteredIssues[currentIndex - 1].id);
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown); // cleanup — Pitfall 2
+  }, [selectedIssueId, filteredIssues]); // filteredIssues in deps — recalculates when filter changes
+
   // No repo source — show error state (Assumption A1: handle gracefully)
   if (!repoSource) {
     return (
@@ -201,6 +241,7 @@ export function IssuesView() {
                   issue={issue}
                   isSelected={issue.id === selectedIssueId}
                   onClick={() => setSelectedIssueId(issue.id)}
+                  triageState={issueTriageCache.get(issue.id)}
                 />
               ))}
 
@@ -231,6 +272,7 @@ export function IssuesView() {
         <IssueDetailPanel
           issue={selectedIssue}
           isOpen={selectedIssueId !== null}
+          onTriageLoad={handleTriageLoad}
         />
       </div>
     </div>
