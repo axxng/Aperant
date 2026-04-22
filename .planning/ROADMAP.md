@@ -188,14 +188,16 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 04.2. Fake Data and Mocked Services | 5/5 | Complete    | 2026-04-22 |
 | 5. Triage Actions | 6/6 | Complete | 2026-04-22 |
 | 6. Notes | 4/4 | Complete    | 2026-04-22 |
-| 7. Promote to Backlog | 0/4 | Not started | - |
+| 7. Promote to Backlog | 4/4 | Complete    | 2026-04-22 |
+| 8. Rename to Currents | 0/2 | Not started | - |
 
-### Phase 8: rename from "Aperant" to "Currents"
+### Phase 8: Rename from "Aperant" to "Currents"
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Every occurrence of "Aperant" in apps/web/ is replaced with "Currents" — package name, localStorage key, i18n strings, HTML title, CSS comment, and documentation files — completing the branding rename
+**Requirements**: RENAME-01, RENAME-02, RENAME-03
 **Depends on:** Phase 7
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 8 to break down)
+- [ ] 08-01-PLAN.md — Code files: auth-store.ts localStorage key + api-client.ts localStorage key + package.json name + index.html title + globals.css comment
+- [ ] 08-02-PLAN.md — i18n + docs: 6 locale files (en/fr common, auth, settings) + README.md + SPEC.md + npm install lockfile regeneration + full test suite gate
