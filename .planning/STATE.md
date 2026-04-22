@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 04.1 planned — 5 plans ready to execute
-last_updated: "2026-04-22T00:00:00.000Z"
+status: executing
+stopped_at: Completed Phase 04.1 Plan 01 — Wave 0 TDD stubs for tasks and products DB mappers
+last_updated: "2026-04-22T01:50:02.309Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 25
-  completed_plans: 20
-  percent: 50
+  completed_plans: 21
+  percent: 84
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: Not started
 Status: Ready to execute (5 plans planned)
 Last activity: 2026-04-22
 
-Progress: [████░░░░░░] 40%
+Progress: [████████░░] 84%
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [████░░░░░░] 40%
 
 *Updated after each plan completion*
 | Phase 02-single-repo-issues-browser P01 | 8 | 2 tasks | 5 files |
+| Phase 04.1 P01 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,7 @@ Recent decisions affecting current work:
 - Phase 3: Null GitHub email → `login@github.invalid` synthetic address to satisfy NOT NULL constraint
 - Phase 3: `upsertOAuthUser` excludes `role` from ON CONFLICT DO UPDATE SET — re-auth cannot downgrade admin
 - Phase 3: bootstrapAdmin env var replaced by first-user-is-admin logic in OAuth callback
+- 04.1-01 RED phase: rowToTask/rowToProduct throws TypeError (not yet exported) satisfies .toThrow() loosely; Wave 1 GREEN must make them throw ZodError specifically
 
 ### Pending Todos
 
@@ -97,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: --stopped-at
-Stopped at: Phase 04.1 context gathered
-Resume file: --resume-file
+Last session: 2026-04-22T01:50:02.306Z
+Stopped at: Completed Phase 04.1 Plan 01 — Wave 0 TDD stubs for tasks and products DB mappers
+Resume file: None
