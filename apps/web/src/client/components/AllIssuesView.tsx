@@ -157,11 +157,11 @@ export function AllIssuesView() {
       if (e.key === 'Escape') { setSelectedIssueId(null); return; }
       const currentIndex = filteredIssues.findIndex(i => i.id === selectedIssueId);
       if (currentIndex === -1) return; // selected issue filtered out — do nothing
-      // Gap 2 fix: j = previous/up (currentIndex - 1), k = next/down (currentIndex + 1)
-      if (e.key === 'j' && currentIndex > 0) {
-        setSelectedIssueId(filteredIssues[currentIndex - 1].id);
-      } else if (e.key === 'k' && currentIndex < filteredIssues.length - 1) {
+      // j = next/down (currentIndex + 1), k = prev/up (currentIndex - 1) — vim convention
+      if (e.key === 'j' && currentIndex < filteredIssues.length - 1) {
         setSelectedIssueId(filteredIssues[currentIndex + 1].id);
+      } else if (e.key === 'k' && currentIndex > 0) {
+        setSelectedIssueId(filteredIssues[currentIndex - 1].id);
       }
     }
 

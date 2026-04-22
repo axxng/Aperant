@@ -2,6 +2,7 @@ import type { Application, Request, Response } from 'express';
 import { createToken } from '../../api/_lib/auth/jwt.js';
 import { upsertOAuthUser, userCount } from '../../api/_lib/db/users.js';
 import { ensureDb } from '../../api/_lib/db/client.js';
+import { getTriageRecordsBatch } from '../../api/_lib/db/triage.js';
 
 // ===== Pure fixture builders (exported for unit testing) =====
 
@@ -167,11 +168,19 @@ export function registerMockRoutes(app: Application): void {
   });
 
   // Mock batch triage — GET /api/triage/:owner/:repo?numbers=1,2,3
-  // Returns empty triage records (mock dev env starts with no priorities set)
-  app.get('/api/triage/:owner/:repo', (req: Request, res: Response) => {
+  // Reads from dev.db (same as the real handler in mock mode) so persisted priorities appear on list render.
+  app.get('/api/triage/:owner/:repo', async (req: Request, res: Response) => {
+    const { owner, repo } = req.params;
     const numbers = typeof req.query.numbers === 'string'
       ? req.query.numbers.split(',').map(Number).filter(n => !isNaN(n) && n > 0)
       : [];
-    res.json({ records: numbers.map(issueNumber => ({ issueNumber, isTriaged: false, priority: null })) });
+    try {
+      await ensureDb();
+      const records = await getTriageRecordsBatch(`${owner}/${repo}`, numbers);
+      res.json({ records });
+    } catch (err) {
+      console.error('[mock] batch triage error:', err);
+      res.status(500).json({ error: 'Mock triage error' });
+    }
   });
 }

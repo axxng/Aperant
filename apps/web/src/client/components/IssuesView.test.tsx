@@ -149,47 +149,47 @@ describe('IssuesView — TRIAGE-04: batch triage pre-fetch on render', () => {
 });
 
 describe('IssuesView — TRIAGE-05: j/k keyboard navigation', () => {
-  it('pressing j when panel is open moves selection to previous issue', () => {
+  it('pressing j when panel is open moves selection to next issue (down)', () => {
     setupStore(threeIssues);
     render(<IssuesView />);
 
-    // Open panel by clicking second row (index 1) — j goes up, so we need room to go prev
-    fireEvent.click(screen.getAllByTestId('row')[1]);
-    expect(screen.getByTestId('panel')).toHaveAttribute('data-issue-id', '2');
-
-    // Press j — should move to first issue (prev/up)
-    fireEvent.keyDown(window, { key: 'j' });
+    // Open panel on first row — j goes down/next
+    fireEvent.click(screen.getAllByTestId('row')[0]);
     expect(screen.getByTestId('panel')).toHaveAttribute('data-issue-id', '1');
+
+    // Press j — should move to second issue (next/down)
+    fireEvent.keyDown(window, { key: 'j' });
+    expect(screen.getByTestId('panel')).toHaveAttribute('data-issue-id', '2');
   });
 
-  it('pressing k when panel is open moves selection to next issue', () => {
+  it('pressing k when panel is open moves selection to previous issue (up)', () => {
     setupStore(threeIssues);
     render(<IssuesView />);
 
-    fireEvent.click(screen.getAllByTestId('row')[0]); // click first row
-    expect(screen.getByTestId('panel')).toHaveAttribute('data-issue-id', '1');
+    fireEvent.click(screen.getAllByTestId('row')[1]); // click second row
+    expect(screen.getByTestId('panel')).toHaveAttribute('data-issue-id', '2');
 
     fireEvent.keyDown(window, { key: 'k' });
-    // k goes down/next — should be second issue
-    expect(screen.getByTestId('panel')).toHaveAttribute('data-issue-id', '2');
-  });
-
-  it('pressing j on first issue does nothing (boundary guard)', () => {
-    setupStore(threeIssues);
-    render(<IssuesView />);
-
-    fireEvent.click(screen.getAllByTestId('row')[0]);
-    fireEvent.keyDown(window, { key: 'j' }); // j=prev, already at first — do nothing
+    // k goes up/prev — should be first issue
     expect(screen.getByTestId('panel')).toHaveAttribute('data-issue-id', '1');
   });
 
-  it('pressing k on last issue does nothing (boundary guard)', () => {
+  it('pressing j on last issue does nothing (boundary guard)', () => {
     setupStore(threeIssues);
     render(<IssuesView />);
 
     fireEvent.click(screen.getAllByTestId('row')[2]); // last issue
-    fireEvent.keyDown(window, { key: 'k' }); // k=next, already at last — do nothing
+    fireEvent.keyDown(window, { key: 'j' }); // j=next, already at last — do nothing
     expect(screen.getByTestId('panel')).toHaveAttribute('data-issue-id', '3');
+  });
+
+  it('pressing k on first issue does nothing (boundary guard)', () => {
+    setupStore(threeIssues);
+    render(<IssuesView />);
+
+    fireEvent.click(screen.getAllByTestId('row')[0]);
+    fireEvent.keyDown(window, { key: 'k' }); // k=prev, already at first — do nothing
+    expect(screen.getByTestId('panel')).toHaveAttribute('data-issue-id', '1');
   });
 
   it('pressing Escape closes the panel (sets selectedIssueId to null)', () => {
