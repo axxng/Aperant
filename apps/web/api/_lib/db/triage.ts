@@ -50,7 +50,7 @@ export async function upsertTriageRecord(
   repo: string,
   issueNumber: number,
   updates: { isTriaged?: boolean; priority?: 'critical' | 'high' | 'medium' | 'low' | null }
-): Promise<TriageRecord> {
+): Promise<TriageRecord & { triageState: TriageState }> {
   // COALESCE preserves existing value when field is not in the update payload
   await getClient().execute({
     sql: `INSERT INTO issue_triage (github_repo, github_issue_number, is_triaged, priority, updated_at)
