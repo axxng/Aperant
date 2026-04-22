@@ -113,7 +113,53 @@ describe('upsertTriageRecord — NOTES-02: comment fields', () => {
   beforeEach(() => { mockExecute.mockReset(); });
 
   it('saves githubCommentId and commentStatus to triage record', async () => {
-    expect(true).toBe(false); // RED — implement in Wave 1 plan 02
+    // Step 1: INSERT ON CONFLICT DO UPDATE
+    mockExecute.mockResolvedValueOnce({});
+    // Step 2: SELECT via getTriageRecord
+    mockExecute.mockResolvedValueOnce({
+      rows: [{
+        github_repo: 'owner/repo',
+        github_issue_number: 42,
+        is_triaged: 0,
+        priority: null,
+        github_comment_id: 123456,
+        comment_status: 'posted',
+        created_at: '2026-01-01T00:00:00',
+        updated_at: '2026-01-02T00:00:00',
+      }],
+    });
+    const result = await upsertTriageRecord('owner/repo', 42, { githubCommentId: 123456, commentStatus: 'posted' });
+    // Verify INSERT includes github_comment_id and comment_status columns
+    expect(mockExecute).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      sql: expect.stringContaining('github_comment_id'),
+      args: expect.arrayContaining([123456, 'posted']),
+    }));
+    expect(result.githubCommentId).toBe(123456);
+    expect(result.commentStatus).toBe('posted');
+  });
+
+  it('preserves existing github_comment_id when not in updates', async () => {
+    // Step 1: INSERT ON CONFLICT DO UPDATE
+    mockExecute.mockResolvedValueOnce({});
+    // Step 2: SELECT via getTriageRecord — existing comment id preserved
+    mockExecute.mockResolvedValueOnce({
+      rows: [{
+        github_repo: 'owner/repo',
+        github_issue_number: 42,
+        is_triaged: 1,
+        priority: 'high',
+        github_comment_id: 999,
+        comment_status: 'posted',
+        created_at: '2026-01-01T00:00:00',
+        updated_at: '2026-01-02T00:00:00',
+      }],
+    });
+    const result = await upsertTriageRecord('owner/repo', 42, { isTriaged: true, priority: 'high' });
+    // SQL should preserve existing github_comment_id (not update it)
+    expect(mockExecute).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      sql: expect.stringContaining('issue_triage.github_comment_id'),
+    }));
+    expect(result.githubCommentId).toBe(999);
   });
 });
 

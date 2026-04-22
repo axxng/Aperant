@@ -53,42 +53,128 @@ beforeEach(() => {
 
 describe('comment.ts — NOTES-01: valid POST', () => {
   it('returns 405 on GET request', async () => {
-    expect(true).toBe(false); // RED — implement in Wave 1 plan 02
+    const { res, status, json } = mockVercelRes();
+    await handler(mockVercelReq({ method: 'GET' }), res);
+    expect(status).toHaveBeenCalledWith(405);
+    expect(json).toHaveBeenCalledWith({ error: 'Method not allowed' });
   });
 
   it('returns 400 when body is empty string', async () => {
-    expect(true).toBe(false); // RED — implement in Wave 1 plan 02
+    vi.mocked(authenticateRequest).mockResolvedValue(mockUser);
+    const { res, status, json } = mockVercelRes();
+    await handler(mockVercelReq({ body: { body: '' } }), res);
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ error: 'Invalid input' });
   });
 
   it('returns 401 when no auth token', async () => {
-    expect(true).toBe(false); // RED — implement in Wave 1 plan 02
+    vi.mocked(authenticateRequest).mockResolvedValue(null);
+    const { res } = mockVercelRes();
+    await handler(mockVercelReq(), res);
+    expect(authenticateRequest).toHaveBeenCalled();
   });
 
   it('calls GitHub API and returns comment on valid input', async () => {
-    expect(true).toBe(false); // RED — implement in Wave 1 plan 02
+    vi.mocked(authenticateRequest).mockResolvedValue(mockUser);
+    vi.mocked(getUserById).mockResolvedValue(mockDbUser as any);
+    vi.mocked(getTriageRecord).mockResolvedValue(null);
+    vi.mocked(upsertTriageRecord).mockResolvedValue({} as any);
+    const mockComment = { id: 9999, body: 'This is a test note.' };
+    vi.mocked(globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(mockComment),
+    });
+    const { res, json } = mockVercelRes();
+    await handler(mockVercelReq(), res);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/repos/org/myrepo/issues/42/comments'),
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({ Authorization: 'Bearer ghp_testtoken123' }),
+      })
+    );
+    expect(json).toHaveBeenCalledWith(mockComment);
   });
 });
 
 describe('comment.ts — D-04: per-user token', () => {
   it('returns 403 when user has no github_token', async () => {
-    expect(true).toBe(false); // RED — implement in Wave 1 plan 02
+    vi.mocked(authenticateRequest).mockResolvedValue(mockUser);
+    vi.mocked(getUserById).mockResolvedValue({ ...mockDbUser, github_token: null } as any);
+    const { res, status, json } = mockVercelRes();
+    await handler(mockVercelReq(), res);
+    expect(status).toHaveBeenCalledWith(403);
+    expect(json).toHaveBeenCalledWith({ error: 'No GitHub token for user' });
   });
 
   it('uses dbUser.github_token in Authorization header (not GITHUB_TOKEN env var)', async () => {
-    expect(true).toBe(false); // RED — implement in Wave 1 plan 02
+    vi.mocked(authenticateRequest).mockResolvedValue(mockUser);
+    vi.mocked(getUserById).mockResolvedValue(mockDbUser as any);
+    vi.mocked(getTriageRecord).mockResolvedValue(null);
+    vi.mocked(upsertTriageRecord).mockResolvedValue({} as any);
+    vi.mocked(globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ id: 1234 }),
+    });
+    const { res } = mockVercelRes();
+    await handler(mockVercelReq(), res);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer ghp_testtoken123' }),
+      })
+    );
+    // Verify it does NOT use env GITHUB_TOKEN
+    expect(globalThis.fetch).not.toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }),
+      })
+    );
   });
 });
 
 describe('comment.ts — NOTES-02: idempotency', () => {
   it('returns { alreadyPosted: true, commentId } when github_comment_id already set', async () => {
-    expect(true).toBe(false); // RED — implement in Wave 1 plan 02
+    vi.mocked(authenticateRequest).mockResolvedValue(mockUser);
+    vi.mocked(getUserById).mockResolvedValue(mockDbUser as any);
+    vi.mocked(getTriageRecord).mockResolvedValue({
+      githubCommentId: 55555,
+      commentStatus: 'posted',
+    } as any);
+    const { res, json } = mockVercelRes();
+    await handler(mockVercelReq(), res);
+    expect(json).toHaveBeenCalledWith({ alreadyPosted: true, commentId: 55555 });
   });
 
   it('does NOT call GitHub API when already posted', async () => {
-    expect(true).toBe(false); // RED — implement in Wave 1 plan 02
+    vi.mocked(authenticateRequest).mockResolvedValue(mockUser);
+    vi.mocked(getUserById).mockResolvedValue(mockDbUser as any);
+    vi.mocked(getTriageRecord).mockResolvedValue({
+      githubCommentId: 55555,
+      commentStatus: 'posted',
+    } as any);
+    const { res } = mockVercelRes();
+    await handler(mockVercelReq(), res);
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
   it('saves githubCommentId to triage record after successful GitHub post', async () => {
-    expect(true).toBe(false); // RED — implement in Wave 1 plan 02
+    vi.mocked(authenticateRequest).mockResolvedValue(mockUser);
+    vi.mocked(getUserById).mockResolvedValue(mockDbUser as any);
+    vi.mocked(getTriageRecord).mockResolvedValue(null);
+    vi.mocked(upsertTriageRecord).mockResolvedValue({} as any);
+    const mockComment = { id: 77777, body: 'This is a test note.' };
+    vi.mocked(globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(mockComment),
+    });
+    const { res } = mockVercelRes();
+    await handler(mockVercelReq(), res);
+    expect(upsertTriageRecord).toHaveBeenCalledWith(
+      'org/myrepo',
+      42,
+      { githubCommentId: 77777, commentStatus: 'posted' }
+    );
   });
 });

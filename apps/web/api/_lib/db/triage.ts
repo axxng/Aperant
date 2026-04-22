@@ -49,7 +49,12 @@ export async function getTriageRecord(repo: string, issueNumber: number): Promis
 export async function upsertTriageRecord(
   repo: string,
   issueNumber: number,
-  updates: { isTriaged?: boolean; priority?: 'critical' | 'high' | 'medium' | 'low' | null }
+  updates: {
+    isTriaged?: boolean;
+    priority?: 'critical' | 'high' | 'medium' | 'low' | null;
+    githubCommentId?: number | null;
+    commentStatus?: 'posted' | 'failed' | null;
+  }
 ): Promise<TriageRecord & { triageState: TriageState }> {
   const client = getClient();
 
@@ -58,20 +63,26 @@ export async function upsertTriageRecord(
   // a bare INSERT-then-UPDATE pattern where concurrent requests can interleave.
   const isTriagedVal = updates.isTriaged !== undefined ? (updates.isTriaged ? 1 : 0) : 0;
   const priorityVal = 'priority' in updates ? (updates.priority ?? null) : null;
+  const commentIdVal = 'githubCommentId' in updates ? (updates.githubCommentId ?? null) : null;
+  const commentStatusVal = 'commentStatus' in updates ? (updates.commentStatus ?? null) : null;
 
   // If only partial fields are supplied, we need to preserve the existing values.
   // Use COALESCE on individual fields when the update does not include them.
   const isTriagedExpr = updates.isTriaged !== undefined ? 'excluded.is_triaged' : 'issue_triage.is_triaged';
   const priorityExpr = 'priority' in updates ? 'excluded.priority' : 'issue_triage.priority';
+  const commentIdExpr = 'githubCommentId' in updates ? 'excluded.github_comment_id' : 'issue_triage.github_comment_id';
+  const commentStatusExpr = 'commentStatus' in updates ? 'excluded.comment_status' : 'issue_triage.comment_status';
 
   await client.execute({
-    sql: `INSERT INTO issue_triage (github_repo, github_issue_number, is_triaged, priority, updated_at)
-          VALUES (?, ?, ?, ?, datetime('now'))
+    sql: `INSERT INTO issue_triage (github_repo, github_issue_number, is_triaged, priority, github_comment_id, comment_status, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
           ON CONFLICT(github_repo, github_issue_number) DO UPDATE SET
-            is_triaged = ${isTriagedExpr},
-            priority   = ${priorityExpr},
-            updated_at = datetime('now')`,
-    args: [repo, issueNumber, isTriagedVal, priorityVal],
+            is_triaged          = ${isTriagedExpr},
+            priority            = ${priorityExpr},
+            github_comment_id   = ${commentIdExpr},
+            comment_status      = ${commentStatusExpr},
+            updated_at          = datetime('now')`,
+    args: [repo, issueNumber, isTriagedVal, priorityVal, commentIdVal, commentStatusVal],
   });
 
   const record = await getTriageRecord(repo, issueNumber);
