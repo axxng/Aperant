@@ -124,10 +124,29 @@ export function registerMockRoutes(app: Application): void {
     }
   });
 
-  // Mock GitHub issues — colon syntax (NOT bracket [owner] syntax — Express uses colon, Vercel uses brackets)
+  // Mock GitHub issues — returns PaginatedIssuesResult shape with camelCase fields (matching real handler)
   app.get('/api/github/repos/:owner/:repo/issues', (req: Request, res: Response) => {
     const { owner, repo } = req.params;
-    res.json(buildIssueFixtures(owner, repo));
+    const repoFullName = `${owner}/${repo}`;
+    const issues = buildIssueFixtures(owner, repo).map((issue) => ({
+      id: issue.id,
+      number: issue.number,
+      title: issue.title,
+      body: issue.body,
+      state: issue.state,
+      labels: issue.labels.map((l) => ({ id: l.id, name: l.name, color: l.color, description: l.description ?? undefined })),
+      assignees: issue.assignees.map((a) => ({ login: a.login, avatarUrl: a.avatar_url })),
+      author: { login: issue.user.login, avatarUrl: issue.user.avatar_url },
+      milestone: undefined,
+      createdAt: issue.created_at,
+      updatedAt: issue.updated_at,
+      closedAt: issue.closed_at ?? undefined,
+      commentsCount: issue.comments,
+      url: issue.url,
+      htmlUrl: issue.html_url,
+      repoFullName,
+    }));
+    res.json({ issues, hasMore: false });
   });
 
   // Mock GitHub labels
