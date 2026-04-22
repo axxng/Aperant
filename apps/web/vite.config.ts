@@ -45,6 +45,16 @@ export default defineConfig({
           setupFiles: ['src/test-setup.ts'],
         },
       },
+      {
+        // Script tests — node environment
+        extends: true,
+        test: {
+          name: 'scripts',
+          globals: true,
+          environment: 'node',
+          include: ['scripts/**/*.test.ts'],
+        },
+      },
     ],
   },
 });
