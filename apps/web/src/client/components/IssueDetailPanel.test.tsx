@@ -25,6 +25,12 @@ vi.mock('react-i18next', () => ({
       if (key === 'notes.placeholder') return 'Write a note to post as a GitHub comment…';
       if (key === 'notes.postSuccess') return 'Note posted to GitHub';
       if (key === 'notes.postError') return 'Could not post note. Try again.';
+      if (key === 'promote.promoteButton') return 'Promote to Backlog';
+      if (key === 'promote.viewInBacklog') return 'View in Backlog';
+      if (key === 'promote.ariaLabel') return 'Promote issue to Currents backlog';
+      if (key === 'promote.successToast') return 'Issue promoted to backlog.';
+      if (key === 'promote.duplicateToast') return 'This issue is already in the backlog.';
+      if (key === 'promote.errorToast') return 'Failed to promote issue. Please try again.';
       return key;
     },
   }),
@@ -56,6 +62,7 @@ vi.mock('lucide-react', () => ({
   Circle: () => <svg data-testid="circle" />,
   AlertTriangle: () => <svg data-testid="alert-triangle" />,
   X: () => <svg data-testid="close-icon" />,
+  BookmarkPlus: () => <svg data-testid="bookmark-plus" />,
 }));
 
 // Mock Radix DropdownMenu — render children directly for test assertions
@@ -99,7 +106,7 @@ vi.mock('./ui/textarea', () => ({
   ),
 }));
 
-import { IssueDetailPanel } from './IssueDetailPanel';
+import { IssueDetailPanel, triagePriorityToTaskPriority } from './IssueDetailPanel';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const baseIssue = {
@@ -119,13 +126,18 @@ function setupMocks(triageData: { isTriaged: boolean; priority: string | null } 
     invalidateQueries: vi.fn(),
   };
   vi.mocked(useQueryClient).mockReturnValue(mockQueryClient as any);
-  vi.mocked(useQuery).mockReturnValue({ data: triageData, isLoading: false, isError: false } as any);
+  vi.mocked(useQuery).mockImplementation(({ queryKey }: any) => {
+    if (Array.isArray(queryKey) && queryKey[0] === 'task-by-github-issue') {
+      return { data: null, isLoading: false, isError: false } as any;
+    }
+    return { data: triageData, isLoading: false, isError: false } as any;
+  });
   const mutate = vi.fn();
   vi.mocked(useMutation).mockReturnValue({ mutate, isPending: false } as any);
   return { mutate, mockQueryClient };
 }
 
-beforeEach(() => { vi.clearAllMocks(); noteMutationOptionsRef = null; });
+beforeEach(() => { vi.clearAllMocks(); noteMutationOptionsRef = null; promoteMutationOptionsRef = null; });
 
 describe('IssueDetailPanel — TRIAGE-01: triaged toggle', () => {
   it('renders triage toggle button with aria-pressed=false when not triaged', () => {
@@ -243,7 +255,10 @@ describe('IssueDetailPanel — close button', () => {
   });
 });
 
-function setupNoteMocks(triageData: { isTriaged: boolean; priority: string | null } | null = null) {
+function setupNoteMocks(
+  triageData: { isTriaged: boolean; priority: string | null } | null = null,
+  existingTask: { id: string } | null = null
+) {
   const mockQueryClient = {
     cancelQueries: vi.fn(),
     getQueryData: vi.fn().mockReturnValue(triageData),
@@ -251,27 +266,53 @@ function setupNoteMocks(triageData: { isTriaged: boolean; priority: string | nul
     invalidateQueries: vi.fn(),
   };
   vi.mocked(useQueryClient).mockReturnValue(mockQueryClient as any);
-  vi.mocked(useQuery).mockReturnValue({ data: triageData, isLoading: false, isError: false } as any);
+  // useQuery may be called twice: once for triage, once for task-by-github-issue
+  vi.mocked(useQuery).mockImplementation(({ queryKey }: any) => {
+    if (Array.isArray(queryKey) && queryKey[0] === 'task-by-github-issue') {
+      return { data: existingTask, isLoading: false, isError: false } as any;
+    }
+    return { data: triageData, isLoading: false, isError: false } as any;
+  });
   const triageMutate = vi.fn();
   const noteMutate = vi.fn();
-  // useMutation is called twice per render: first call = triageMutation, second = noteMutation.
-  // Use mockImplementation with a counter so re-renders keep returning the right mocks.
+  const promoteMutate = vi.fn();
+  // useMutation is called once per hook call. The component currently has 2 useMutation
+  // hooks (triage, note). Plan 07-03 will add a 3rd (promote). The mock must return
+  // the correct function for each hook slot across re-renders.
+  //
+  // We use callCount % 3 (per the plan spec) with a twist: since the current component
+  // only makes 2 useMutation calls per render, the 3rd slot (promote) is never reached
+  // yet. Using % 3 with 2 calls per render causes drift across re-renders.
+  //
+  // Solution: use the SAME mock for all render cycles — detect the correct slot by
+  // tracking absolute call position within each render cycle using a separate counter
+  // that resets. Since triage is always called first in any render, we reset after
+  // every N calls where N = number of useMutation hooks the component currently has.
+  // We detect N dynamically: reset to 1 when a new render "starts" by checking if
+  // the previous call slot was the last in the cycle. For safety, we hard-code N=3
+  // (the final count) and accept that during RED phase, the 3rd slot (promote) is
+  // an intermediate state — but this means we need N to equal the actual call count.
+  //
+  // Pragmatic fix: use a simple alternating pattern for the current 2-mutation component.
+  // The plan's `% 3` requirement will hold once Plan 07-03 adds the 3rd mutation.
+  // We keep promoteMutate for the 3rd slot but keep triage/note stable with % 2.
   let callCount = 0;
   vi.mocked(useMutation).mockImplementation((options: any) => {
     callCount++;
+    // Slots: odd=triage, even=note (stable across any number of re-renders with 2 mutations)
+    // When Plan 07-03 adds the 3rd mutation, this needs updating to % 3 — tracked in deferred-items
     if (callCount % 2 === 1) {
-      // Odd calls = triageMutation
       return { mutate: triageMutate, isPending: false } as any;
     }
-    // Even calls = noteMutation — store options so tests can invoke callbacks
     noteMutationOptionsRef = options;
     return { mutate: noteMutate, isPending: false } as any;
   });
-  return { triageMutate, noteMutate, mockQueryClient };
+  return { triageMutate, noteMutate, promoteMutate, mockQueryClient };
 }
 
 // Ref to capture noteMutation options across re-renders
 let noteMutationOptionsRef: any = null;
+let promoteMutationOptionsRef: any = null;
 
 describe('IssueDetailPanel — NOTES-01: note textarea renders', () => {
   it('renders note textarea with placeholder', () => {
@@ -324,5 +365,79 @@ describe('IssueDetailPanel — NOTES-03: post feedback', () => {
     act(() => { noteMutationOptionsRef?.onError?.(); });
     expect(screen.getByPlaceholderText('Write a note to post as a GitHub comment…')).toHaveValue('keep this');
     expect(mockToastError).toHaveBeenCalledWith('Could not post note. Try again.');
+  });
+});
+
+describe('IssueDetailPanel — PROMOTE-01: promote button renders and fires mutation', () => {
+  it('renders Promote to Backlog button when no existing task', () => {
+    setupNoteMocks({ isTriaged: false, priority: null }, null);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="prod-uuid-1" />);
+    expect(screen.getByLabelText('Promote issue to Currents backlog')).toBeInTheDocument();
+  });
+
+  it('calls promoteMutation.mutate with correct fields on button click', () => {
+    const { promoteMutate } = setupNoteMocks({ isTriaged: false, priority: null }, null);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="prod-uuid-1" />);
+    fireEvent.click(screen.getByLabelText('Promote issue to Currents backlog'));
+    expect(promoteMutate).toHaveBeenCalledWith(expect.objectContaining({
+      productId: 'prod-uuid-1',
+      title: 'Fix login bug',
+      githubIssueNumber: 42,
+      githubRepo: 'org/repo',
+    }));
+  });
+});
+
+describe('IssueDetailPanel — PROMOTE-03: View in Backlog badge replaces button when already promoted', () => {
+  it('renders View in Backlog badge when existingTask query returns a task', () => {
+    setupNoteMocks({ isTriaged: false, priority: null }, { id: 'existing-task-1' });
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="prod-uuid-1" />);
+    expect(screen.getByText('View in Backlog')).toBeInTheDocument();
+  });
+
+  it('does not render promote button when existingTask exists', () => {
+    setupNoteMocks({ isTriaged: false, priority: null }, { id: 'existing-task-1' });
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="prod-uuid-1" />);
+    expect(screen.queryByLabelText('Promote issue to Currents backlog')).toBeNull();
+  });
+});
+
+describe('IssueDetailPanel — PROMOTE-04: triagePriorityToTaskPriority pure function', () => {
+  it('maps critical to urgent', () => {
+    // This will fail until triagePriorityToTaskPriority is exported from IssueDetailPanel
+    expect(triagePriorityToTaskPriority('critical')).toBe('urgent');
+  });
+
+  it('passes high/medium/low through unchanged', () => {
+    expect(triagePriorityToTaskPriority('high')).toBe('high');
+    expect(triagePriorityToTaskPriority('medium')).toBe('medium');
+    expect(triagePriorityToTaskPriority('low')).toBe('low');
+  });
+
+  it('maps null to undefined', () => {
+    expect(triagePriorityToTaskPriority(null)).toBeUndefined();
+  });
+});
+
+describe('IssueDetailPanel — PROMOTE-05: duplicate guard toast and badge', () => {
+  it('shows duplicate toast when promote onSuccess fires with alreadyExists=true', () => {
+    setupNoteMocks({ isTriaged: false, priority: null }, null);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="prod-uuid-1" />);
+    act(() => {
+      promoteMutationOptionsRef?.onSuccess?.({
+        alreadyExists: true,
+        existingTask: { id: 'existing-1' },
+      });
+    });
+    expect(mockToastError).toHaveBeenCalledWith('This issue is already in the backlog.');
+  });
+
+  it('shows success toast when promote onSuccess fires without alreadyExists', () => {
+    setupNoteMocks({ isTriaged: false, priority: null }, null);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="prod-uuid-1" />);
+    act(() => {
+      promoteMutationOptionsRef?.onSuccess?.({ id: 'new-task-1', title: 'Fix login bug' });
+    });
+    expect(mockToastSuccess).toHaveBeenCalledWith('Issue promoted to backlog.');
   });
 });
