@@ -83,7 +83,7 @@ async function seed(): Promise<void> {
           faker.lorem.sentence(),
           faker.lorem.paragraph(),
           status,
-          needsReviewReason ? 'Needs review' : null,
+          needsReviewReason ? 'errors' : null,
           isPrCreated ? 1 : null,
           isPrCreated ? `https://github.com/${owner}/${repo}/issues/1` : null,
           isPrCreated ? `${owner}/${repo}` : null,
