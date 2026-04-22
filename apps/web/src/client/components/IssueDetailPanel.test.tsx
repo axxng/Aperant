@@ -113,11 +113,11 @@ describe('IssueDetailPanel — TRIAGE-01: triaged toggle', () => {
     expect(screen.getByTestId('circle')).toBeInTheDocument();
   });
 
-  it('calls mutation with { isTriaged: true } when toggle clicked while untriaged', () => {
+  it('calls mutation with { isTriaged: true, owner, repo, number } when toggle clicked while untriaged', () => {
     const { mutate } = setupMocks({ isTriaged: false, priority: null });
     render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
     fireEvent.click(screen.getByLabelText('Toggle triaged status'));
-    expect(mutate).toHaveBeenCalledWith({ isTriaged: true });
+    expect(mutate).toHaveBeenCalledWith({ isTriaged: true, owner: 'org', repo: 'repo', number: 42 });
   });
 
   it('renders CheckCircle2 and aria-pressed=true when triaged', () => {
@@ -136,11 +136,11 @@ describe('IssueDetailPanel — TRIAGE-02: priority selector', () => {
     expect(screen.getByText('Priority: None')).toBeInTheDocument();
   });
 
-  it('calls mutation with { priority: "high" } when High option selected', () => {
+  it('calls mutation with { priority: "high", owner, repo, number } when High option selected', () => {
     const { mutate } = setupMocks({ isTriaged: false, priority: null });
     render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
     fireEvent.click(screen.getByText('High'));
-    expect(mutate).toHaveBeenCalledWith({ priority: 'high' });
+    expect(mutate).toHaveBeenCalledWith({ priority: 'high', owner: 'org', repo: 'repo', number: 42 });
   });
 
   it('shows Clear priority option only when priority is set', () => {
@@ -149,11 +149,11 @@ describe('IssueDetailPanel — TRIAGE-02: priority selector', () => {
     expect(screen.getByText('Clear priority')).toBeInTheDocument();
   });
 
-  it('calls mutation with { priority: null } when Clear priority selected', () => {
+  it('calls mutation with { priority: null, owner, repo, number } when Clear priority selected', () => {
     const { mutate } = setupMocks({ isTriaged: false, priority: 'high' });
     render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
     fireEvent.click(screen.getByText('Clear priority'));
-    expect(mutate).toHaveBeenCalledWith({ priority: null });
+    expect(mutate).toHaveBeenCalledWith({ priority: null, owner: 'org', repo: 'repo', number: 42 });
   });
 });
 
