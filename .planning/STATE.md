@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready_to_plan
-stopped_at: context exhaustion at 90% (2026-04-22)
-last_updated: "2026-04-22T12:11:58.851Z"
+stopped_at: Phase 06 UI-SPEC approved
+last_updated: "2026-04-22T13:49:49.233Z"
 last_activity: 2026-04-22 -- Phase --phase execution started
 progress:
-  total_phases: 9
-  completed_phases: 7
-  total_plans: 36
-  completed_plans: 35
-  percent: 78
+  total_phases: 10
+  completed_phases: 8
+  total_plans: 40
+  completed_plans: 36
+  percent: 80
 ---
 
 # Project State
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** A team can run a full triage session — browse issues from all connected repos, assign priority, leave notes, and promote the right ones to the backlog — entirely inside Currents.
-**Current focus:** Phase --phase — 05
+**Current focus:** Phase --phase — 06
 
 ## Current Position
 
@@ -36,7 +36,7 @@ Progress: [██████░░░░] 63%
 
 **Velocity:**
 
-- Total plans completed: 31
+- Total plans completed: 35
 - Average duration: —
 - Total execution time: 0 hours
 
@@ -50,6 +50,7 @@ Progress: [██████░░░░] 63%
 | 04 | 4 | - | - |
 | 04.2 | 5 | - | - |
 | 05 | 6 | - | - |
+| 06 | 4 | - | - |
 
 **Recent Trend:**
 
@@ -68,6 +69,7 @@ Progress: [██████░░░░] 63%
 
 ### Roadmap Evolution
 
+- Phase 8 added: rename from "Aperant" to "Currents"
 - Phase 7 added: To use Github OAuth login, to use the given repo permissions granted from OAuth
 - Phase 04.1 inserted after Phase 4: Engineering principles refactor — parse-don't-validate, functional core/imperative shell, FSM illegal state, red-green TDD (URGENT)
 - Phase 04.2 inserted after Phase 04.1: New engineering principle — fake data and mocked services for dev env (URGENT)
@@ -112,6 +114,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-22T09:16:03.387Z
-Stopped at: context exhaustion at 90% (2026-04-22)
-Resume file: None
+Last session: --stopped-at
+Stopped at: Phase 06 UI-SPEC approved
+Resume file: --resume-file

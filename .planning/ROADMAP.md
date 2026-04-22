@@ -150,10 +150,10 @@ Plans:
   3. After posting, the user sees a clear success confirmation or, on failure, an actionable error message
 **Plans**: 4 plans
 Plans:
-- [ ] 06-01-PLAN.md — Wave 0: TDD stubs for comment.test.ts (NOTES-01, NOTES-02, D-04) + triage.test.ts extension + IssueDetailPanel.test.tsx extension (NOTES-01, NOTES-03)
-- [ ] 06-02-PLAN.md — Wave 1: upsertTriageRecord comment fields extension + comment.ts idempotency guard (D-03) + per-user token fix (D-04)
-- [ ] 06-03-PLAN.md — Wave 1: Textarea UI component + en/fr i18n notes keys + IssueDetailPanel note section (useMutation + sent state + feedback) + github-fixtures.ts mock route
-- [ ] 06-04-PLAN.md — Wave 2: full suite gate + human verification checkpoint (NOTES-01, NOTES-02, NOTES-03)
+- [x] 06-01-PLAN.md — Wave 0: TDD stubs for comment.test.ts (NOTES-01, NOTES-02, D-04) + triage.test.ts extension + IssueDetailPanel.test.tsx extension (NOTES-01, NOTES-03)
+- [x] 06-02-PLAN.md — Wave 1: upsertTriageRecord comment fields extension + comment.ts idempotency guard (D-03) + per-user token fix (D-04)
+- [x] 06-03-PLAN.md — Wave 1: Textarea UI component + en/fr i18n notes keys + IssueDetailPanel note section (useMutation + sent state + feedback) + github-fixtures.ts mock route
+- [x] 06-04-PLAN.md — Wave 2: full suite gate + human verification checkpoint (NOTES-01, NOTES-02, NOTES-03)
 
 ### Phase 7: Promote to Backlog
 **Goal**: Users can promote a GitHub issue to a Currents backlog task in one action, with the task staying live-synced to the issue and all promotion safeguards in place
