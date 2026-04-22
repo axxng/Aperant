@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
 import { ensureDb } from '../_lib/db/client.js';
 import { authenticateRequest, hasRole } from '../_lib/auth/middleware.js';
-import { getAllTasks, getTasksByProduct, createTask } from '../_lib/db/tasks.js';
+import { getAllTasks, getTasksByProduct, createTask, getTaskByGitHubIssue } from '../_lib/db/tasks.js';
 import { createTaskSchema } from '../_lib/validation.js';
 import { broadcastEvent } from '../_lib/events.js';
 
@@ -39,11 +39,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!hasRole(user, 'admin', 'member')) {
         return res.status(403).json({ error: 'Insufficient permissions' });
       }
-      // 3. DB call
-      const task = await createTask(result.data);
-      await broadcastEvent('task_created', task);
-      // 4. Respond
-      return res.status(201).json(task);
+      // 3. DB call — wrapped in try/catch to intercept UNIQUE constraint violation
+      try {
+        const task = await createTask(result.data);
+        await broadcastEvent('task_created', task);
+        // 4. Respond
+        return res.status(201).json(task);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        if (message.includes('UNIQUE constraint failed')) {
+          // Return existing task so client can show "View in Backlog" badge (PROMOTE-05)
+          const existing = await getTaskByGitHubIssue(
+            result.data.githubRepo!,
+            result.data.githubIssueNumber!
+          );
+          return res.status(409).json({
+            error: 'This issue is already in the backlog.',
+            existingTask: existing,
+          });
+        }
+        throw err;
+      }
     }
 
     default:
