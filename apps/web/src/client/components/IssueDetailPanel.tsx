@@ -75,7 +75,10 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad }: IssueDetailPan
       return res.json();
     },
     onMutate: async (updates) => {
-      await queryClient.cancelQueries({ queryKey: ['triage', owner, repo, issue?.number] });
+      // No await — keeps setQueryData synchronous so React batches it before Radix's ref cleanup runs.
+      // Awaiting cancelQueries defers setQueryData to a microtask, which races with the DropdownMenu
+      // unmount commit phase and causes "Maximum update depth exceeded" in React 19.
+      queryClient.cancelQueries({ queryKey: ['triage', owner, repo, issue?.number] });
       const previous = queryClient.getQueryData(['triage', owner, repo, issue?.number]);
       queryClient.setQueryData(['triage', owner, repo, issue?.number], (old: { isTriaged: boolean; priority: string | null } | undefined) => ({
         ...(old ?? { isTriaged: false, priority: null }),
