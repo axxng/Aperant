@@ -6,6 +6,7 @@ let migrated = false;
 export function getClient(): Client {
   if (!client) {
     if (process.env.MOCK_SERVICES === 'true') {
+      if (process.env.VERCEL) throw new Error('MOCK_SERVICES=true must not be set in Vercel deployments');
       client = createClient({ url: 'file:dev.db' });
     } else {
       client = createClient({

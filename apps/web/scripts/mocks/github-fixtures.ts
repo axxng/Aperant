@@ -104,6 +104,7 @@ export function buildLabelFixtures(): LabelFixture[] {
 // ===== Express mock route registration =====
 
 export function registerMockRoutes(app: Application): void {
+  if (process.env.MOCK_SERVICES !== 'true') throw new Error('registerMockRoutes must only be called when MOCK_SERVICES=true');
   // Mock OAuth initiate — redirect directly to callback (no real GitHub redirect)
   app.get('/api/auth/github', (_req: Request, res: Response) => {
     res.redirect(302, '/api/auth/github/callback');
