@@ -134,8 +134,8 @@ Plans:
 **Plans**: 4 plans
 Plans:
 - [x] 05-01-PLAN.md — Wave 0 TDD stubs: IssueDetailPanel.test.tsx (TRIAGE-01, 02, 03, 06) + IssuesView.test.tsx (TRIAGE-05) + extend IssueListRow.test.tsx (TRIAGE-04) (completed 2026-04-22)
-- [ ] 05-02-PLAN.md — Wave 1a: IssueListRow TriageBadgeSlot (triageState prop + checkmark + priority pill) + en/fr triage i18n keys
-- [ ] 05-03-PLAN.md — Wave 1b: IssueDetailPanel TriageSection (useQuery lazy fetch + useMutation optimistic + ClosedIssueWarning + TriagedToggle + PrioritySelector)
+- [x] 05-02-PLAN.md — Wave 1a: IssueListRow TriageBadgeSlot (triageState prop + checkmark + priority pill) + en/fr triage i18n keys (completed 2026-04-22)
+- [x] 05-03-PLAN.md — Wave 1b: IssueDetailPanel TriageSection (useQuery lazy fetch + useMutation optimistic + ClosedIssueWarning + TriagedToggle + PrioritySelector) (completed 2026-04-22)
 - [ ] 05-04-PLAN.md — Wave 2: j/k keyboard nav in IssuesView + AllIssuesView + triageState cache passthrough + human verification
 
 ### Phase 6: Notes
