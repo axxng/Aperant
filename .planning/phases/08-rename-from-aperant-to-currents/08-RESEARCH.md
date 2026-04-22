@@ -211,19 +211,19 @@ Step skipped — no new authentication, authorization, input handling, cryptogra
 | A3 | `apps/desktop/` is out of scope for this phase | Scope | Medium — if user intended desktop rename too, plan must add those files |
 | A4 | `package-lock.json` will auto-update after `npm install` | Category A | Low — standard npm workspace behaviour; verified conceptually |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **HTML title subtitle**
+1. **HTML title subtitle** — RESOLVED: Title set to `Currents` (Plan 08-01 Task 2)
    - What we know: Current title is "Auto Claude — Multi-Product Backlog" (wrong on both counts)
    - What's unclear: Should the title be just "Currents" or "Currents — GitHub Issues & Triage" or something else?
    - Recommendation: Default to `Currents` (simplest); user can override during planning
 
-2. **README.md content refresh scope**
+2. **README.md content refresh scope** — RESOLVED: Brand rename + outdated description update only; not a full rewrite (Plan 08-02 Task 2)
    - What we know: README.md references OTP auth (now removed), "Coming Soon" features that are done, and desktop app references
    - What's unclear: Should README be fully refreshed to reflect current state, or just name-swapped?
    - Recommendation: Do a full content refresh in this phase since the rename requires touching every paragraph anyway; but mark this as discretionary if the user wants a minimal change set
 
-3. **apps/desktop/ scope**
+3. **apps/desktop/ scope** — RESOLVED: Both plans scoped to `apps/web/` only; desktop files excluded (Plans 08-01, 08-02)
    - What we know: PROJECT.md says `apps/desktop/` is out of this project's scope
    - What's unclear: Does the user want desktop files renamed as a secondary task in this phase?
    - Recommendation: Default to apps/web/ only; user can confirm if desktop should be included
