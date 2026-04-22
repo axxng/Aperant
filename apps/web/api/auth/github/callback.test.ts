@@ -116,3 +116,35 @@ describe('OAuth callback handler', () => {
     expect(redirect).toHaveBeenCalledWith(302, expect.stringContaining('/?token='));
   });
 });
+
+import { validateOAuthState, determineRole, buildEmailFallback } from './callback.js';
+
+describe('validateOAuthState', () => {
+  it('returns true when cookie state matches query state', () => {
+    expect(validateOAuthState('oauth_state=abc123', 'abc123')).toBe(true);
+  });
+  it('returns false when states do not match', () => {
+    expect(validateOAuthState('oauth_state=abc123', 'wrong')).toBe(false);
+  });
+  it('returns false when cookie header is empty', () => {
+    expect(validateOAuthState('', 'abc123')).toBe(false);
+  });
+});
+
+describe('determineRole', () => {
+  it('returns admin when userCount is 0', () => {
+    expect(determineRole(0)).toBe('admin');
+  });
+  it('returns member when userCount > 0', () => {
+    expect(determineRole(1)).toBe('member');
+  });
+});
+
+describe('buildEmailFallback', () => {
+  it('returns email when provided', () => {
+    expect(buildEmailFallback('alice@example.com', 'alice')).toBe('alice@example.com');
+  });
+  it('returns synthetic email when email is null', () => {
+    expect(buildEmailFallback(null, 'alice')).toBe('alice@github.invalid');
+  });
+});

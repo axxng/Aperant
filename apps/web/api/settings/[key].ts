@@ -25,17 +25,15 @@ const settingSchema = z.object({
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   await ensureDb();
 
+  // 1. Parse input — key is a path param; validate against known keys
+  const key = z.enum(VALID_KEYS).parse(req.query.key as string);
+
+  // 2. Authorize
   const user = await authenticateRequest(req, res);
   if (!user) return;
 
   if (!hasRole(user, 'admin')) {
     return res.status(403).json({ error: 'Admin access required' });
-  }
-
-  const key = req.query.key as string;
-
-  if (!VALID_KEYS.includes(key as any)) {
-    return res.status(400).json({ error: 'Invalid setting key' });
   }
 
   const c = getClient();

@@ -10,10 +10,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // 1. Parse input — optional since param
+  const since = (req.query.since as string) || new Date(Date.now() - 30_000).toISOString().replace('T', ' ').replace('Z', '');
+
+  // 2. Authorize
   const user = await authenticateRequest(req, res);
   if (!user) return;
 
-  const since = (req.query.since as string) || new Date(Date.now() - 30_000).toISOString().replace('T', ' ').replace('Z', '');
+  // 3. DB call
   const events = await getEventsSince(since);
 
   res.json({ events });

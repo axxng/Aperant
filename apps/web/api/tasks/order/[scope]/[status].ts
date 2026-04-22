@@ -16,22 +16,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // 1. Parse input — path params and body
+  const scope = z.string().min(1).parse(req.query.scope as string);
+  const validatedStatus: TaskStatusKey = taskStatusEnum.parse(req.query.status as string);
+  const result = setTaskOrderSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });
+  }
+
+  // 2. Authorize
   const user = await authenticateRequest(req, res);
   if (!user) return;
 
   if (!hasRole(user, 'admin', 'member')) {
     return res.status(403).json({ error: 'Insufficient permissions' });
   }
-
-  const scope = req.query.scope as string;
-  const status = req.query.status as string;
-
-  const result = setTaskOrderSchema.safeParse(req.body);
-  if (!result.success) {
-    return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });
-  }
-
-  const validatedStatus: TaskStatusKey = taskStatusEnum.parse(status);
   await setTaskOrder(scope, validatedStatus, result.data.taskIds);
   await broadcastEvent('tasks_reordered', { scope, status });
   res.json({ success: true });

@@ -19,23 +19,18 @@ const triagePutBodySchema = z.object({
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   await ensureDb();
 
-  // D-06: require authentication on both GET and PUT
-  const user = await authenticateRequest(req, res);
-  if (!user) return;
-
-  // Validate path params
-  const pathResult = triagePathSchema.safeParse({
+  // 1. Parse input — path params (programmer bug if invalid → throws → 500)
+  const { owner, repo, number } = triagePathSchema.parse({
     owner: req.query.owner,
     repo: req.query.repo,
     number: req.query.number,
   });
-  if (!pathResult.success) {
-    return res.status(400).json({ error: 'Invalid path parameters', details: pathResult.error.flatten().fieldErrors });
-  }
-
-  const { owner, repo, number } = pathResult.data;
   const repoFull = `${owner}/${repo}`;
   const issueNumber = parseInt(number, 10);
+
+  // 2. Authorize — D-06: require authentication on both GET and PUT
+  const user = await authenticateRequest(req, res);
+  if (!user) return;
 
   try {
     switch (req.method) {

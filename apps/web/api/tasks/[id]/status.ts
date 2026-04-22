@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { z } from 'zod';
 import { ensureDb } from '../../_lib/db/client.js';
 import { authenticateRequest, hasRole } from '../../_lib/auth/middleware.js';
 import { getTaskById, updateTask, updateTaskSyncState } from '../../_lib/db/tasks.js';
@@ -13,21 +14,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const user = await authenticateRequest(req, res);
-  if (!user) return;
-
-  if (!hasRole(user, 'admin', 'member')) {
-    return res.status(403).json({ error: 'Insufficient permissions' });
-  }
-
-  const id = req.query.id as string;
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
-    return res.status(400).json({ error: 'Invalid ID format' });
-  }
-
+  // 1. Parse input — id is a path param (programmer bug if invalid → throws → 500)
+  const id = z.string().uuid().parse(req.query.id as string);
+  // body is user input → safeParse + 400
   const result = updateTaskStatusSchema.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });
+  }
+
+  // 2. Authorize
+  const user = await authenticateRequest(req, res);
+  if (!user) return;
+  if (!hasRole(user, 'admin', 'member')) {
+    return res.status(403).json({ error: 'Insufficient permissions' });
   }
 
   // Optimistic concurrency check
