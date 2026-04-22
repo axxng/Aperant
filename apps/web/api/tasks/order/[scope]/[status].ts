@@ -32,6 +32,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(403).json({ error: 'Insufficient permissions' });
   }
   await setTaskOrder(scope, validatedStatus, result.data.taskIds);
-  await broadcastEvent('tasks_reordered', { scope, status });
+  await broadcastEvent('tasks_reordered', { scope, status: validatedStatus });
   res.json({ success: true });
 }
