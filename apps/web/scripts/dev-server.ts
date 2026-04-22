@@ -61,7 +61,13 @@ async function main() {
     console.log('[mock] GitHub fixture middleware registered');
   }
 
-  const routes = collectRoutes(API_DIR);
+  const routes = collectRoutes(API_DIR).sort((a, b) => {
+    // Static segments must register before dynamic [param] segments so Express
+    // matches /tasks/by-github-issue before /tasks/:id (first-match wins).
+    const aDynamic = a.route.includes('[') ? 1 : 0;
+    const bDynamic = b.route.includes('[') ? 1 : 0;
+    return aDynamic - bDynamic;
+  });
 
   for (const { filePath, route } of routes) {
     const expressRoute = `/api${toExpressRoute(route)}`;
