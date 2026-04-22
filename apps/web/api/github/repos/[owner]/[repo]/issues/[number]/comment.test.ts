@@ -43,7 +43,7 @@ function mockVercelRes() {
   };
 }
 
-const mockUser = { userId: 'user-uuid-1', email: 'alice@example.com', role: 'member' };
+const mockUser = { userId: 'user-uuid-1', email: 'alice@example.com', role: 'member', exp: Math.floor(Date.now() / 1000) + 3600 };
 const mockDbUser = { id: 'user-uuid-1', github_token: 'ghp_testtoken123', github_login: 'alice' };
 
 beforeEach(() => {
