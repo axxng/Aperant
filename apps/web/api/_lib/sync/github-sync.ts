@@ -6,24 +6,12 @@ import type { CreateTaskInput, TaskStatusKey } from '../../../src/shared/types/t
 import type { SyncResult } from '../../../src/shared/types/github.js';
 
 import { resolveConfig } from '../config-resolver.js';
-
-const GITHUB_API = 'https://api.github.com';
+import { githubFetch, GITHUB_API, GitHubRateLimitError } from '../github.js';
 
 async function getGitHubToken(): Promise<string> {
   const token = await resolveConfig('githubToken', 'GITHUB_TOKEN');
   if (!token) throw new Error('GITHUB_TOKEN not configured');
   return token;
-}
-
-async function githubFetch(url: string, headers: Record<string, string> = {}): Promise<Response> {
-  return fetch(url, {
-    headers: {
-      'Accept': 'application/vnd.github.v3+json',
-      'Authorization': `Bearer ${await getGitHubToken()}`,
-      'X-GitHub-Api-Version': '2022-11-28',
-      ...headers,
-    },
-  });
 }
 
 /** Sync a single repo's issues into the product's backlog */
@@ -44,7 +32,7 @@ async function syncRepo(productId: string, owner: string, repo: string): Promise
       headers['If-None-Match'] = syncState.etag;
     }
 
-    const response = await githubFetch(url, headers);
+    const response = await githubFetch(url, { headers });
 
     // Not modified
     if (response.status === 304) {
