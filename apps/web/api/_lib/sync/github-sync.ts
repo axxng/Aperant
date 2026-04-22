@@ -2,7 +2,7 @@ import { getProductById, getAllProducts } from '../db/products.js';
 import { getTaskByGitHubIssue, createTask, updateTask, getTasksByProduct } from '../db/tasks.js';
 import { getSyncState, upsertSyncState } from '../db/sync-state.js';
 import type { Product, RepoSource, MultiRepoSource } from '../../../src/shared/types/product.js';
-import type { TaskStatus, CreateTaskInput } from '../../../src/shared/types/task.js';
+import type { CreateTaskInput, TaskStatusKey } from '../../../src/shared/types/task.js';
 import type { SyncResult } from '../../../src/shared/types/github.js';
 
 import { resolveConfig } from '../config-resolver.js';
@@ -65,7 +65,7 @@ async function syncRepo(productId: string, owner: string, repo: string): Promise
 
         if (existingTask) {
           // Skip tasks with pending write-back to avoid overwriting local edits
-          if (existingTask.githubSyncPending) {
+          if (existingTask.githubSyncState?.kind === 'pending' || existingTask.githubSyncState?.kind === 'retrying') {
             result.updated++;
             continue;
           }
@@ -74,7 +74,7 @@ async function syncRepo(productId: string, owner: string, repo: string): Promise
           await updateTask(existingTask.id, {
             title: issue.title,
             description: issue.body || '',
-            status: newStatus !== existingTask.status ? newStatus as TaskStatus : undefined,
+            status: newStatus !== existingTask.status ? newStatus : undefined,
             labels: issue.labels?.map((l: any) => ({ name: l.name, color: l.color })) || [],
             assignees: issue.assignees?.map((a: any) => ({ login: a.login, avatarUrl: a.avatar_url })) || [],
           });
@@ -162,13 +162,13 @@ async function syncGitHubProject(
   productId: string,
   owner: string,
   projectNumber: number,
-  statusMapping?: Record<string, TaskStatus>,
+  statusMapping?: Record<string, TaskStatusKey>,
 ): Promise<SyncResult> {
   const sourceKey = `project:${owner}/${projectNumber}`;
   const syncState = await getSyncState(productId, sourceKey);
   const result: SyncResult = { created: 0, updated: 0, closed: 0, errors: [] };
 
-  const defaultStatusMapping: Record<string, TaskStatus> = {
+  const defaultStatusMapping: Record<string, TaskStatusKey> = {
     'Todo': 'backlog',
     'Backlog': 'backlog',
     'In Progress': 'in_progress',
@@ -263,7 +263,7 @@ async function syncGitHubProject(
 
           if (existingTask) {
             // Skip tasks with pending write-back to avoid overwriting local edits
-            if (existingTask.githubSyncPending) {
+            if (existingTask.githubSyncState?.kind === 'pending' || existingTask.githubSyncState?.kind === 'retrying') {
               result.updated++;
               continue;
             }

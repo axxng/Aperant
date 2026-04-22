@@ -1,4 +1,5 @@
 import { getClient } from './client.js';
+import { triageDbRowSchema } from '../validation.js';
 
 export interface TriageRecord {
   githubRepo: string;
@@ -11,16 +12,28 @@ export interface TriageRecord {
   updatedAt: string;
 }
 
-function rowToTriage(row: any): TriageRecord {
+export type TriageState =
+  | { kind: 'untouched' }
+  | { kind: 'prioritized'; priority: 'critical' | 'high' | 'medium' | 'low' }
+  | { kind: 'complete' };
+
+export function rowToTriage(row: unknown): TriageRecord & { triageState: TriageState } {
+  const parsed = triageDbRowSchema.parse(row);
+  const triageState: TriageState = parsed.is_triaged === 0
+    ? { kind: 'untouched' }
+    : parsed.priority !== null
+      ? { kind: 'prioritized', priority: parsed.priority }
+      : { kind: 'complete' };
   return {
-    githubRepo: row.github_repo as string,
-    githubIssueNumber: Number(row.github_issue_number),
-    isTriaged: row.is_triaged === 1,
-    priority: (row.priority as TriageRecord['priority']) || null,
-    githubCommentId: row.github_comment_id != null ? Number(row.github_comment_id) : null,
-    commentStatus: (row.comment_status as TriageRecord['commentStatus']) || null,
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
+    githubRepo: parsed.github_repo,
+    githubIssueNumber: parsed.github_issue_number,
+    isTriaged: parsed.is_triaged === 1,
+    priority: parsed.priority,
+    githubCommentId: parsed.github_comment_id,
+    commentStatus: parsed.comment_status,
+    createdAt: parsed.created_at,
+    updatedAt: parsed.updated_at,
+    triageState,
   };
 }
 

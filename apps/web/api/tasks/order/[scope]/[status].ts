@@ -4,7 +4,10 @@ import { authenticateRequest, hasRole } from '../../../_lib/auth/middleware.js';
 import { setTaskOrder } from '../../../_lib/db/tasks.js';
 import { setTaskOrderSchema } from '../../../_lib/validation.js';
 import { broadcastEvent } from '../../../_lib/events.js';
-import type { TaskStatus } from '../../../../src/shared/types/task.js';
+import type { TaskStatusKey } from '../../../../src/shared/types/task.js';
+import { z } from 'zod';
+
+const taskStatusEnum = z.enum(['backlog', 'queue', 'in_progress', 'ai_review', 'human_review', 'done', 'pr_created', 'error']);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   await ensureDb();
@@ -28,7 +31,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Invalid input', details: result.error.flatten().fieldErrors });
   }
 
-  await setTaskOrder(scope, status as TaskStatus, result.data.taskIds);
+  const validatedStatus: TaskStatusKey = taskStatusEnum.parse(status);
+  await setTaskOrder(scope, validatedStatus, result.data.taskIds);
   await broadcastEvent('tasks_reordered', { scope, status });
   res.json({ success: true });
 }

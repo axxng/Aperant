@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ensureDb } from '../../_lib/db/client.js';
 import { authenticateRequest, hasRole } from '../../_lib/auth/middleware.js';
-import { getTaskById, updateTask } from '../../_lib/db/tasks.js';
+import { getTaskById, updateTask, updateTaskSyncState } from '../../_lib/db/tasks.js';
 import { updateTaskStatusSchema } from '../../_lib/validation.js';
 import { broadcastEvent } from '../../_lib/events.js';
 import { syncTaskToGitHub } from '../../_lib/sync/github-writeback.js';
@@ -47,10 +47,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (task.githubRepo && task.githubIssueNumber) {
     const syncResult = await syncTaskToGitHub(task, { status: result.data.status });
     if (syncResult.success) {
-      await updateTask(id, { githubSyncPending: false, githubSyncRetryCount: 0 });
+      await updateTaskSyncState(id, false, 0);
       githubSyncStatus = 'synced';
     } else {
-      await updateTask(id, { githubSyncPending: true });
+      await updateTaskSyncState(id, true, 0);
       githubSyncStatus = 'failed';
     }
   }

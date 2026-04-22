@@ -1,6 +1,8 @@
 import { v4 as uuid } from 'uuid';
+import { z } from 'zod';
 import { getClient } from './client.js';
-import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatus, TaskOrderState } from '../../../src/shared/types/task.js';
+import { taskDbRowSchema } from '../validation.js';
+import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatusKey, TaskOrderState, GithubSyncState } from '../../../src/shared/types/task.js';
 
 function safeJsonParse<T>(value: string | null | undefined, fallback: T): T {
   if (!value) return fallback;
@@ -9,6 +11,138 @@ function safeJsonParse<T>(value: string | null | undefined, fallback: T): T {
   } catch {
     return fallback;
   }
+}
+
+// === Pure domain logic ===
+
+/** Build a GithubSyncState discriminated union from raw DB column values */
+export function buildSyncState(pending: number, retryCount: number): GithubSyncState {
+  if (pending === 1 && retryCount === 0) return { kind: 'pending' };
+  if (pending === 1 && retryCount > 0) return { kind: 'retrying', retryCount };
+  if (pending === 0 && retryCount > 0) return { kind: 'failed', retryCount };
+  return { kind: 'idle' };
+}
+
+/** Map a raw DB task row to a typed Task discriminated union variant */
+export function rowToTask(row: unknown): Task {
+  const parsed = taskDbRowSchema.parse(row);
+
+  const base = {
+    id: parsed.id,
+    productId: parsed.product_id,
+    title: parsed.title,
+    description: parsed.description,
+    priority: parsed.priority ?? undefined,
+    category: parsed.category ?? undefined,
+    githubIssueNumber: parsed.github_issue_number ?? undefined,
+    githubIssueUrl: parsed.github_issue_url ?? undefined,
+    githubRepo: parsed.github_repo ?? undefined,
+    githubProjectItemId: parsed.github_project_item_id ?? undefined,
+    githubSyncState: buildSyncState(parsed.github_sync_pending, parsed.github_sync_retry_count),
+    labels: safeJsonParse(parsed.labels, []),
+    assignees: safeJsonParse(parsed.assignees, []),
+    milestone: parsed.milestone ? safeJsonParse(parsed.milestone, undefined) : undefined,
+    metadata: safeJsonParse(parsed.metadata, {}),
+    createdAt: parsed.created_at,
+    updatedAt: parsed.updated_at,
+  };
+
+  switch (parsed.status) {
+    case 'backlog':
+      return { ...base, status: 'backlog' };
+    case 'queue':
+      return { ...base, status: 'queue' };
+    case 'in_progress':
+      return { ...base, status: 'in_progress' };
+    case 'done':
+      return { ...base, status: 'done' };
+    case 'ai_review':
+      return { ...base, status: 'ai_review', reviewReason: parsed.review_reason ?? undefined } as Task;
+    case 'human_review':
+      return { ...base, status: 'human_review', reviewReason: parsed.review_reason ?? undefined } as Task;
+    case 'error':
+      return { ...base, status: 'error', reviewReason: parsed.review_reason ?? undefined } as Task;
+    case 'pr_created':
+      return {
+        ...base,
+        status: 'pr_created',
+        githubIssueNumber: parsed.github_issue_number ?? 0,
+        githubIssueUrl: parsed.github_issue_url ?? '',
+        githubRepo: parsed.github_repo ?? '',
+      };
+  }
+}
+
+/** Build the flat SQL args object for createTask — pure function, no side effects */
+export function buildCreateTaskInput(
+  input: CreateTaskInput,
+  id: string,
+  now: string,
+): {
+  id: string;
+  product_id: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string | null;
+  category: string | null;
+  github_issue_number: number | null;
+  github_issue_url: string | null;
+  github_repo: string | null;
+  github_project_item_id: string | null;
+  labels: string;
+  assignees: string;
+  metadata: string;
+  created_at: string;
+  updated_at: string;
+} {
+  return {
+    id,
+    product_id: input.productId,
+    title: input.title,
+    description: input.description,
+    status: input.status || 'backlog',
+    priority: input.priority || null,
+    category: input.category || null,
+    github_issue_number: input.githubIssueNumber || null,
+    github_issue_url: input.githubIssueUrl || null,
+    github_repo: input.githubRepo || null,
+    github_project_item_id: input.githubProjectItemId || null,
+    labels: JSON.stringify(input.labels || []),
+    assignees: JSON.stringify(input.assignees || []),
+    metadata: JSON.stringify(input.metadata || {}),
+    created_at: now,
+    updated_at: now,
+  };
+}
+
+/** Build SQL updates and values array from UpdateTaskInput — pure function, no side effects */
+export function buildUpdateTaskFields(input: UpdateTaskInput): { updates: string[]; values: any[] } {
+  const updates: string[] = [];
+  const values: any[] = [];
+
+  if (input.title !== undefined) { updates.push('title = ?'); values.push(input.title); }
+  if (input.description !== undefined) { updates.push('description = ?'); values.push(input.description); }
+  if (input.status !== undefined) { updates.push('status = ?'); values.push(input.status); }
+  if (input.priority !== undefined) { updates.push('priority = ?'); values.push(input.priority); }
+  if (input.category !== undefined) { updates.push('category = ?'); values.push(input.category); }
+  if (input.reviewReason !== undefined) { updates.push('review_reason = ?'); values.push(input.reviewReason); }
+  if (input.labels !== undefined) { updates.push('labels = ?'); values.push(JSON.stringify(input.labels)); }
+  if (input.assignees !== undefined) { updates.push('assignees = ?'); values.push(JSON.stringify(input.assignees)); }
+  if (input.metadata !== undefined) { updates.push('metadata = ?'); values.push(JSON.stringify(input.metadata)); }
+
+  return { updates, values };
+}
+
+// === Internal helper for write-back sync state updates ===
+
+/** Write github_sync_pending and github_sync_retry_count directly — internal use only */
+export async function updateTaskSyncState(id: string, pending: boolean, retryCount: number): Promise<void> {
+  const now = new Date().toISOString();
+  await getClient().execute({
+    sql: 'UPDATE tasks SET github_sync_pending = ?, github_sync_retry_count = ?, updated_at = ? WHERE id = ?',
+    args: [pending ? 1 : 0, retryCount, now, id],
+  });
 }
 
 export async function getTasksByProduct(productId: string): Promise<Task[]> {
@@ -45,6 +179,7 @@ export async function getTaskByGitHubIssue(repo: string, issueNumber: number): P
 export async function createTask(input: CreateTaskInput): Promise<Task> {
   const id = uuid();
   const now = new Date().toISOString();
+  const fields = buildCreateTaskInput(input, id, now);
 
   await getClient().execute({
     sql: `INSERT INTO tasks (id, product_id, title, description, status, priority, category,
@@ -52,22 +187,22 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
             labels, assignees, metadata, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
-      id,
-      input.productId,
-      input.title,
-      input.description,
-      input.status || 'backlog',
-      input.priority || null,
-      input.category || null,
-      input.githubIssueNumber || null,
-      input.githubIssueUrl || null,
-      input.githubRepo || null,
-      input.githubProjectItemId || null,
-      JSON.stringify(input.labels || []),
-      JSON.stringify(input.assignees || []),
-      JSON.stringify(input.metadata || {}),
-      now,
-      now,
+      fields.id,
+      fields.product_id,
+      fields.title,
+      fields.description,
+      fields.status,
+      fields.priority,
+      fields.category,
+      fields.github_issue_number,
+      fields.github_issue_url,
+      fields.github_repo,
+      fields.github_project_item_id,
+      fields.labels,
+      fields.assignees,
+      fields.metadata,
+      fields.created_at,
+      fields.updated_at,
     ],
   });
 
@@ -78,20 +213,7 @@ export async function updateTask(id: string, input: UpdateTaskInput): Promise<Ta
   const existing = await getTaskById(id);
   if (!existing) return null;
 
-  const updates: string[] = [];
-  const values: any[] = [];
-
-  if (input.title !== undefined) { updates.push('title = ?'); values.push(input.title); }
-  if (input.description !== undefined) { updates.push('description = ?'); values.push(input.description); }
-  if (input.status !== undefined) { updates.push('status = ?'); values.push(input.status); }
-  if (input.priority !== undefined) { updates.push('priority = ?'); values.push(input.priority); }
-  if (input.category !== undefined) { updates.push('category = ?'); values.push(input.category); }
-  if (input.reviewReason !== undefined) { updates.push('review_reason = ?'); values.push(input.reviewReason); }
-  if (input.labels !== undefined) { updates.push('labels = ?'); values.push(JSON.stringify(input.labels)); }
-  if (input.assignees !== undefined) { updates.push('assignees = ?'); values.push(JSON.stringify(input.assignees)); }
-  if (input.metadata !== undefined) { updates.push('metadata = ?'); values.push(JSON.stringify(input.metadata)); }
-  if (input.githubSyncPending !== undefined) { updates.push('github_sync_pending = ?'); values.push(input.githubSyncPending ? 1 : 0); }
-  if (input.githubSyncRetryCount !== undefined) { updates.push('github_sync_retry_count = ?'); values.push(input.githubSyncRetryCount); }
+  const { updates, values } = buildUpdateTaskFields(input);
 
   if (updates.length === 0) return existing;
 
@@ -122,6 +244,8 @@ export async function getTasksPendingSync(): Promise<Task[]> {
   return result.rows.map(rowToTask);
 }
 
+const taskStatuses = ['backlog', 'queue', 'in_progress', 'ai_review', 'human_review', 'done', 'pr_created', 'error'] as const;
+
 export async function getTaskOrder(scope: string): Promise<TaskOrderState> {
   const result = await getClient().execute({
     sql: 'SELECT status, task_ids FROM task_order WHERE scope = ?',
@@ -130,46 +254,21 @@ export async function getTaskOrder(scope: string): Promise<TaskOrderState> {
 
   const order: Partial<TaskOrderState> = {};
   for (const row of result.rows) {
-    order[row.status as TaskStatus] = safeJsonParse(row.task_ids as string, []);
+    const statusKey = z.enum(taskStatuses).parse(row.status);
+    order[statusKey] = safeJsonParse(row.task_ids as string, []);
   }
 
-  const statuses: TaskStatus[] = ['backlog', 'queue', 'in_progress', 'ai_review', 'human_review', 'done', 'pr_created', 'error'];
-  for (const status of statuses) {
+  for (const status of taskStatuses) {
     if (!order[status]) order[status] = [];
   }
 
   return order as TaskOrderState;
 }
 
-export async function setTaskOrder(scope: string, status: TaskStatus, taskIds: string[]): Promise<void> {
+export async function setTaskOrder(scope: string, status: TaskStatusKey, taskIds: string[]): Promise<void> {
   await getClient().execute({
     sql: `INSERT INTO task_order (scope, status, task_ids) VALUES (?, ?, ?)
           ON CONFLICT(scope, status) DO UPDATE SET task_ids = excluded.task_ids`,
     args: [scope, status, JSON.stringify(taskIds)],
   });
-}
-
-function rowToTask(row: any): Task {
-  return {
-    id: row.id as string,
-    productId: row.product_id as string,
-    title: row.title as string,
-    description: row.description as string,
-    status: row.status as TaskStatus,
-    reviewReason: (row.review_reason as Task['reviewReason']) || undefined,
-    priority: (row.priority as Task['priority']) || undefined,
-    category: (row.category as Task['category']) || undefined,
-    githubIssueNumber: row.github_issue_number ? Number(row.github_issue_number) : undefined,
-    githubIssueUrl: (row.github_issue_url as string) || undefined,
-    githubRepo: (row.github_repo as string) || undefined,
-    githubProjectItemId: (row.github_project_item_id as string) || undefined,
-    labels: safeJsonParse(row.labels as string, []),
-    assignees: safeJsonParse(row.assignees as string, []),
-    milestone: row.milestone ? safeJsonParse(row.milestone as string, undefined) : undefined,
-    metadata: safeJsonParse(row.metadata as string, {}),
-    githubSyncPending: row.github_sync_pending === 1,
-    githubSyncRetryCount: Number(row.github_sync_retry_count ?? 0),
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
-  };
 }

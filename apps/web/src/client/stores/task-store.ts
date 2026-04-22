@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { api } from '../lib/api-client';
-import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatus, TaskOrderState } from '@shared/types/task';
+import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatusKey, TaskOrderState } from '@shared/types/task';
 
 interface TaskState {
   tasks: Task[];
@@ -12,12 +12,12 @@ interface TaskState {
   loadTasks: (productId?: string) => Promise<void>;
   createTask: (input: CreateTaskInput) => Promise<Task>;
   updateTask: (id: string, input: UpdateTaskInput) => Promise<Task>;
-  updateTaskStatus: (id: string, status: TaskStatus) => Promise<Task>;
+  updateTaskStatus: (id: string, status: TaskStatusKey) => Promise<Task>;
   deleteTask: (id: string) => Promise<void>;
   setSelectedTask: (id: string | null) => void;
   loadTaskOrder: (scope: string) => Promise<void>;
-  reorderTasks: (scope: string, status: TaskStatus, taskIds: string[]) => Promise<void>;
-  getTasksByStatus: (status: TaskStatus) => Task[];
+  reorderTasks: (scope: string, status: TaskStatusKey, taskIds: string[]) => Promise<void>;
+  getTasksByStatus: (status: TaskStatusKey) => Task[];
 }
 
 export const useTaskStore = create<TaskState>((set, get) => ({
