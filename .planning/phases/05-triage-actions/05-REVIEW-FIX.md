@@ -1,59 +1,65 @@
 ---
 phase: 05-triage-actions
-fixed_at: 2026-04-22T00:00:00Z
+fixed_at: 2026-04-22T12:41:50Z
 review_path: .planning/phases/05-triage-actions/05-REVIEW.md
 iteration: 1
-findings_in_scope: 4
-fixed: 4
+findings_in_scope: 6
+fixed: 6
 skipped: 0
 status: all_fixed
 ---
 
 # Phase 05: Code Review Fix Report
 
-**Fixed at:** 2026-04-22T00:00:00Z
+**Fixed at:** 2026-04-22T12:41:50Z
 **Source review:** .planning/phases/05-triage-actions/05-REVIEW.md
 **Iteration:** 1
 
 **Summary:**
-- Findings in scope: 4
-- Fixed: 4
+- Findings in scope: 6
+- Fixed: 6
 - Skipped: 0
 
 ## Fixed Issues
 
-### WR-01: Keyboard handler captures stale `filteredIssues` when search changes mid-session
+### WR-01: Non-atomic upsert race condition
 
-**Files modified:** `apps/web/src/client/components/IssuesView.tsx`
-**Commit:** 85e242bb
-**Applied fix:** Wrapped the inline `data?.pages.flatMap(p => p.issues) ?? []` expression (line 121) in a `useMemo` with `[data]` as its dependency. This matches the existing pattern in `AllIssuesView.tsx` and prevents `filteredIssues` from being a new reference on every render, eliminating unnecessary `keydown` listener remove/re-add churn in the `useEffect`.
+**Files modified:** `apps/web/api/_lib/db/triage.ts`
+**Commit:** bb5d2f30
+**Applied fix:** Collapsed the two-step INSERT-then-UPDATE into a single atomic `INSERT ... ON CONFLICT DO UPDATE` statement. Partial-update semantics (only patching supplied fields) are preserved by using conditional expressions (`excluded.is_triaged` vs `issue_triage.is_triaged`) in the SET clause based on whether each field is present in the `updates` argument.
 
----
+### WR-02: Non-null assertion after SELECT-after-upsert
 
-### WR-02: Off-by-one risk — `filteredIssues[currentIndex + 1]` accessed without bounds guard when `currentIndex === -1`
+**Files modified:** `apps/web/api/_lib/db/triage.ts`
+**Commit:** bb5d2f30
+**Applied fix:** Replaced `return record!;` with an explicit null check that throws a descriptive `Error` if the record is missing after upsert, preventing an unhandled `TypeError` from propagating to the calling handler.
 
-**Files modified:** `apps/web/src/client/components/IssuesView.tsx`, `apps/web/src/client/components/AllIssuesView.tsx`
-**Commit:** af20e49d
-**Applied fix:** Added `if (currentIndex === -1) return;` immediately after the `findIndex` call in the `handleKeyDown` function in both `IssuesView.tsx` (line 154) and `AllIssuesView.tsx` (line 112). This prevents the silent jump to `filteredIssues[0]` when the selected issue is not present in the filtered list.
-
----
-
-### WR-03: PUT mutation missing `Content-Type: application/json` header
+### WR-03: Non-null assertions in IssueDetailPanel event handlers
 
 **Files modified:** `apps/web/src/client/components/IssueDetailPanel.tsx`
-**Commit:** 2bc0f82b
-**Applied fix:** Added `headers: { 'Content-Type': 'application/json' }` to the `authenticatedFetch` options object in the `triageMutation.mutationFn` (line 68). This ensures the Vercel API handler's body parser correctly deserialises the JSON payload and `triagePutBodySchema.safeParse(req.body)` receives a parsed object rather than a raw string.
+**Commit:** 17b08255
+**Applied fix:** Added `if (!issue) return;` guard at the top of each of the three callbacks — the TriagedToggle `onClick`, the priority `DropdownMenuItem` `onSelect`, and the Clear `DropdownMenuItem` `onSelect` — before accessing `issue.number`.
+
+### WR-04: Mock labels endpoint returns bare array
+
+**Files modified:** `apps/web/scripts/mocks/github-fixtures.ts`
+**Commit:** 7f38d99c
+**Applied fix:** Wrapped the `buildLabelFixtures()` return value in `{ labels: buildLabelFixtures() }` to match the `LabelsResult` shape that `IssuesView` reads via `labelsData?.labels`.
+
+### WR-05: Missing X icon in lucide-react mock + no onClose test
+
+**Files modified:** `apps/web/src/client/components/IssueDetailPanel.test.tsx`
+**Commit:** 5a4b117b
+**Applied fix:** Added `X: () => <svg data-testid="close-icon" />` to the `lucide-react` mock. Added `'detail.closePanel'` key mapping to the `t` stub. Added a new `describe('IssueDetailPanel — close button')` block with a test that verifies `onClose` is called once when the close button is clicked.
+
+### WR-06: .todo rollback tests
+
+**Files modified:** `apps/web/src/client/components/IssueDetailPanel.test.tsx`
+**Commit:** e2a78eb6
+**Applied fix:** Promoted the toast mock (`mockToastError`) to module level so rollback tests can assert on it. Replaced all three `it.todo` stubs in `TRIAGE-03` with fully implemented tests: one verifying `onMutate` calls `setQueryData` with a merge function, one verifying `onError` restores the previous data via `setQueryData`, and one verifying `onError` calls the toast error with the correct message. All 13 tests in the file pass.
 
 ---
 
-### WR-04: EN i18n key `triage.markTriaged` value is misleading
-
-**Files modified:** `apps/web/src/shared/i18n/locales/en/issues.json`
-**Commit:** b7e3a517
-**Applied fix:** Changed `"markTriaged": "Triaged"` to `"markTriaged": "Mark as Triaged"` in the EN locale file (line 64). This aligns with the test mock expectation in `IssueDetailPanel.test.tsx` and makes the call-to-action label clearly distinct from the already-triaged state label (`triage.triaged` which remains `"Triaged"`).
-
----
-
-_Fixed: 2026-04-22T00:00:00Z_
+_Fixed: 2026-04-22T12:41:50Z_
 _Fixer: Claude (gsd-code-fixer)_
 _Iteration: 1_
