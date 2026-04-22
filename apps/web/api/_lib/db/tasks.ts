@@ -63,12 +63,17 @@ export function rowToTask(row: unknown): Task {
     case 'error':
       return { ...base, status: 'error', reviewReason: parsed.review_reason ?? undefined } as Task;
     case 'pr_created':
+      if (!parsed.github_issue_number || !parsed.github_issue_url || !parsed.github_repo) {
+        throw new Error(
+          `DB integrity: pr_created task ${parsed.id} is missing required GitHub fields`
+        );
+      }
       return {
         ...base,
         status: 'pr_created',
-        githubIssueNumber: parsed.github_issue_number ?? 0,
-        githubIssueUrl: parsed.github_issue_url ?? '',
-        githubRepo: parsed.github_repo ?? '',
+        githubIssueNumber: parsed.github_issue_number,
+        githubIssueUrl:    parsed.github_issue_url,
+        githubRepo:        parsed.github_repo,
       };
   }
 }
@@ -102,12 +107,12 @@ export function buildCreateTaskInput(
     title: input.title,
     description: input.description,
     status: input.status || 'backlog',
-    priority: input.priority || null,
-    category: input.category || null,
-    github_issue_number: input.githubIssueNumber || null,
-    github_issue_url: input.githubIssueUrl || null,
-    github_repo: input.githubRepo || null,
-    github_project_item_id: input.githubProjectItemId || null,
+    priority:               input.priority              ?? null,
+    category:               input.category              ?? null,
+    github_issue_number:    input.githubIssueNumber     ?? null,
+    github_issue_url:       input.githubIssueUrl        ?? null,
+    github_repo:            input.githubRepo            ?? null,
+    github_project_item_id: input.githubProjectItemId   ?? null,
     labels: JSON.stringify(input.labels || []),
     assignees: JSON.stringify(input.assignees || []),
     metadata: JSON.stringify(input.metadata || {}),
