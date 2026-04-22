@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed Phase 04.1 Plan 04 — Wave 3 GREEN: all 26 handlers reshaped to 4-step shape, pure functions extracted"
-last_updated: "2026-04-22T02:10:40.066Z"
+stopped_at: "Completed Phase 04.1 Plan 05 — Wave 4 COMPLETE: Engineering Principles documented in root CLAUDE.md"
+last_updated: "2026-04-22T02:13:30.200Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 8
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 25
-  completed_plans: 24
-  percent: 96
+  completed_plans: 25
+  percent: 100
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: Not started
 Status: Ready to execute (5 plans planned)
 Last activity: 2026-04-22
 
-Progress: [██████████] 96%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [██████████] 96%
 | Phase 04.1 P02 | 20min | 2 tasks | 14 files |
 | Phase 04.1 P03 | 152 | 2 tasks | 5 files |
 | Phase 04.1 P04 | 6min | 2 tasks | 22 files |
+| Phase 04.1 P05 | 2min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,7 @@ Recent decisions affecting current work:
 - getTriageRecord return type updated to expose triageState field — needed for test assertions and callers
 - triage/[number].ts switched from safeParse to parse for path params — programmer errors should be 500 not 400
 - settings/[key].ts uses z.enum(VALID_KEYS).parse() replacing manual includes check for Zod error semantics at parse step
+- Engineering principles section appended to root CLAUDE.md — scoped to apps/web/, covers parse-don't-validate/functional core/FSM/TDD with code examples and codebase inventory
 
 ### Pending Todos
 
@@ -107,6 +109,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-22T02:10:40.063Z
-Stopped at: Completed Phase 04.1 Plan 04 — Wave 3 GREEN: all 26 handlers reshaped to 4-step shape, pure functions extracted
+Last session: 2026-04-22T02:13:30.197Z
+Stopped at: Completed Phase 04.1 Plan 05 — Wave 4 COMPLETE: Engineering Principles documented in root CLAUDE.md
 Resume file: None
