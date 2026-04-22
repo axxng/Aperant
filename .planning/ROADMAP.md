@@ -112,14 +112,14 @@ Plans:
 **Goal:** Establish a self-contained local development environment for apps/web/ — developers can run the full app without real Turso credentials, a real GitHub OAuth app, or any external service. Codify mocked services as engineering principle 5 in root CLAUDE.md.
 **Requirements**: TBD (cross-cutting dev tooling)
 **Depends on:** Phase 04.1
-**Plans:** 5 plans
+**Plans:** 5/5 plans complete
 
 Plans:
-- [ ] 04.2-01-PLAN.md — Wave 0: test stubs (client.test.ts for MOCK-01/02, seed.test.ts for MOCK-04, github-fixtures.test.ts for MOCK-05) + vite.config.ts scripts test project
-- [ ] 04.2-02-PLAN.md — Wave 1: MOCK_SERVICES gate in client.ts getClient() — file:dev.db vs Turso
-- [ ] 04.2-03-PLAN.md — Wave 1: scripts/mocks/github-fixtures.ts (fixture builders + OAuth bypass) + dev-server.ts mock middleware injection
-- [ ] 04.2-04-PLAN.md — Wave 1: @faker-js/faker install + scripts/seed.ts deterministic seeder (faker.seed(12345), all 8 Kanban statuses)
-- [ ] 04.2-05-PLAN.md — Wave 2: vite.config.ts define block + DevModeBanner component + App.tsx mount + .env.example docs + CLAUDE.md principle 5
+- [x] 04.2-01-PLAN.md — Wave 0: test stubs (client.test.ts for MOCK-01/02, seed.test.ts for MOCK-04, github-fixtures.test.ts for MOCK-05) + vite.config.ts scripts test project
+- [x] 04.2-02-PLAN.md — Wave 1: MOCK_SERVICES gate in client.ts getClient() — file:dev.db vs Turso
+- [x] 04.2-03-PLAN.md — Wave 1: scripts/mocks/github-fixtures.ts (fixture builders + OAuth bypass) + dev-server.ts mock middleware injection
+- [x] 04.2-04-PLAN.md — Wave 1: @faker-js/faker install + scripts/seed.ts deterministic seeder (faker.seed(12345), all 8 Kanban statuses)
+- [x] 04.2-05-PLAN.md — Wave 2: vite.config.ts define block + DevModeBanner component + App.tsx mount + .env.example docs + CLAUDE.md principle 5
 
 ### Phase 5: Triage Actions
 **Goal**: Users can assign internal priority and mark issues as triaged directly inside Currents, with keyboard shortcuts and safety warnings — without touching the GitHub issue
@@ -170,7 +170,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. GitHub OAuth Login | 6/6 | Complete    | 2026-04-21 |
 | 4. Cross-Repo Unified View | 0/4 | Not started | - |
 | 04.1. Engineering Principles Refactor | 5/5 | Complete | 2026-04-22 |
-| 04.2. Fake Data and Mocked Services | 0/5 | Not started | - |
+| 04.2. Fake Data and Mocked Services | 5/5 | Complete    | 2026-04-22 |
 | 5. Triage Actions | 0/TBD | Not started | - |
 | 6. Notes | 0/TBD | Not started | - |
 | 7. Promote to Backlog | 0/TBD | Not started | - |
