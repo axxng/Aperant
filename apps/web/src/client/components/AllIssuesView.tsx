@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueries } from '@tanstack/react-query';
 import { AlertCircle, Inbox, X } from 'lucide-react';
@@ -19,6 +19,19 @@ export function AllIssuesView() {
   const { state, search, setSearch, setStateFilter } = useAllIssuesFilters();
   const [selectedIssueId, setSelectedIssueId] = useState<number | null>(null);
   const [dismissedRepos, setDismissedRepos] = useState<Set<string>>(new Set());
+
+  // triageState cache — same pattern as IssuesView (TRIAGE-04 session-level badge updating)
+  const [issueTriageCache, setIssueTriageCache] = useState<
+    Map<number, { isTriaged: boolean; priority: 'critical' | 'high' | 'medium' | 'low' | null }>
+  >(new Map());
+
+  const handleTriageLoad = useCallback(
+    (issueId: number, triageState: { isTriaged: boolean; priority: string | null }) => {
+      const priority = triageState.priority as 'critical' | 'high' | 'medium' | 'low' | null;
+      setIssueTriageCache(prev => new Map(prev).set(issueId, { isTriaged: triageState.isTriaged, priority }));
+    },
+    []
+  );
 
   // Only products with a 'repo' source participate (D-04, CONTEXT.md)
   // Memoized to prevent index drift between useQueries result array and productsWithRepo array (Pitfall 2)
@@ -84,6 +97,29 @@ export function AllIssuesView() {
   const isAllLoading = issueQueries.length > 0 && issueQueries.every(q => q.isLoading);
 
   const selectedIssue = allIssues.find(i => i.id === selectedIssueId) ?? null;
+
+  // j/k keyboard navigation — D-05: identical pattern to IssuesView
+  useEffect(() => {
+    if (!selectedIssueId) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+
+      if (e.key === 'j' || e.key === 'k') {
+        e.preventDefault();
+        const currentIndex = filteredIssues.findIndex(i => i.id === selectedIssueId);
+        if (e.key === 'j' && currentIndex < filteredIssues.length - 1) {
+          setSelectedIssueId(filteredIssues[currentIndex + 1].id);
+        } else if (e.key === 'k' && currentIndex > 0) {
+          setSelectedIssueId(filteredIssues[currentIndex - 1].id);
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedIssueId, filteredIssues]);
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -201,6 +237,7 @@ export function AllIssuesView() {
                     isSelected={issue.id === selectedIssueId}
                     onClick={() => setSelectedIssueId(issue.id)}
                     productBadge={{ color: issue.product.color, name: issue.product.name }}
+                    triageState={issueTriageCache.get(issue.id)}
                   />
                 </li>
               ))}
@@ -212,6 +249,7 @@ export function AllIssuesView() {
         <IssueDetailPanel
           issue={selectedIssue}
           isOpen={selectedIssueId !== null}
+          onTriageLoad={handleTriageLoad}
         />
       </div>
     </div>
