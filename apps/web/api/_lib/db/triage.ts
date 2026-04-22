@@ -1,5 +1,5 @@
 import { getClient } from './client.js';
-import { triageDbRowSchema } from '../validation.js';
+import { triageDbRowSchema, triageBatchRowSchema } from '../validation.js';
 
 export interface TriageRecord {
   githubRepo: string;
@@ -80,4 +80,25 @@ export async function upsertTriageRecord(
 
   const record = await getTriageRecord(repo, issueNumber);
   return record!;
+}
+
+export async function getTriageRecordsBatch(
+  repo: string,
+  issueNumbers: number[]
+): Promise<Array<{ issueNumber: number; isTriaged: boolean; priority: 'critical' | 'high' | 'medium' | 'low' | null }>> {
+  if (issueNumbers.length === 0) return [];
+  const placeholders = issueNumbers.map(() => '?').join(', ');
+  const result = await getClient().execute({
+    sql: `SELECT github_issue_number, is_triaged, priority FROM issue_triage
+          WHERE github_repo = ? AND github_issue_number IN (${placeholders})`,
+    args: [repo, ...issueNumbers],
+  });
+  return result.rows.map(row => {
+    const r = triageBatchRowSchema.parse(row);
+    return {
+      issueNumber: r.github_issue_number,
+      isTriaged: r.is_triaged === 1,
+      priority: r.priority,
+    };
+  });
 }

@@ -126,6 +126,13 @@ export const githubUpdateIssueSchema = z.object({
   assignees: z.array(z.string().max(100)).max(50).optional(),
 }).refine(data => Object.keys(data).length > 0, { message: 'At least one field is required' });
 
+// Triage batch query row — lightweight schema (only columns used by batch endpoint)
+export const triageBatchRowSchema = z.object({
+  github_issue_number: z.number(),
+  is_triaged: z.number(),
+  priority: z.enum(['critical', 'high', 'medium', 'low']).nullable(),
+});
+
 // Path parameter schemas
 export const githubOwnerRepoSchema = z.object({
   owner: z.string().min(1).max(100).regex(/^[a-zA-Z0-9_.-]+$/),

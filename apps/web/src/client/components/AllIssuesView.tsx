@@ -98,6 +98,51 @@ export function AllIssuesView() {
 
   const selectedIssue = allIssues.find(i => i.id === selectedIssueId) ?? null;
 
+  // Batch pre-fetch triage state for all visible issues (GAP-1 fix)
+  // Groups by repoFullName — one request per unique repo.
+  useEffect(() => {
+    if (filteredIssues.length === 0) return;
+
+    // Group issue numbers by repo
+    const byRepo = new Map<string, { numbers: number[]; idByNumber: Map<number, number> }>();
+    for (const issue of filteredIssues) {
+      if (!byRepo.has(issue.repoFullName)) {
+        byRepo.set(issue.repoFullName, { numbers: [], idByNumber: new Map() });
+      }
+      const entry = byRepo.get(issue.repoFullName)!;
+      entry.numbers.push(issue.number);
+      entry.idByNumber.set(issue.number, issue.id);
+    }
+
+    for (const [repoFullName, { numbers, idByNumber }] of byRepo.entries()) {
+      const [owner, repo] = repoFullName.split('/');
+      if (!owner || !repo) continue;
+      fetch(
+        `/api/triage/${owner}/${repo}?numbers=${numbers.join(',')}`,
+        { credentials: 'include' }
+      )
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then((data: { records: Array<{ issueNumber: number; isTriaged: boolean; priority: string | null }> }) => {
+          setIssueTriageCache(prev => {
+            const next = new Map(prev);
+            for (const record of data.records) {
+              const id = idByNumber.get(record.issueNumber);
+              if (id === undefined) continue;
+              // Only seed entries not already in cache (preserve optimistic updates)
+              if (!next.has(id)) {
+                next.set(id, {
+                  isTriaged: record.isTriaged,
+                  priority: record.priority as 'critical' | 'high' | 'medium' | 'low' | null,
+                });
+              }
+            }
+            return next;
+          });
+        })
+        .catch(() => { /* silent — list renders without badges if fetch fails */ });
+    }
+  }, [filteredIssues]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // j/k/Escape keyboard navigation — D-05: identical pattern to IssuesView
   useEffect(() => {
     if (!selectedIssueId) return;

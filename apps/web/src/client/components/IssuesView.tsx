@@ -138,6 +138,39 @@ export function IssuesView() {
 
   const selectedIssue = allIssues.find(i => i.id === selectedIssueId) ?? null;
 
+  // Batch pre-fetch triage state for all visible issues (GAP-1 fix)
+  // Fires on first render and whenever the visible issue list changes.
+  // Uses functional setState to avoid overwriting newer optimistic updates from onTriageLoad.
+  useEffect(() => {
+    if (!repoSource || filteredIssues.length === 0) return;
+    const numbers = filteredIssues.map(i => i.number);
+    fetch(
+      `/api/triage/${repoSource.owner}/${repoSource.repo}?numbers=${numbers.join(',')}`,
+      { credentials: 'include' }
+    )
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then((data: { records: Array<{ issueNumber: number; isTriaged: boolean; priority: string | null }> }) => {
+        // Build a number→id lookup so we can key the cache by issue.id (same as onTriageLoad)
+        const numberToId = new Map(filteredIssues.map(i => [i.number, i.id]));
+        setIssueTriageCache(prev => {
+          const next = new Map(prev);
+          for (const record of data.records) {
+            const id = numberToId.get(record.issueNumber);
+            if (id === undefined) continue;
+            // Only seed entries that are NOT already in the cache (preserve optimistic updates)
+            if (!next.has(id)) {
+              next.set(id, {
+                isTriaged: record.isTriaged,
+                priority: record.priority as 'critical' | 'high' | 'medium' | 'low' | null,
+              });
+            }
+          }
+          return next;
+        });
+      })
+      .catch(() => { /* silent — list renders without badges if fetch fails */ });
+  }, [filteredIssues, repoSource]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // j/k/Escape keyboard navigation — D-05: only active when panel is open (selectedIssueId !== null)
   // RESEARCH.md Pitfall 2: cleanup removeEventListener is MANDATORY to prevent stacking
   useEffect(() => {
