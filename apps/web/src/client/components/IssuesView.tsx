@@ -34,14 +34,15 @@ export function IssuesView() {
   // issueTriageCache — stores triage state per issue.id; populated via onTriageLoad callback
   // Enables TriageBadgeSlot to update immediately after panel action without N API calls on load (D-07)
   const [issueTriageCache, setIssueTriageCache] = useState<
-    Map<number, { isTriaged: boolean; priority: string | null }>
+    Map<number, { isTriaged: boolean; priority: 'critical' | 'high' | 'medium' | 'low' | null }>
   >(new Map());
 
   // handleTriageLoad — called by IssueDetailPanel when triage data loads or changes
   // useCallback prevents re-creation on every render (stable ref for IssueDetailPanel dep array)
   const handleTriageLoad = useCallback(
     (issueId: number, triageState: { isTriaged: boolean; priority: string | null }) => {
-      setIssueTriageCache(prev => new Map(prev).set(issueId, triageState));
+      const priority = triageState.priority as 'critical' | 'high' | 'medium' | 'low' | null;
+      setIssueTriageCache(prev => new Map(prev).set(issueId, { isTriaged: triageState.isTriaged, priority }));
     },
     []
   );
