@@ -83,3 +83,73 @@ describe('IssueListRow — CROSS-02: product badge', () => {
     expect(nameEl.className).toContain('max-w-[80px]');
   });
 });
+
+// Additional mock for lucide-react CheckCircle2 (used by TriageBadgeSlot)
+// Note: vi.mock is hoisted — this mock REPLACES the existing vi.mock('lucide-react') if any.
+// Since IssueListRow.test.tsx has no existing lucide mock, add it here.
+vi.mock('lucide-react', () => ({
+  CheckCircle2: ({ className, 'aria-label': ariaLabel }: { className?: string; 'aria-label'?: string }) => (
+    <svg data-testid="check-circle-2" className={className} aria-label={ariaLabel} />
+  ),
+}));
+
+describe('IssueListRow — TRIAGE-04: triage badge slot', () => {
+  it('renders checkmark icon when triageState.isTriaged=true and no priority', () => {
+    render(
+      <IssueListRow
+        issue={baseIssue}
+        isSelected={false}
+        onClick={() => {}}
+        triageState={{ isTriaged: true, priority: null }}
+      />
+    );
+    expect(screen.getByTestId('check-circle-2')).toBeInTheDocument();
+  });
+
+  it('renders priority pill with capitalized text when priority is set and not triaged', () => {
+    render(
+      <IssueListRow
+        issue={baseIssue}
+        isSelected={false}
+        onClick={() => {}}
+        triageState={{ isTriaged: false, priority: 'high' }}
+      />
+    );
+    expect(screen.getByText('High')).toBeInTheDocument();
+    expect(screen.queryByTestId('check-circle-2')).toBeNull();
+  });
+
+  it('renders both priority pill and checkmark when triaged with priority', () => {
+    render(
+      <IssueListRow
+        issue={baseIssue}
+        isSelected={false}
+        onClick={() => {}}
+        triageState={{ isTriaged: true, priority: 'critical' }}
+      />
+    );
+    expect(screen.getByText('Critical')).toBeInTheDocument();
+    expect(screen.getByTestId('check-circle-2')).toBeInTheDocument();
+  });
+
+  it('renders no triage badge when triageState prop is absent', () => {
+    render(
+      <IssueListRow issue={baseIssue} isSelected={false} onClick={() => {}} />
+    );
+    expect(screen.queryByTestId('check-circle-2')).toBeNull();
+  });
+
+  it('renders no triage badge when isTriaged=false and priority=null', () => {
+    render(
+      <IssueListRow
+        issue={baseIssue}
+        isSelected={false}
+        onClick={() => {}}
+        triageState={{ isTriaged: false, priority: null }}
+      />
+    );
+    expect(screen.queryByTestId('check-circle-2')).toBeNull();
+    // No priority pill text either
+    expect(screen.queryByText('High')).toBeNull();
+  });
+});
