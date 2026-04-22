@@ -90,4 +90,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-21 after Phase 4 completion — Cross-Repo Unified View*
+*Last updated: 2026-04-22 after Phase 04.1 completion — Engineering Principles Refactor (parse-don't-validate, functional core/imperative shell, FSM illegal state, red-green TDD codified in CLAUDE.md)*
