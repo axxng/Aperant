@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ExternalLink, CheckCircle2, Circle, AlertTriangle, X } from 'lucide-react';
+import { ExternalLink, CheckCircle2, Circle, AlertTriangle, X, BookmarkPlus } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
@@ -27,6 +27,22 @@ const PRIORITY_DOT_CLASSES: Record<string, string> = {
   low:      'bg-muted-foreground',
 };
 
+// === Pure domain logic ===
+
+/**
+ * Maps triage priority to task priority.
+ * 'critical' → 'urgent' (only non-trivial mapping; see RESEARCH.md Pattern 3)
+ * 'high' | 'medium' | 'low' → pass-through
+ * null → undefined (no priority set on promoted task)
+ */
+export function triagePriorityToTaskPriority(
+  triage: 'critical' | 'high' | 'medium' | 'low' | null
+): 'low' | 'medium' | 'high' | 'urgent' | undefined {
+  if (!triage) return undefined;
+  if (triage === 'critical') return 'urgent';
+  return triage;
+}
+
 interface IssueDetailPanelProps {
   issue: GitHubIssue | null;
   isOpen: boolean;
@@ -38,9 +54,11 @@ interface IssueDetailPanelProps {
   onTriageLoad?: (issueId: number, triageState: { isTriaged: boolean; priority: string | null }) => void;
   /** Called when the user clicks the X close button. Parent should set selectedIssueId(null). */
   onClose?: () => void;
+  /** Required: UUID of the product this issue browser is scoped to. Used for task creation and "View in Backlog" link. */
+  productId: string;
 }
 
-export function IssueDetailPanel({ issue, isOpen, onTriageLoad, onClose }: IssueDetailPanelProps) {
+export function IssueDetailPanel({ issue, isOpen, onTriageLoad, onClose, productId }: IssueDetailPanelProps) {
   const { t } = useTranslation('issues');
 
   // Derive owner/repo from issue.repoFullName — no new props needed (RESEARCH.md Pattern 5)
@@ -127,6 +145,72 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad, onClose }: Issue
       toastError(t('notes.postError'));
     },
   });
+
+  // Already-promoted detection — fires when issue panel opens (PROMOTE-03)
+  const { data: existingTask } = useQuery({
+    queryKey: ['task-by-github-issue', issue?.repoFullName, issue?.number],
+    queryFn: async () => {
+      if (!issue?.repoFullName || !issue?.number) return null;
+      const res = await authenticatedFetch(
+        `/tasks/by-github-issue?repo=${encodeURIComponent(issue.repoFullName)}&number=${issue.number}`
+      );
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: Boolean(issue?.repoFullName && issue?.number),
+    staleTime: 0,
+  });
+
+  // Promote mutation — POST /api/tasks; handles 409 duplicate case (PROMOTE-01, PROMOTE-05)
+  const promoteMutation = useMutation({
+    mutationFn: async (vars: {
+      productId: string;
+      title: string;
+      priority?: 'low' | 'medium' | 'high' | 'urgent';
+      githubIssueNumber: number;
+      githubIssueUrl: string;
+      githubRepo: string;
+    }) => {
+      const res = await authenticatedFetch('/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...vars, status: 'backlog', description: '' }),
+      });
+      if (res.status === 409) {
+        const body = await res.json();
+        return { alreadyExists: true as const, existingTask: body.existingTask };
+      }
+      if (!res.ok) throw new Error('promote failed');
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ['task-by-github-issue', issue?.repoFullName, issue?.number],
+      });
+      if ('alreadyExists' in data && data.alreadyExists) {
+        toastError(t('promote.duplicateToast'));
+      } else {
+        toastSuccess(t('promote.successToast'));
+      }
+    },
+    onError: () => {
+      toastError(t('promote.errorToast'));
+    },
+  });
+
+  function handlePromote() {
+    if (!issue) return;
+    promoteMutation.mutate({
+      productId,
+      title: issue.title,
+      priority: triagePriorityToTaskPriority(
+        (triageData?.priority as 'critical' | 'high' | 'medium' | 'low' | null) ?? null
+      ),
+      githubIssueNumber: issue.number,
+      githubIssueUrl: issue.htmlUrl,
+      githubRepo: issue.repoFullName,
+    });
+  }
 
   // Notify parent when triageData loads/changes — enables TriageBadgeSlot without N API calls.
   // startTransition defers the parent setState (issueTriageCache) until after the current commit
@@ -366,6 +450,29 @@ export function IssueDetailPanel({ issue, isOpen, onTriageLoad, onClose }: Issue
                 {t('detail.viewOnGitHub')}
               </a>
             </Button>
+
+            {/* Promote to Backlog — PROMOTE-01, PROMOTE-03, PROMOTE-04, PROMOTE-05 */}
+            {existingTask ? (
+              <Badge variant="success" className="cursor-pointer gap-1 text-xs" asChild>
+                <a href={`/products/${productId}`}>
+                  <ExternalLink className="h-3 w-3" />
+                  {t('promote.viewInBacklog')}
+                </a>
+              </Badge>
+            ) : (
+              <Button
+                variant="default"
+                size="sm"
+                disabled={promoteMutation.isPending}
+                aria-label={t('promote.ariaLabel')}
+                aria-busy={promoteMutation.isPending}
+                aria-disabled={promoteMutation.isPending}
+                onClick={handlePromote}
+              >
+                <BookmarkPlus className="h-3.5 w-3.5 mr-1.5" />
+                {t('promote.promoteButton')}
+              </Button>
+            )}
 
             {/* Divider */}
             <div className="border-t border-border" />

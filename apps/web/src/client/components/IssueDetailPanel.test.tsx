@@ -142,7 +142,7 @@ beforeEach(() => { vi.clearAllMocks(); noteMutationOptionsRef = null; promoteMut
 describe('IssueDetailPanel — TRIAGE-01: triaged toggle', () => {
   it('renders triage toggle button with aria-pressed=false when not triaged', () => {
     const { mutate } = setupMocks({ isTriaged: false, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     const btn = screen.getByLabelText('Toggle triaged status');
     expect(btn).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByTestId('circle')).toBeInTheDocument();
@@ -150,14 +150,14 @@ describe('IssueDetailPanel — TRIAGE-01: triaged toggle', () => {
 
   it('calls mutation with { isTriaged: true, owner, repo, number } when toggle clicked while untriaged', () => {
     const { mutate } = setupMocks({ isTriaged: false, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     fireEvent.click(screen.getByLabelText('Toggle triaged status'));
     expect(mutate).toHaveBeenCalledWith({ isTriaged: true, owner: 'org', repo: 'repo', number: 42 });
   });
 
   it('renders CheckCircle2 and aria-pressed=true when triaged', () => {
     setupMocks({ isTriaged: true, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     const btn = screen.getByLabelText('Toggle triaged status');
     expect(btn).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByTestId('check-circle-2')).toBeInTheDocument();
@@ -167,26 +167,26 @@ describe('IssueDetailPanel — TRIAGE-01: triaged toggle', () => {
 describe('IssueDetailPanel — TRIAGE-02: priority selector', () => {
   it('shows "Priority: None" trigger when no priority set', () => {
     setupMocks({ isTriaged: false, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     expect(screen.getByText('Priority: None')).toBeInTheDocument();
   });
 
   it('calls mutation with { priority: "high", owner, repo, number } when High option selected', () => {
     const { mutate } = setupMocks({ isTriaged: false, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     fireEvent.click(screen.getByText('High'));
     expect(mutate).toHaveBeenCalledWith({ priority: 'high', owner: 'org', repo: 'repo', number: 42 });
   });
 
   it('shows Clear priority option only when priority is set', () => {
     setupMocks({ isTriaged: false, priority: 'high' });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     expect(screen.getByText('Clear priority')).toBeInTheDocument();
   });
 
   it('calls mutation with { priority: null, owner, repo, number } when Clear priority selected', () => {
     const { mutate } = setupMocks({ isTriaged: false, priority: 'high' });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     fireEvent.click(screen.getByText('Clear priority'));
     expect(mutate).toHaveBeenCalledWith({ priority: null, owner: 'org', repo: 'repo', number: 42 });
   });
@@ -195,7 +195,7 @@ describe('IssueDetailPanel — TRIAGE-02: priority selector', () => {
 describe('IssueDetailPanel — TRIAGE-03: optimistic updates', () => {
   it('onMutate calls queryClient.setQueryData with merged update before server responds', async () => {
     const { mockQueryClient } = setupMocks({ isTriaged: false, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     const [mutationOptions] = vi.mocked(useMutation).mock.calls[0] as any[];
     const vars = { isTriaged: true, owner: 'org', repo: 'repo', number: 42 };
     await mutationOptions.onMutate?.(vars);
@@ -207,7 +207,7 @@ describe('IssueDetailPanel — TRIAGE-03: optimistic updates', () => {
 
   it('onError restores previous query data via queryClient.setQueryData', () => {
     const { mockQueryClient } = setupMocks({ isTriaged: true, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     const [mutationOptions] = vi.mocked(useMutation).mock.calls[0] as any[];
     const vars = { isTriaged: false, owner: 'org', repo: 'repo', number: 42 };
     const context = { previous: { isTriaged: true, priority: null }, vars };
@@ -220,7 +220,7 @@ describe('IssueDetailPanel — TRIAGE-03: optimistic updates', () => {
 
   it('onError calls toast error after rollback', () => {
     setupMocks({ isTriaged: true, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     const [mutationOptions] = vi.mocked(useMutation).mock.calls[0] as any[];
     const vars = { isTriaged: false, owner: 'org', repo: 'repo', number: 42 };
     const context = { previous: { isTriaged: true, priority: null }, vars };
@@ -232,14 +232,14 @@ describe('IssueDetailPanel — TRIAGE-03: optimistic updates', () => {
 describe('IssueDetailPanel — TRIAGE-06: closed issue warning', () => {
   it('renders ClosedIssueWarning banner when issue.state === "closed"', () => {
     setupMocks({ isTriaged: false, priority: null });
-    render(<IssueDetailPanel issue={closedIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={closedIssue} isOpen={true} productId="" />);
     expect(screen.getByText('This issue is closed. Triage actions are still saved in Currents.')).toBeInTheDocument();
     expect(screen.getByTestId('alert-triangle')).toBeInTheDocument();
   });
 
   it('does not render ClosedIssueWarning when issue.state === "open"', () => {
     setupMocks({ isTriaged: false, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     expect(screen.queryByText('This issue is closed. Triage actions are still saved in Currents.')).toBeNull();
     expect(screen.queryByTestId('alert-triangle')).toBeNull();
   });
@@ -249,7 +249,7 @@ describe('IssueDetailPanel — close button', () => {
   it('calls onClose when close button is clicked', () => {
     const onClose = vi.fn();
     setupMocks({ isTriaged: false, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} onClose={onClose} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} onClose={onClose} productId="" />);
     fireEvent.click(screen.getByLabelText('Close panel'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -299,13 +299,19 @@ function setupNoteMocks(
   let callCount = 0;
   vi.mocked(useMutation).mockImplementation((options: any) => {
     callCount++;
-    // Slots: odd=triage, even=note (stable across any number of re-renders with 2 mutations)
-    // When Plan 07-03 adds the 3rd mutation, this needs updating to % 3 — tracked in deferred-items
-    if (callCount % 2 === 1) {
+    // Slots: 1=triage, 2=note, 3=promote (repeating every 3 calls across re-renders)
+    // Component now has 3 useMutation hooks (triage, note, promote) added in Plan 07-03.
+    const slot = callCount % 3;
+    if (slot === 1) {
       return { mutate: triageMutate, isPending: false } as any;
     }
-    noteMutationOptionsRef = options;
-    return { mutate: noteMutate, isPending: false } as any;
+    if (slot === 2) {
+      noteMutationOptionsRef = options;
+      return { mutate: noteMutate, isPending: false } as any;
+    }
+    // slot === 0 → 3rd mutation (promote)
+    promoteMutationOptionsRef = options;
+    return { mutate: promoteMutate, isPending: false } as any;
   });
   return { triageMutate, noteMutate, promoteMutate, mockQueryClient };
 }
@@ -317,26 +323,26 @@ let promoteMutationOptionsRef: any = null;
 describe('IssueDetailPanel — NOTES-01: note textarea renders', () => {
   it('renders note textarea with placeholder', () => {
     setupNoteMocks({ isTriaged: false, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     expect(screen.getByPlaceholderText('Write a note to post as a GitHub comment…')).toBeInTheDocument();
   });
 
   it('Post Note button is disabled when textarea is empty', () => {
     setupNoteMocks({ isTriaged: false, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     expect(screen.getByText('Post Note')).toBeDisabled();
   });
 
   it('Post Note button is enabled when textarea has text', () => {
     setupNoteMocks({ isTriaged: false, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     fireEvent.change(screen.getByPlaceholderText('Write a note to post as a GitHub comment…'), { target: { value: 'hello' } });
     expect(screen.getByText('Post Note')).not.toBeDisabled();
   });
 
   it('calls noteMutation.mutate with correct args on button click', () => {
     const { noteMutate } = setupNoteMocks({ isTriaged: false, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     fireEvent.change(screen.getByPlaceholderText('Write a note to post as a GitHub comment…'), { target: { value: 'my note' } });
     fireEvent.click(screen.getByText('Post Note'));
     expect(noteMutate).toHaveBeenCalledWith({ body: 'my note', owner: 'org', repo: 'repo', number: 42 });
@@ -346,21 +352,21 @@ describe('IssueDetailPanel — NOTES-01: note textarea renders', () => {
 describe('IssueDetailPanel — NOTES-03: post feedback', () => {
   it('onSuccess clears textarea and shows success toast', () => {
     setupNoteMocks({ isTriaged: false, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     act(() => { noteMutationOptionsRef?.onSuccess?.(); });
     expect(mockToastSuccess).toHaveBeenCalledWith('Note posted to GitHub');
   });
 
   it('onSuccess shows Sent button state', () => {
     setupNoteMocks({ isTriaged: false, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     act(() => { noteMutationOptionsRef?.onSuccess?.(); });
     expect(screen.getByText('Sent')).toBeInTheDocument();
   });
 
   it('onError preserves textarea text and shows error toast', () => {
     setupNoteMocks({ isTriaged: false, priority: null });
-    render(<IssueDetailPanel issue={baseIssue} isOpen={true} />);
+    render(<IssueDetailPanel issue={baseIssue} isOpen={true} productId="" />);
     fireEvent.change(screen.getByPlaceholderText('Write a note to post as a GitHub comment…'), { target: { value: 'keep this' } });
     act(() => { noteMutationOptionsRef?.onError?.(); });
     expect(screen.getByPlaceholderText('Write a note to post as a GitHub comment…')).toHaveValue('keep this');
