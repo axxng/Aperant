@@ -45,7 +45,7 @@ A team can run a full triage session — browse issues from all connected repos,
 
 ## Context
 
-The web app (`apps/web/`) is a React 19 SPA deployed on Vercel with serverless functions backed by Turso. It was extracted from a larger Electron desktop app (Auto Claude / Aperant) — the desktop app code in `apps/desktop/` is not part of this project's scope.
+The web app (`apps/web/`) is a React 19 SPA deployed on Vercel with serverless functions backed by Turso. It was extracted from a larger Electron desktop app (Auto Claude / Currents) — the desktop app code in `apps/desktop/` is not part of this project's scope.
 
 The existing GitHub API proxy (`api/github/`) already covers issues, PRs, branches, and GitHub Projects. The write-back sync module (`api/_lib/sync/github-writeback.ts`) provides the pattern for syncing task changes back to GitHub. These are the primary building blocks for the issues browser and triage features.
 
@@ -90,4 +90,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-22 after Phase 05 completion — Triage Actions (priority assignment, triaged toggle, j/k keyboard nav, closed-issue warning, batch pre-fetch for instant badge display)*
+*Last updated: 2026-04-23 after Phase 08 completion — Branding rename complete: "Aperant" → "Currents" across all apps/web/ files (package name, localStorage key, i18n strings, HTML title, CSS comment, documentation)*
