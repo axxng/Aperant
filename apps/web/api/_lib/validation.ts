@@ -199,3 +199,68 @@ export const triageDbRowSchema = z.object({
   created_at: z.string(),
   updated_at: z.string(),
 });
+
+// GitHub API response schemas
+export const gitHubApiIssueSchema = z.object({
+  id: z.number(),
+  number: z.number(),
+  title: z.string(),
+  body: z.string().nullable().optional(),
+  state: z.enum(['open', 'closed']),
+  labels: z.array(z.object({
+    id: z.number(),
+    name: z.string(),
+    color: z.string(),
+    description: z.string().nullable().optional(),
+  })).default([]),
+  assignees: z.array(z.object({
+    login: z.string(),
+    avatar_url: z.string().optional(),
+  })).default([]),
+  user: z.object({ login: z.string(), avatar_url: z.string().optional() }),
+  milestone: z.object({
+    id: z.number(),
+    title: z.string(),
+    state: z.enum(['open', 'closed']),
+  }).nullable().optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  closed_at: z.string().nullable().optional(),
+  comments: z.number().default(0),
+  url: z.string(),
+  html_url: z.string(),
+  pull_request: z.unknown().optional(),
+});
+
+export const gitHubApiPRSchema = z.object({
+  number: z.number(),
+  title: z.string(),
+  body: z.string().nullable().optional(),
+  state: z.enum(['open', 'closed']),
+  merged_at: z.string().nullable().optional(),
+  user: z.object({ login: z.string(), avatar_url: z.string().optional() }).nullable().optional(),
+  head: z.object({ ref: z.string() }),
+  base: z.object({ ref: z.string() }),
+  additions: z.number().default(0),
+  deletions: z.number().default(0),
+  changed_files: z.number().default(0),
+  labels: z.array(z.object({ name: z.string(), color: z.string() })).default([]),
+  assignees: z.array(z.object({ login: z.string() })).default([]),
+  created_at: z.string(),
+  updated_at: z.string(),
+  html_url: z.string(),
+  draft: z.boolean().default(false),
+});
+
+// OAuth response schemas
+export const oauthTokenResponseSchema = z.object({
+  access_token: z.string(),
+  error: z.string().optional(),
+});
+
+export const gitHubUserSchema = z.object({
+  id: z.number(),
+  login: z.string(),
+  email: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+});
