@@ -31,6 +31,15 @@ vi.mock('../stores/product-store', () => ({
 // Mock TanStack Query
 vi.mock('@tanstack/react-query', () => ({
   useQueries: vi.fn(),
+  // useQuery and useMutation are used by IssueDetailPanel (rendered inside AllIssuesView)
+  useQuery: vi.fn().mockReturnValue({ data: null, isLoading: false, isError: false }),
+  useMutation: vi.fn().mockReturnValue({ mutate: vi.fn(), isPending: false }),
+  useQueryClient: vi.fn(() => ({
+    cancelQueries: vi.fn(),
+    getQueryData: vi.fn(),
+    setQueryData: vi.fn(),
+    invalidateQueries: vi.fn(),
+  })),
 }));
 
 import { useProductStore } from '../stores/product-store';
