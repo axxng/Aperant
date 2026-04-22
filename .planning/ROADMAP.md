@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Single-Repo Issues Browser** - Per-product issues list with filters, search, pagination, and detail panel (completed 2026-04-21)
 - [x] **Phase 3: GitHub OAuth Login** - Replace email OTP with GitHub OAuth; per-user tokens; remove PAT setting (completed 2026-04-21)
 - [ ] **Phase 4: Cross-Repo Unified View** - Server-side fan-out aggregating all repos into one list with partial-failure handling
-- [ ] **Phase 5: Triage Actions** - Internal priority, triaged toggle, keyboard navigation, and closed-issue warning
+- [x] **Phase 5: Triage Actions** - Internal priority, triaged toggle, keyboard navigation, and closed-issue warning (completed 2026-04-22)
 - [ ] **Phase 6: Notes** - Idempotent note posting as GitHub comments with success/failure feedback
 - [ ] **Phase 7: Promote to Backlog** - One-action promotion to Kanban task with live write-back and duplicate guard
 
@@ -138,7 +138,7 @@ Plans:
 - [x] 05-03-PLAN.md — Wave 1b: IssueDetailPanel TriageSection (useQuery lazy fetch + useMutation optimistic + ClosedIssueWarning + TriagedToggle + PrioritySelector) (completed 2026-04-22)
 - [x] 05-04-PLAN.md — Wave 2: j/k keyboard nav in IssuesView + AllIssuesView + triageState cache passthrough + human verification (completed 2026-04-22)
 - [x] 05-05-PLAN.md — UAT gap closure: X close button, Escape handler, j/k direction fix, mock state filter, stale closure fix (completed 2026-04-22)
-- [ ] 05-06-PLAN.md — GAP-1 fix: batch triage pre-fetch (getTriageRecordsBatch + batch API endpoint + useEffect in IssuesView + AllIssuesView)
+- [x] 05-06-PLAN.md — GAP-1 fix: batch triage pre-fetch (getTriageRecordsBatch + batch API endpoint + useEffect in IssuesView + AllIssuesView) (completed 2026-04-22)
 
 ### Phase 6: Notes
 **Goal**: Users can write and post an internal note on any issue that is added as a comment on the GitHub issue, with no risk of duplicates on retry
@@ -177,6 +177,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 4. Cross-Repo Unified View | 0/4 | Not started | - |
 | 04.1. Engineering Principles Refactor | 5/5 | Complete | 2026-04-22 |
 | 04.2. Fake Data and Mocked Services | 5/5 | Complete    | 2026-04-22 |
-| 5. Triage Actions | 5/6 | In progress (gap closure) | - |
+| 5. Triage Actions | 6/6 | Complete | 2026-04-22 |
 | 6. Notes | 0/TBD | Not started | - |
 | 7. Promote to Backlog | 0/TBD | Not started | - |
