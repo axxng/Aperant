@@ -61,7 +61,7 @@
     }
   },
   "triage": {
-    "markTriaged": "Triaged",
+    "markTriaged": "Mark as Triaged",
     "markTriagedAriaLabel": "Toggle triaged status",
     "triaged": "Triaged",
     "triagedAriaLabel": "Toggle triaged status",
