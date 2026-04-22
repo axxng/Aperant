@@ -92,7 +92,6 @@ export const updateTaskSchema = z.object({
   labels: z.array(labelSchema).max(50).optional(),
   assignees: z.array(assigneeSchema).max(50).optional(),
   metadata: taskMetadataSchema,
-  githubSyncPending: z.boolean().optional(),
   updatedAt: z.string().optional(),
 });
 
@@ -152,4 +151,51 @@ export const githubPRQuerySchema = z.object({
   state: z.enum(['open', 'closed', 'all']).default('open'),
   page: z.string().regex(/^\d+$/).default('1'),
   per_page: z.string().regex(/^\d+$/).default('30'),
+});
+
+// DB row schemas — used for parse-don't-validate at the DB boundary
+
+export const taskDbRowSchema = z.object({
+  id: z.string(),
+  product_id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  status: z.enum(['backlog', 'queue', 'in_progress', 'ai_review', 'human_review', 'done', 'pr_created', 'error']),
+  review_reason: z.enum(['completed', 'errors', 'qa_rejected', 'plan_review', 'stopped']).nullable().optional(),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']).nullable().optional(),
+  category: z.enum(['feature', 'bug_fix', 'refactoring', 'documentation', 'security', 'performance', 'ui_ux', 'infrastructure', 'testing']).nullable().optional(),
+  github_issue_number: z.number().nullable().optional(),
+  github_issue_url: z.string().nullable().optional(),
+  github_repo: z.string().nullable().optional(),
+  github_project_item_id: z.string().nullable().optional(),
+  labels: z.string().nullable().optional(),
+  assignees: z.string().nullable().optional(),
+  milestone: z.string().nullable().optional(),
+  metadata: z.string().nullable().optional(),
+  github_sync_pending: z.number(),
+  github_sync_retry_count: z.number(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export const productDbRowSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  color: z.string(),
+  sources: z.string(),
+  status_mapping: z.string().nullable().optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export const triageDbRowSchema = z.object({
+  github_repo: z.string(),
+  github_issue_number: z.number(),
+  is_triaged: z.number(),
+  priority: z.enum(['critical', 'high', 'medium', 'low']).nullable(),
+  github_comment_id: z.number().nullable(),
+  comment_status: z.enum(['posted', 'failed']).nullable(),
+  created_at: z.string(),
+  updated_at: z.string(),
 });
