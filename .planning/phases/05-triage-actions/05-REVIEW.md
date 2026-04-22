@@ -2,187 +2,159 @@
 phase: 05-triage-actions
 reviewed: 2026-04-22T00:00:00Z
 depth: standard
-files_reviewed: 10
+files_reviewed: 8
 files_reviewed_list:
-  - apps/web/src/client/components/IssueDetailPanel.test.tsx
-  - apps/web/src/client/components/IssuesView.test.tsx
-  - apps/web/src/client/components/IssueListRow.test.tsx
-  - apps/web/src/client/components/IssueListRow.tsx
-  - apps/web/src/shared/i18n/locales/en/issues.json
-  - apps/web/src/shared/i18n/locales/fr/issues.json
   - apps/web/src/client/components/IssueDetailPanel.tsx
-  - apps/web/src/client/components/AllIssuesView.test.tsx
   - apps/web/src/client/components/IssuesView.tsx
   - apps/web/src/client/components/AllIssuesView.tsx
+  - apps/web/src/client/components/IssuesView.test.tsx
+  - apps/web/src/client/components/IssueDetailPanel.test.tsx
+  - apps/web/scripts/mocks/github-fixtures.ts
+  - apps/web/src/shared/i18n/locales/en/issues.json
+  - apps/web/src/shared/i18n/locales/fr/issues.json
 findings:
   critical: 0
-  warning: 4
-  info: 5
-  total: 9
+  warning: 3
+  info: 4
+  total: 7
 status: issues_found
 ---
 
-# Phase 05: Code Review Report
+# Phase 05: Code Review Report (Gap Closure 05-05)
 
 **Reviewed:** 2026-04-22T00:00:00Z
 **Depth:** standard
-**Files Reviewed:** 10
+**Files Reviewed:** 8
 **Status:** issues_found
 
 ## Summary
 
-Phase 05 introduces triage actions (triaged toggle, priority selector, optimistic mutations, closed-issue warning) in `IssueDetailPanel`, surfaces triage badge slots in `IssueListRow`, propagates triage state to both `IssuesView` and `AllIssuesView` via an `onTriageLoad` callback, and adds j/k keyboard navigation. The implementation is well-structured and follows project conventions — parse-don't-validate at the API boundary, 4-step handler shape, i18n parity across en/fr, Zustand-based triage cache.
+This review covers the Phase 05 gap-closure plan 05-05, which fixed four UAT bugs: X close button with `onClose` prop on `IssueDetailPanel`, Escape-key handler in `IssuesView`/`AllIssuesView`, j/k navigation direction swap (j=prev, k=next), mock fixture state filtering, and the `useMutation` stale-closure fix using the variables pattern.
 
-No critical security issues were found. Four warnings were identified that could cause incorrect runtime behaviour: a stale-closure risk in the keyboard handler when search is active, an unchecked array access in the keyboard nav logic, a missing `Content-Type` header on the PUT mutation, and an incomplete i18n key stub in the EN locale. Five info items cover dead/duplicated i18n keys, a `.todo` test block left incomplete, a loose `as any` cast, and minor code-quality notes.
+The implementations are structurally sound. The stale-closure fix (gap 4) is correctly applied — `owner`, `repo`, and `number` are passed as mutation variables rather than captured from the render closure. The Escape key handler and j/k direction swap are correctly implemented with identical logic in both `IssuesView` and `AllIssuesView`.
+
+Three warnings were found: non-null assertions on `issue` inside event handlers that can throw if `issue` unmounts concurrently, the mock labels endpoint returning a bare array instead of the `{ labels: [] }` object shape expected by the consumer, and the `lucide-react` mock in `IssueDetailPanel.test.tsx` omitting the `X` icon which leaves the primary UAT-gap-1 fix (close button) with no test coverage. Four informational items cover an unsafe priority type cast, dead i18n keys, fragile test mock shape, and incomplete TRIAGE-03 `.todo` tests.
+
+No critical security or correctness issues were found.
 
 ---
 
 ## Warnings
 
-### WR-01: Keyboard handler captures stale `filteredIssues` when search changes mid-session
+### WR-01: Non-null assertion on `issue` inside event handlers — throws if issue becomes null after dropdown opens
 
-**File:** `apps/web/src/client/components/IssuesView.tsx:140-161`
-
-**Issue:** The `useEffect` dependency array is `[selectedIssueId, filteredIssues]`. When the search filter changes, `filteredIssues` is a new array reference (re-derived by `useMemo`), so the effect re-registers correctly. However, `filteredIssues` is itself derived from `allIssues` (the flattened `data.pages`), which is an **inline expression** on line 121 — not memoized. Every render recreates `allIssues`, which causes `filteredIssues` to be a new reference on every render even when the underlying data has not changed. This makes the `useEffect` re-register (remove + add) the `keydown` listener on every render while the panel is open, creating unnecessary churn and a brief window where no listener is attached.
-
-**Fix:** Memoize `allIssues` the same way `filteredIssues` is memoized:
-
+**File:** `apps/web/src/client/components/IssueDetailPanel.tsx:178`, `apps/web/src/client/components/IssueDetailPanel.tsx:208`, `apps/web/src/client/components/IssueDetailPanel.tsx:217`
+**Issue:** `issue!.number` is used in three `onClick`/`onSelect` callbacks (TriagedToggle at line 178, priority DropdownMenuItems at line 208, and Clear priority at line 217). The `issue` prop is typed `GitHubIssue | null` (line 30), and while the parent JSX guard at line 126 (`{issue && (...)}`) prevents rendering when `issue` is null, callbacks capture the closure value at creation time. In React 19 concurrent mode, a re-render can nullify `issue` between the render pass that created the handler and the user's click dispatch. If `issue` becomes `null` after the dropdown opens but before selection, `issue!.number` will throw a runtime `TypeError: Cannot read properties of null`.
+**Fix:**
 ```typescript
-const allIssues: GitHubIssue[] = useMemo(
-  () => data?.pages.flatMap(p => p.issues) ?? [],
-  [data]
-);
-```
+// TriagedToggle onClick (line 178):
+onClick={() => {
+  if (!issue) return;
+  triageMutation.mutate({ isTriaged: !(triageData?.isTriaged ?? false), owner, repo, number: issue.number });
+}}
 
-The same pattern applies to `AllIssuesView.tsx` line 73-86 where `allIssues` is already memoized — `IssuesView.tsx` just needs to be brought to parity.
+// Priority DropdownMenuItem onSelect (line 208):
+onSelect={() => {
+  if (!issue) return;
+  triageMutation.mutate({ priority: p, owner, repo, number: issue.number });
+}}
+
+// Clear priority onSelect (line 217):
+onSelect={() => {
+  if (!issue) return;
+  triageMutation.mutate({ priority: null, owner, repo, number: issue.number });
+}}
+```
 
 ---
 
-### WR-02: Off-by-one risk — `filteredIssues[currentIndex + 1]` accessed without bounds guard when `currentIndex === -1`
+### WR-02: Mock labels endpoint returns bare array — mismatches `LabelsResult` shape expected by `IssuesView`
 
-**File:** `apps/web/src/client/components/IssuesView.tsx:151-155`
-
-**Issue:** When `selectedIssueId` is set but the currently-selected issue no longer appears in `filteredIssues` (e.g., because a search filter was typed immediately after opening a panel), `findIndex` returns `-1`. The guard `currentIndex < filteredIssues.length - 1` evaluates to `true` for `-1 < N-1` (always true when `N >= 1`), so `filteredIssues[-1 + 1]` → `filteredIssues[0]` is accessed. Pressing `j` silently jumps to the first issue instead of doing nothing, which is surprising behaviour and violates the boundary-guard contract tested in the test suite.
-
-The same code is duplicated in `AllIssuesView.tsx` at lines 111-115 and carries the same bug.
-
-**Fix:** Add an explicit guard for `currentIndex === -1`:
-
+**File:** `apps/web/scripts/mocks/github-fixtures.ts:165-167`
+**Issue:** The labels mock handler at line 165 responds with `buildLabelFixtures()` directly — a bare `LabelFixture[]` array. However, `IssuesView.tsx` types the response as `LabelsResult` (defined at lines 23-25 as `{ labels: GitHubLabel[] }`) and reads it as `labelsData?.labels`. The mock therefore delivers `undefined` for `labelsData?.labels`, which is then passed as `availableLabels={[]}` to `IssuesFilterBar`. Label filters will always be empty in the mock dev environment regardless of which labels exist in the fixture data. This is a silent data-shape mismatch that only manifests when `MOCK_SERVICES=true`.
+**Fix:**
 ```typescript
-function handleKeyDown(e: KeyboardEvent) {
-  const target = e.target as HTMLElement;
-  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
-
-  if (e.key === 'j' || e.key === 'k') {
-    e.preventDefault();
-    const currentIndex = filteredIssues.findIndex(i => i.id === selectedIssueId);
-    if (currentIndex === -1) return; // selected issue filtered out — do nothing
-    if (e.key === 'j' && currentIndex < filteredIssues.length - 1) {
-      setSelectedIssueId(filteredIssues[currentIndex + 1].id);
-    } else if (e.key === 'k' && currentIndex > 0) {
-      setSelectedIssueId(filteredIssues[currentIndex - 1].id);
-    }
-  }
-}
-```
-
-Apply the same fix to `AllIssuesView.tsx:111-115`.
-
----
-
-### WR-03: PUT mutation missing `Content-Type: application/json` header
-
-**File:** `apps/web/src/client/components/IssueDetailPanel.tsx:65-71`
-
-**Issue:** The `mutationFn` sends a JSON body via `authenticatedFetch` but does not set `Content-Type: application/json`. Depending on how `authenticatedFetch` is implemented (and whether it defaults this header), the Vercel API handler's `req.body` may be `undefined` or an unparsed string. If the body is unparsed, `triagePutBodySchema.safeParse(req.body)` will return a validation error and the mutation will silently fail with a 400, triggering the rollback toast — user-visible but confusing.
-
-```typescript
-// current — no Content-Type
-const res = await authenticatedFetch(`/triage/${owner}/${repo}/${issue!.number}`, {
-  method: 'PUT',
-  body: JSON.stringify(updates),
+app.get('/api/github/repos/:owner/:repo/labels', (_req: Request, res: Response) => {
+  res.json({ labels: buildLabelFixtures() }); // wrap to match LabelsResult shape
 });
 ```
+
+---
+
+### WR-03: `lucide-react` mock in `IssueDetailPanel.test.tsx` omits `X` icon — close button has zero test coverage
+
+**File:** `apps/web/src/client/components/IssueDetailPanel.test.tsx:44-49`
+**Issue:** The `lucide-react` mock maps `ExternalLink`, `CheckCircle2`, `Circle`, and `AlertTriangle` but omits `X`. `IssueDetailPanel.tsx` imports and renders `<X />` inside the close button (line 149). When the mock does not define `X`, the import resolves to `undefined` and React silently renders nothing. Consequences:
+
+1. The close button icon renders as nothing in tests — silently degraded
+2. There is no test that verifies the `onClose` callback is called when the close button is clicked — the primary fix for UAT gap 1 has no regression protection
 
 **Fix:**
-
 ```typescript
-const res = await authenticatedFetch(`/triage/${owner}/${repo}/${issue!.number}`, {
-  method: 'PUT',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(updates),
+// Add X to the lucide-react mock:
+vi.mock('lucide-react', () => ({
+  ExternalLink: () => <svg data-testid="external-link" />,
+  CheckCircle2: ({ 'aria-label': al }: { 'aria-label'?: string }) => <svg data-testid="check-circle-2" aria-label={al} />,
+  Circle: () => <svg data-testid="circle" />,
+  AlertTriangle: () => <svg data-testid="alert-triangle" />,
+  X: () => <svg data-testid="close-icon" />,
+}));
+
+// Add a test for the onClose prop:
+it('calls onClose when close button is clicked', () => {
+  const onClose = vi.fn();
+  setupMocks({ isTriaged: false, priority: null });
+  render(<IssueDetailPanel issue={baseIssue} isOpen={true} onClose={onClose} />);
+  fireEvent.click(screen.getByLabelText('Toggle triaged status')); // replace with aria-label for close button
+  // Use: screen.getByRole('button', { name: /close panel/i }) or the aria-label key
+  expect(onClose).toHaveBeenCalledTimes(1);
 });
-```
-
----
-
-### WR-04: EN i18n key `triage.markTriaged` value is misleading — says "Triaged" but key name implies untriaged CTA
-
-**File:** `apps/web/src/shared/i18n/locales/en/issues.json:64`
-
-**Issue:** The key `triage.markTriaged` has value `"Triaged"` in the EN locale. In `IssueDetailPanel.tsx` line 172, it is used as the button label when `!triageData?.isTriaged` (i.e., the action label before the issue is triaged). The FR locale correctly uses `"Triage effectué"` (past tense, "Triage done"). However, the EN value `"Triaged"` (also past tense) is used as the **call-to-action** before triaging, which is confusing to users — it reads as if the issue is already triaged. The value should be an active CTA like `"Mark as Triaged"`.
-
-The test mock on line 8 of `IssueDetailPanel.test.tsx` already uses `'Mark as Triaged'` as the expected stub, so tests pass, but the production EN locale differs from test intent.
-
-**Fix:** Update `en/issues.json`:
-
-```json
-"markTriaged": "Mark as Triaged"
 ```
 
 ---
 
 ## Info
 
-### IN-01: Duplicate i18n key — `triage.triaged` and `triage.markTriaged` are distinct keys that currently share the value "Triaged"
-
-**File:** `apps/web/src/shared/i18n/locales/en/issues.json:64-66`
-
-**Issue:** After fixing WR-04 above, `triage.markTriaged` → `"Mark as Triaged"` and `triage.triaged` → `"Triaged"` will be distinct. However, in the current file both resolve to `"Triaged"`. The FR locale already differentiates them (`markTriaged: "Triage effectué"` vs `triaged: "Traité"`). No code change needed beyond WR-04 fix — flagged as a documentation note.
-
----
-
-### IN-02: Dead i18n keys — `triage.triagedAriaLabel` is never consumed in source
-
-**File:** `apps/web/src/shared/i18n/locales/en/issues.json:67`, `apps/web/src/shared/i18n/locales/fr/issues.json:67`
-
-**Issue:** Both locale files define `triage.triagedAriaLabel` (`"Toggle triaged status"` / `"Basculer le statut de triage"`). The implementation in `IssueDetailPanel.tsx` line 160 uses `triage.markTriagedAriaLabel` (not `triage.triagedAriaLabel`). The key `triage.triagedAriaLabel` is unused dead code. It should either be removed from both locale files or the component should reference it consistently.
-
----
-
-### IN-03: `it.todo` block for optimistic update tests left incomplete
-
-**File:** `apps/web/src/client/components/IssueDetailPanel.test.tsx:161-164`
-
-**Issue:** TRIAGE-03 has three `it.todo` stubs covering optimistic update rollback behaviour. These are the most safety-critical paths in the triage implementation (rollback on error, toast after rollback). Leaving them as `.todo` means the rollback path has zero test coverage. Per the project's Red-Green TDD principle (CLAUDE.md), these should be implemented before the phase is considered complete.
-
----
-
-### IN-04: Loose `as any` cast in `handleTriageLoad` suppresses type safety
+### IN-01: Unsafe priority cast — invalid string values from API pass through `handleTriageLoad` silently
 
 **File:** `apps/web/src/client/components/IssuesView.tsx:44`, `apps/web/src/client/components/AllIssuesView.tsx:30`
-
-**Issue:** Both `handleTriageLoad` implementations cast the incoming `priority: string | null` to `'critical' | 'high' | 'medium' | 'low' | null` using `as`. If the API returns an unexpected priority value (e.g., after a schema migration), the cast silently accepts it and stores it in `issueTriageCache`, which is then passed directly to `IssueListRow` where it's used as an index into `PRIORITY_PILL_CLASSES`. An unrecognised key returns `undefined`, causing the `cn()` call to receive `undefined` — no crash, but the pill renders with no colour classes.
-
-A Zod parse or explicit narrowing guard would be safer:
-
+**Issue:** `const priority = triageState.priority as 'critical' | 'high' | 'medium' | 'low' | null;` is a bare TypeScript cast with no runtime validation. If the API ever returns an unknown value (e.g., `"urgent"` after a schema migration), it is cast without error and stored in `issueTriageCache`. When the value reaches `PRIORITY_DOT_CLASSES[p]` in `IssueDetailPanel.tsx`, it returns `undefined`, producing a pill with no colour class — silent visual degradation, no crash.
+**Fix:**
 ```typescript
-const VALID_PRIORITIES = ['critical', 'high', 'medium', 'low'] as const;
-type Priority = typeof VALID_PRIORITIES[number];
-
-const priority: Priority | null =
-  triageState.priority !== null && VALID_PRIORITIES.includes(triageState.priority as Priority)
-    ? (triageState.priority as Priority)
-    : null;
+const VALID_PRIORITIES = new Set(['critical', 'high', 'medium', 'low']);
+const priority = VALID_PRIORITIES.has(triageState.priority ?? '')
+  ? (triageState.priority as 'critical' | 'high' | 'medium' | 'low')
+  : null;
 ```
 
 ---
 
-### IN-05: `IssuesView` issues list pane renders rows without `<ol>/<li>` semantic list markup
+### IN-02: Dead i18n key `triage.triagedAriaLabel` — never referenced in source, present in both locales
 
-**File:** `apps/web/src/client/components/IssuesView.tsx:239-247`
+**File:** `apps/web/src/shared/i18n/locales/en/issues.json:68`, `apps/web/src/shared/i18n/locales/fr/issues.json:68`
+**Issue:** Both locale files define `triage.triagedAriaLabel`. The component uses only `triage.markTriagedAriaLabel` (a single key for both triaged and untriaged states, per `IssueDetailPanel.tsx` line 175). The `triagedAriaLabel` key is unused and creates confusion about which key controls the aria-label.
+**Fix:** Remove `triage.triagedAriaLabel` from both `en/issues.json` and `fr/issues.json`.
 
-**Issue:** `AllIssuesView.tsx` correctly wraps issue rows in `<ol>/<li>` (lines 232-244), but `IssuesView.tsx` renders them as bare `<div>` elements with no list semantics. The `AllIssuesView.test.tsx` tests use `screen.getAllByRole('listitem')` to find rows, which only works because of the `<li>` wrapping in `AllIssuesView`. The `IssuesView` tests use `data-testid="row"` (via the mock), so the inconsistency is hidden by the test setup. Screen-reader users of `IssuesView` will not receive list navigation semantics. The pattern should be consistent across both views.
+---
+
+### IN-03: `useTranslation` mock in `IssuesView.test.tsx` exposes a property `tNav` that `useTranslation` does not return
+
+**File:** `apps/web/src/client/components/IssuesView.test.tsx:7`
+**Issue:** The mock returns `{ t: (k: string) => k, tNav: (k: string) => k }`. The real `useTranslation` hook returns `{ t }` — not `{ t, tNav }`. In `IssuesView`, `tNav` is a destructured second `useTranslation` call (`const { t: tNav } = useTranslation('navigation')`), not a field on the first call's return. The mock is harmless because both `t` and `tNav` in the component end up as identity functions, but the extra `tNav` property on the mock return is misleading and could mask future breakage if a developer relies on the mock shape.
+**Fix:**
+```typescript
+vi.mock('react-i18next', () => ({
+  useTranslation: (_ns?: string) => ({ t: (k: string) => k }),
+}));
+```
+
+---
+
+### IN-04: TRIAGE-03 optimistic update rollback tests remain `.todo` — zero coverage for the rollback path
+
+**File:** `apps/web/src/client/components/IssueDetailPanel.test.tsx:161-164`
+**Issue:** Three `it.todo` stubs cover `onMutate`/`onError` rollback behaviour. The rollback path (lines 90-93 in `IssueDetailPanel.tsx`) is the safety net for the mutation — it restores optimistic state and shows the error toast. With `.todo`, a future regression in this path (e.g., wrong query key in rollback, toast not called) would not be caught. Per the project's Red-Green TDD principle, these should be implemented.
+**Fix:** Capture the `useMutation` callbacks in the mock by inspecting the argument passed to `vi.mocked(useMutation).mock.calls`, then invoke `onMutate`/`onError` directly to test the rollback contract against `mockQueryClient`.
 
 ---
 
