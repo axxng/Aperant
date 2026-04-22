@@ -109,6 +109,14 @@ describe('getTriageRecordsBatch', () => {
   });
 });
 
+describe('upsertTriageRecord — NOTES-02: comment fields', () => {
+  beforeEach(() => { mockExecute.mockReset(); });
+
+  it('saves githubCommentId and commentStatus to triage record', async () => {
+    expect(true).toBe(false); // RED — implement in Wave 1 plan 02
+  });
+});
+
 describe('TriageState via rowToTriage', () => {
   beforeEach(() => { mockExecute.mockReset(); });
 

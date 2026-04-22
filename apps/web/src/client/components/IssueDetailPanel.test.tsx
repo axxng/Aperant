@@ -19,6 +19,12 @@ vi.mock('react-i18next', () => ({
       if (key === 'triage.markTriagedAriaLabel') return 'Toggle triaged status';
       if (key === 'triage.priorityAriaLabel') return 'Set priority';
       if (key === 'detail.closePanel') return 'Close panel';
+      if (key === 'notes.postButton') return 'Post Note';
+      if (key === 'notes.sentButton') return 'Sent';
+      if (key === 'notes.sectionLabel') return 'Add a note';
+      if (key === 'notes.placeholder') return 'Write a note to post as a GitHub comment…';
+      if (key === 'notes.postSuccess') return 'Note posted to GitHub';
+      if (key === 'notes.postError') return 'Could not post note. Try again.';
       return key;
     },
   }),
@@ -36,10 +42,11 @@ vi.mock('@tanstack/react-query', () => ({
   })),
 }));
 
-// Stable mock for useToast so TRIAGE-03 tests can assert on toast calls
+// Stable mock for useToast so TRIAGE-03 and NOTES-03 tests can assert on toast calls
 const mockToastError = vi.fn();
+const mockToastSuccess = vi.fn();
 vi.mock('../hooks/useToast', () => ({
-  useToast: () => ({ error: mockToastError, success: vi.fn() }),
+  useToast: () => ({ error: mockToastError, success: mockToastSuccess }),
 }));
 
 // Mock lucide-react icons used in TriageSection
@@ -76,6 +83,19 @@ vi.mock('./ui/badge', () => ({
 vi.mock('./ui/button', () => ({
   Button: ({ children, onClick, 'aria-pressed': pressed, disabled, ...rest }: any) => (
     <button onClick={onClick} aria-pressed={pressed} disabled={disabled} {...rest}>{children}</button>
+  ),
+}));
+
+vi.mock('./ui/textarea', () => ({
+  Textarea: ({ value, onChange, placeholder, disabled, onKeyDown, id }: any) => (
+    <textarea
+      id={id}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      disabled={disabled}
+      onKeyDown={onKeyDown}
+    />
   ),
 }));
 
@@ -221,4 +241,17 @@ describe('IssueDetailPanel — close button', () => {
     fireEvent.click(screen.getByLabelText('Close panel'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+});
+
+describe('IssueDetailPanel — NOTES-01: note textarea renders', () => {
+  it('renders note textarea with placeholder', () => { expect(true).toBe(false); });
+  it('Post Note button is disabled when textarea is empty', () => { expect(true).toBe(false); });
+  it('Post Note button is enabled when textarea has text', () => { expect(true).toBe(false); });
+  it('calls noteMutation.mutate with correct args on button click', () => { expect(true).toBe(false); });
+});
+
+describe('IssueDetailPanel — NOTES-03: post feedback', () => {
+  it('onSuccess clears textarea and shows success toast', () => { expect(true).toBe(false); });
+  it('onSuccess shows Sent button state', () => { expect(true).toBe(false); });
+  it('onError preserves textarea text and shows error toast', () => { expect(true).toBe(false); });
 });
