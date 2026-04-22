@@ -34,7 +34,8 @@
   },
   "detail": {
     "viewOnGitHub": "Voir sur GitHub",
-    "noBody": "Aucune description fournie."
+    "noBody": "Aucune description fournie.",
+    "closePanel": "Fermer le panneau"
   },
   "state": {
     "open": "Ouvert",

@@ -34,7 +34,8 @@
   },
   "detail": {
     "viewOnGitHub": "View on GitHub",
-    "noBody": "No description provided."
+    "noBody": "No description provided.",
+    "closePanel": "Close panel"
   },
   "state": {
     "open": "Open",
