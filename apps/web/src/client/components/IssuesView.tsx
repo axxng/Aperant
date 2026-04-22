@@ -117,8 +117,11 @@ export function IssuesView() {
     enabled: Boolean(repoSource),
   });
 
-  // Flatten pages into single array
-  const allIssues: GitHubIssue[] = data?.pages.flatMap(p => p.issues) ?? [];
+  // Flatten pages into single array — memoized to prevent filteredIssues/useEffect churn on every render
+  const allIssues: GitHubIssue[] = useMemo(
+    () => data?.pages.flatMap(p => p.issues) ?? [],
+    [data]
+  );
 
   // Client-side title search — instant, no API calls (D-10)
   const filteredIssues = useMemo(() => {
