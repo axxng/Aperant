@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 05-triage-actions
 source: [05-01-SUMMARY.md, 05-02-SUMMARY.md, 05-03-SUMMARY.md, 05-04-SUMMARY.md]
 started: 2026-04-22T11:30:00.000Z
@@ -78,34 +78,56 @@ blocked: 0
   reason: "User reported: stuck at 1, clicking elsewhere nor pressing escape closes the detail panel"
   severity: major
   test: 4
-  root_cause: ""
-  artifacts: []
-  missing: []
+  root_cause: "No close mechanism exists anywhere — IssueDetailPanel has no close button, no backdrop, no Escape handler. Neither IssuesView nor AllIssuesView ever calls setSelectedIssueId(null) except on initial render. The j/k handler also never closes the panel."
+  artifacts:
+    - path: "apps/web/src/client/components/IssueDetailPanel.tsx"
+      issue: "No close button or Escape/click-outside handler"
+    - path: "apps/web/src/client/components/IssuesView.tsx"
+      issue: "setSelectedIssueId(null) never called; no Escape key listener"
+    - path: "apps/web/src/client/components/AllIssuesView.tsx"
+      issue: "setSelectedIssueId(null) never called; no Escape key listener"
+  missing:
+    - "Close button (X icon) in IssueDetailPanel header"
+    - "Escape key handler in IssuesView and AllIssuesView that calls setSelectedIssueId(null)"
+    - "Optional: backdrop click handler"
   debug_session: ""
 - truth: "j navigates to the next issue (down the list), k navigates to the previous issue (up the list)"
   status: failed
   reason: "User reported: I'm expecting j to go up, and k to go down, it's currently doing the opposite"
   severity: minor
   test: 5
-  root_cause: ""
-  artifacts: []
-  missing: []
+  root_cause: "Implementation uses vim convention (j=next/down, k=prev/up) which conflicts with the user's expectation. The direction is intentional per the design but feels reversed to this user."
+  artifacts:
+    - path: "apps/web/src/client/components/IssuesView.tsx"
+      issue: "j mapped to currentIndex+1 (next), k mapped to currentIndex-1 (prev)"
+    - path: "apps/web/src/client/components/AllIssuesView.tsx"
+      issue: "Same mapping as IssuesView"
+  missing:
+    - "Swap j/k direction: j should go to currentIndex-1 (prev/up), k to currentIndex+1 (next/down)"
   debug_session: ""
 - truth: "Clicking the Closed filter shows only closed issues in the list"
   status: failed
   reason: "User reported: stuck at 1, clicking on Closed filter doesnt change the list (Open issues still in the list)"
   severity: major
   test: 8
-  root_cause: ""
-  artifacts: []
-  missing: []
+  root_cause: "Mock-only bug: scripts/mocks/github-fixtures.ts GET /api/github/repos/:owner/:repo/issues ignores the state query parameter and returns all issues regardless. Frontend (IssuesFilterBar, useIssuesFilters, IssuesView) correctly passes state=closed in URL params and query key — the issue is solely in the mock handler."
+  artifacts:
+    - path: "apps/web/scripts/mocks/github-fixtures.ts"
+      issue: "Lines 135-157: mock handler does not read req.query.state and does not filter issues by state"
+  missing:
+    - "Read req.query.state in the mock handler and filter buildIssueFixtures() output to match open/closed state"
+    - "Ensure buildIssueFixtures() generates some closed issues (state: 'closed') for testing"
   debug_session: ""
 - truth: "Setting different priority levels on different issues persists correctly — each issue retains its own priority after refresh"
   status: failed
   reason: "User reported: setting priorities to different issues seems to result in random priorities set, when I refresh to dismiss detail pane"
   severity: major
   test: 10
-  root_cause: ""
-  artifacts: []
-  missing: []
+  root_cause: "Stale closure in useMutation in IssueDetailPanel.tsx:66. The mutationFn captures owner/repo/issue.number from the component closure at hook creation time. When the user navigates between issues with j/k, the component re-renders with a new issue prop, but if a mutation was already in flight or the Radix DropdownMenu fires after navigation, the API call goes to the wrong issue's URL. The onSettled invalidation at line 92 then uses the already-updated issue.number, causing a key mismatch."
+  artifacts:
+    - path: "apps/web/src/client/components/IssueDetailPanel.tsx"
+      issue: "Line 66: mutationFn captures owner/repo/issue.number by closure — stale when issue prop changes during j/k navigation"
+  missing:
+    - "Capture owner/repo/number as stable refs inside mutationFn (pass as mutation variables rather than closure)"
+    - "Or cancel in-flight mutations when the issue prop changes (useEffect cleanup)"
   debug_session: ""
