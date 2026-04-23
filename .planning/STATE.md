@@ -5,7 +5,7 @@ milestone_name: milestone
 status: milestone_complete
 stopped_at: Phase 07 complete — Phase 08 (rename Aperant → Currents) ready to plan
 last_updated: "2026-04-22T16:10:58.923Z"
-last_activity: 2026-04-22 -- Phase --phase execution started
+last_activity: 2026-04-23 - Completed quick task 260423-etk: document about mock local api server
 progress:
   total_phases: 10
   completed_phases: 10
@@ -97,6 +97,12 @@ Recent decisions affecting current work:
 ### Pending Todos
 
 None yet.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Status | Directory |
+|---|-------------|------|--------|--------|-----------|
+| 260423-etk | document about mock local api server | 2026-04-23 | 03ea2f95 | Verified | [260423-etk-document-about-mock-local-api-server](./quick/260423-etk-document-about-mock-local-api-server/) |
 
 ### Blockers/Concerns
 
