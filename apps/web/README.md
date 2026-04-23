@@ -84,10 +84,10 @@ Vite (port 5173) → /api/* proxy → Express dev server (port 3001)
                                - /api/auth/github/callback
                                - /api/github/repos/:owner/:repo/issues
                                - /api/github/repos/:owner/:repo/labels
-                               - /api/triage/:owner/:repo
                                - /api/github/repos/:owner/:repo/issues/:number/comment
                                           ↓
                                Real Vercel serverless handlers (file:dev.db)
+                               (includes /api/triage/:owner/:repo via real DB logic)
 ```
 
 ### Quick Start
@@ -98,13 +98,13 @@ Three environment variables are required for mock mode:
 |---|---|---|
 | `MOCK_SERVICES` | `true` | Switches DB to `file:dev.db`, registers mock middleware |
 | `VITE_MOCK_SERVICES` | `true` | Exposes mock flag to Vite frontend |
-| `JWT_SECRET` | any long random string | Stable JWT signing across restarts |
+| `JWT_SECRET` | 32-byte random hex | Stable JWT signing across restarts |
 
 ```bash
 # 1. Add mock vars to .env.local (run from apps/web/)
 echo "MOCK_SERVICES=true" >> .env.local
 echo "VITE_MOCK_SERVICES=true" >> .env.local
-echo "JWT_SECRET=any-long-random-string" >> .env.local
+echo "JWT_SECRET=$(node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\")" >> .env.local
 
 # 2. Seed local SQLite with fake data
 npx tsx scripts/seed.ts
@@ -254,7 +254,7 @@ Saves an idempotency guard to `dev.db` (via `upsertTriageRecord`) and returns a 
 
 2. **Seed not run after schema change** — If the `dev.db` was created before a migration added a new column, queries will fail with SQL errors or `dev.db` may not exist at all. Fix: re-run `npx tsx scripts/seed.ts` from `apps/web/` after any schema change.
 
-3. **`JWT_SECRET` not set** — JWTs are signed with `JWT_SECRET`. If it is missing or changes between restarts, all existing tokens become invalid and every request returns 401. Fix: add a stable `JWT_SECRET=any-long-random-string` to `.env.local`.
+3. **`JWT_SECRET` not set** — JWTs are signed with `JWT_SECRET`. If it is missing or changes between restarts, all existing tokens become invalid and every request returns 401. Fix: add a stable `JWT_SECRET` to `.env.local` — generate one with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` and reuse the same value across restarts.
 
 4. **Only one terminal running** — Vite proxies `/api/*` to `http://localhost:3001`. If `dev-server.ts` is not running, every API call returns a 404 or connection refused. Fix: open two terminals — `npx tsx scripts/dev-server.ts` in one, `npm run dev` in the other.
 
@@ -353,6 +353,7 @@ apps/web/
 | `npm run typecheck` | Type-check without emitting |
 | `npm run lint` | Run Biome linter |
 | `npm run lint:fix` | Auto-fix lint issues |
+| `npm test` | Run Vitest unit tests |
 
 ## Testing
 
@@ -397,6 +398,7 @@ apps/web/
 ### Automated
 
 ```bash
+npm test            # Vitest unit tests
 npm run typecheck   # TypeScript type checking
 npm run lint        # Biome linting
 ```
