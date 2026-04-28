@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Routes, Route, useParams } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from './components/ui/tooltip';
 import { Sidebar } from './components/Sidebar';
 import { KanbanBoard } from './components/KanbanBoard';
@@ -9,19 +10,45 @@ import { TaskEditDialog } from './components/TaskEditDialog';
 import { Settings } from './components/Settings';
 import { ProductSettings } from './components/ProductSettings';
 import { ToastContainer } from './components/ToastContainer';
+import { DevModeBanner } from './components/DevModeBanner';
 import { LoginPage } from './components/LoginPage';
+import { IssuesView, TabSwitcher } from './components/IssuesView'; // IssuesView — created in plan 02-07
+import { AllIssuesView } from './components/AllIssuesView'; // AllIssuesView — Phase 4
 import { useProductStore } from './stores/product-store';
 import { useTaskStore } from './stores/task-store';
 import { useAuthStore } from './stores/auth-store';
 import { useSyncEvents } from './hooks/useSyncEvents';
 import type { Task } from '@shared/types/task';
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 2 * 60 * 1000,
+      gcTime: 5 * 60 * 1000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 export function App() {
   const { token, user, checkSession } = useAuthStore();
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    if (token) {
+    const params = new URLSearchParams(window.location.search);
+    const oauthToken = params.get('token');
+    if (oauthToken) {
+      // OAuth callback redirect — pick up JWT from ?token= query param, clean URL
+      fetch('/api/auth/me', { headers: { Authorization: `Bearer ${oauthToken}` } })
+        .then((r) => r.ok ? r.json() : null)
+        .then((user) => {
+          if (user) useAuthStore.getState().setAuth(oauthToken, user);
+          window.history.replaceState({}, '', '/');
+        })
+        .catch(() => {})
+        .finally(() => setAuthChecked(true));
+    } else if (token) {
       checkSession().finally(() => setAuthChecked(true));
     } else {
       setAuthChecked(true);
@@ -33,7 +60,12 @@ export function App() {
   }
 
   if (!token || !user) {
-    return <LoginPage />;
+    return (
+      <>
+        <LoginPage />
+        <DevModeBanner />
+      </>
+    );
   }
 
   return <AuthenticatedApp />;
@@ -58,7 +90,8 @@ function AuthenticatedApp() {
   }, [loadProducts]);
 
   return (
-    <TooltipProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
       <div className="flex h-screen bg-background text-foreground">
         <Sidebar onAddProduct={() => setShowCreateProduct(true)} />
         <main className="flex-1 flex flex-col overflow-hidden">
@@ -70,6 +103,16 @@ function AuthenticatedApp() {
             <Route
               path="/products/:productId"
               element={<ProductView onNewTask={() => setShowCreateTask(true)} onTaskClick={handleTaskClick} />}
+            />
+            {/* Issues browser — Phase 2 */}
+            <Route
+              path="/products/:productId/issues"
+              element={<IssuesView />}
+            />
+            {/* All Issues unified view — Phase 4 (CROSS-01) */}
+            <Route
+              path="/issues"
+              element={<AllIssuesView />}
             />
             <Route
               path="/products/:productId/settings"
@@ -93,7 +136,9 @@ function AuthenticatedApp() {
         productColor={editProduct?.color}
       />
       <ToastContainer />
+      <DevModeBanner />
     </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 
@@ -132,12 +177,15 @@ function ProductView({ onNewTask, onTaskClick }: { onNewTask: () => void; onTask
   }, [productId, loadTasks, setActiveProduct]);
 
   return (
-    <KanbanBoard
-      tasks={tasks}
-      onTaskClick={onTaskClick}
-      onNewTaskClick={onNewTask}
-      onRefresh={() => productId && loadTasks(productId)}
-      isRefreshing={isLoading}
-    />
+    <div className="flex flex-col h-full overflow-hidden">
+      <TabSwitcher productId={productId ?? ''} />
+      <KanbanBoard
+        tasks={tasks}
+        onTaskClick={onTaskClick}
+        onNewTaskClick={onNewTask}
+        onRefresh={() => productId && loadTasks(productId)}
+        isRefreshing={isLoading}
+      />
+    </div>
   );
 }

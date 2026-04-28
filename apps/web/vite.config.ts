@@ -11,7 +11,50 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, './src/shared'),
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
+  },
   build: {
     outDir: 'dist',
+  },
+  test: {
+    projects: [
+      {
+        // API tests — node environment (unchanged)
+        extends: true,
+        test: {
+          name: 'api',
+          globals: true,
+          environment: 'node',
+          include: ['api/**/*.test.ts'],
+        },
+      },
+      {
+        // Frontend component tests — jsdom environment
+        extends: true,
+        test: {
+          name: 'frontend',
+          globals: true,
+          environment: 'jsdom',
+          include: ['src/**/*.test.tsx', 'src/**/*.test.ts'],
+          setupFiles: ['src/test-setup.ts'],
+        },
+      },
+      {
+        // Script tests — node environment
+        extends: true,
+        test: {
+          name: 'scripts',
+          globals: true,
+          environment: 'node',
+          include: ['scripts/**/*.test.ts'],
+        },
+      },
+    ],
   },
 });

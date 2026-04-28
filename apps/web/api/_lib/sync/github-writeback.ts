@@ -1,7 +1,7 @@
 import { githubFetch, githubGraphQL } from '../github.js';
 import { getProductById } from '../db/products.js';
-import { getTasksPendingSync, updateTask } from '../db/tasks.js';
-import type { Task, UpdateTaskInput, TaskStatus } from '../../../src/shared/types/task.js';
+import { getTasksPendingSync, updateTask, updateTaskSyncState } from '../db/tasks.js';
+import type { Task, UpdateTaskInput, TaskStatusKey } from '../../../src/shared/types/task.js';
 import type { StatusMapping } from '../../../src/shared/types/product.js';
 
 const GITHUB_API = 'https://api.github.com';
@@ -59,7 +59,11 @@ export async function syncTaskToGitHub(
       }
     }
 
-    // 3. Update GitHub Project board column if applicable
+    // 3. Update GitHub Project board column if applicable.
+    // githubProjectItemId is an optional field on TaskBase; only tasks synced from a GitHub Project
+    // board will have it set. The falsy check is intentional: if undefined/null the block is skipped
+    // safely. No type narrowing to pr_created is needed because any status variant can have a project
+    // item ID once it has been linked to a GitHub Project board.
     if (task.githubProjectItemId && changes.status !== undefined) {
       const projectResult = await syncProjectBoardColumn(task, changes.status);
       if (!projectResult.success) {
@@ -79,7 +83,7 @@ export async function syncTaskToGitHub(
  */
 async function syncProjectBoardColumn(
   task: Task,
-  newStatus: TaskStatus,
+  newStatus: TaskStatusKey,
 ): Promise<SyncWriteResult> {
   try {
     // Load the product to get statusMapping
@@ -247,7 +251,10 @@ export async function retryPendingWritebacks(): Promise<{ succeeded: number; fai
 
   for (const task of pendingTasks) {
     // Skip tasks that have exceeded the retry limit
-    if ((task.githubSyncRetryCount ?? 0) >= MAX_SYNC_RETRIES) {
+    const currentRetryCount = task.githubSyncState?.kind === 'retrying' || task.githubSyncState?.kind === 'failed'
+      ? task.githubSyncState.retryCount
+      : 0;
+    if (currentRetryCount >= MAX_SYNC_RETRIES) {
       skipped++;
       continue;
     }
@@ -263,11 +270,12 @@ export async function retryPendingWritebacks(): Promise<{ succeeded: number; fai
 
     const result = await syncTaskToGitHub(task, changes);
     if (result.success) {
-      await updateTask(task.id, { githubSyncPending: false, githubSyncRetryCount: 0 });
+      await updateTaskSyncState(task.id, false, 0);
       succeeded++;
     } else {
-      await updateTask(task.id, { githubSyncRetryCount: (task.githubSyncRetryCount ?? 0) + 1 });
-      console.log(`GitHub write-back retry failed for task ${task.id} (attempt ${(task.githubSyncRetryCount ?? 0) + 1}/${MAX_SYNC_RETRIES}): ${result.error}`);
+      const nextRetryCount = currentRetryCount + 1;
+      await updateTaskSyncState(task.id, true, nextRetryCount);
+      console.log(`GitHub write-back retry failed for task ${task.id} (attempt ${nextRetryCount}/${MAX_SYNC_RETRIES}): ${result.error}`);
       failed++;
     }
   }

@@ -1,15 +1,19 @@
 import { createClient, type Client } from '@libsql/client';
-import { v4 as uuid } from 'uuid';
 
 let client: Client | null = null;
 let migrated = false;
 
 export function getClient(): Client {
   if (!client) {
-    client = createClient({
-      url: process.env.TURSO_DATABASE_URL!,
-      authToken: process.env.TURSO_AUTH_TOKEN,
-    });
+    if (process.env.MOCK_SERVICES === 'true') {
+      if (process.env.VERCEL) throw new Error('MOCK_SERVICES=true must not be set in Vercel deployments');
+      client = createClient({ url: 'file:dev.db' });
+    } else {
+      client = createClient({
+        url: process.env.TURSO_DATABASE_URL!,
+        authToken: process.env.TURSO_AUTH_TOKEN,
+      });
+    }
   }
   return client;
 }
@@ -18,7 +22,6 @@ export async function ensureDb(): Promise<Client> {
   const c = getClient();
   if (!migrated) {
     await runMigrations(c);
-    await bootstrapAdmin(c);
     migrated = true;
   }
   return c;
@@ -48,21 +51,6 @@ async function runMigrations(c: Client): Promise<void> {
   }
 }
 
-async function bootstrapAdmin(c: Client): Promise<void> {
-  const adminEmail = process.env.ADMIN_EMAIL;
-  if (!adminEmail) return;
-
-  const countResult = await c.execute('SELECT COUNT(*) as count FROM users');
-  const count = Number(countResult.rows[0]?.count ?? 0);
-  if (count > 0) return;
-
-  const id = uuid();
-  await c.execute({
-    sql: 'INSERT INTO users (id, email, name, role) VALUES (?, ?, ?, ?)',
-    args: [id, adminEmail, 'Admin', 'admin'],
-  });
-  console.log(`Bootstrapped admin user: ${adminEmail}`);
-}
 
 const MIGRATIONS = [
   {
@@ -196,6 +184,30 @@ const MIGRATIONS = [
     name: '010_github_sync_retry_count',
     sql: `
       ALTER TABLE tasks ADD COLUMN github_sync_retry_count INTEGER NOT NULL DEFAULT 0;
+    `,
+  },
+  {
+    name: '011_issue_triage',
+    sql: `
+      CREATE TABLE IF NOT EXISTS issue_triage (
+        github_repo TEXT NOT NULL,
+        github_issue_number INTEGER NOT NULL,
+        is_triaged INTEGER NOT NULL DEFAULT 0,
+        priority TEXT DEFAULT NULL,
+        github_comment_id INTEGER DEFAULT NULL,
+        comment_status TEXT DEFAULT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (github_repo, github_issue_number)
+      );
+    `,
+  },
+  {
+    name: '012_github_oauth',
+    sql: `
+      DROP TABLE IF EXISTS otp_codes;
+      ALTER TABLE users ADD COLUMN github_token TEXT;
+      ALTER TABLE users ADD COLUMN github_login TEXT;
     `,
   },
 ];

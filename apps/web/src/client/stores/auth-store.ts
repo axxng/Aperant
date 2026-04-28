@@ -6,6 +6,7 @@ interface User {
   email: string;
   name: string;
   role: 'admin' | 'member' | 'viewer';
+  githubLogin?: string | null;
 }
 
 interface AuthState {
@@ -18,8 +19,7 @@ interface AuthState {
   logout: () => void;
   setIsLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  requestOtp: (email: string) => Promise<boolean>;
-  verifyOtp: (email: string, code: string) => Promise<boolean>;
+  initiateGitHubOAuth: () => void;
   checkSession: () => Promise<boolean>;
 }
 
@@ -37,45 +37,8 @@ export const useAuthStore = create<AuthState>()(
         setIsLoading: (isLoading) => set({ isLoading }),
         setError: (error) => set({ error }),
 
-        requestOtp: async (email: string) => {
-          set({ isLoading: true, error: null });
-          try {
-            const res = await fetch('/api/auth/request-otp', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email }),
-            });
-            if (res.status === 429) {
-              set({ error: 'rateLimited', isLoading: false });
-              return false;
-            }
-            set({ isLoading: false });
-            return true;
-          } catch {
-            set({ error: 'sendError', isLoading: false });
-            return false;
-          }
-        },
-
-        verifyOtp: async (email: string, code: string) => {
-          set({ isLoading: true, error: null });
-          try {
-            const res = await fetch('/api/auth/verify-otp', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email, code }),
-            });
-            if (!res.ok) {
-              set({ error: 'codeError', isLoading: false });
-              return false;
-            }
-            const data = await res.json();
-            set({ token: data.token, user: data.user, isLoading: false, error: null });
-            return true;
-          } catch {
-            set({ error: 'codeError', isLoading: false });
-            return false;
-          }
+        initiateGitHubOAuth: () => {
+          window.location.href = '/api/auth/github';
         },
 
         checkSession: async () => {
@@ -98,7 +61,7 @@ export const useAuthStore = create<AuthState>()(
           }
         },
       }),
-      { name: 'aperant-auth' }
+      { name: 'currents-auth' }
     ),
     { name: 'auth-store' }
   )

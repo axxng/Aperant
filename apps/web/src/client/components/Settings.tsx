@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Palette, Globe, Key, RefreshCw,
-  Eye, EyeOff, Check, Loader2, Sun, Moon, Monitor,
+  Check, Loader2, Sun, Moon, Monitor,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { authenticatedFetch } from '../lib/api-client';
@@ -32,7 +32,6 @@ export function Settings() {
   const store = useSettingsStore();
 
   const [editedFields, setEditedFields] = useState<Set<string>>(new Set());
-  const [showGithubToken, setShowGithubToken] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Load settings on mount
@@ -79,11 +78,6 @@ export function Settings() {
       language: store.language,
       syncInterval: String(store.syncInterval),
     };
-
-    // Only send API keys if user actually edited them
-    if (editedFields.has('githubToken')) {
-      payload.githubToken = store.githubToken;
-    }
 
     try {
       const response = await authenticatedFetch('/settings', {
@@ -199,45 +193,6 @@ export function Settings() {
                 {t(`settings:language.${lang}`)}
               </Button>
             ))}
-          </div>
-        </SettingsSection>
-
-        {/* API Keys */}
-        <SettingsSection icon={Key} title={t('settings:sections.apiKeys')}>
-          {/* GitHub */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">{t('settings:apiKeys.github')}</label>
-            <div className="relative">
-              <input
-                type={showGithubToken ? 'text' : 'password'}
-                value={store.githubToken}
-                placeholder={t('settings:apiKeys.githubPlaceholder')}
-                onChange={(e) => {
-                  store.setGithubToken(e.target.value);
-                  markEdited('githubToken');
-                }}
-                className={cn(
-                  'flex h-10 w-full rounded-lg border border-border bg-card px-3 py-2 pr-10 text-sm text-foreground',
-                  'placeholder:text-muted-foreground',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:border-primary',
-                  'transition-colors duration-200'
-                )}
-              />
-              <button
-                type="button"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowGithubToken(!showGithubToken)}
-              >
-                {showGithubToken ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {t('settings:apiKeys.githubDescription')}
-            </p>
           </div>
         </SettingsSection>
 

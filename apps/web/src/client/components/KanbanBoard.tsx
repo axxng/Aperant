@@ -26,7 +26,7 @@ import { Plus, RefreshCw, ChevronDown, ChevronRight, Search, SlidersHorizontal, 
 import { useKanbanFilters } from '../hooks/useKanbanFilters';
 import { KanbanFilterBar } from './KanbanFilterBar';
 import { useToast } from '../hooks/useToast';
-import type { Task, TaskStatus } from '@shared/types/task';
+import type { Task, TaskStatus, TaskStatusKey } from '@shared/types/task';
 
 interface KanbanBoardProps {
   tasks: Task[];
@@ -36,7 +36,7 @@ interface KanbanBoardProps {
   isRefreshing?: boolean;
 }
 
-const COLUMNS: { status: TaskStatus; colorClass: string }[] = [
+const COLUMNS: { status: TaskStatusKey; colorClass: string }[] = [
   { status: 'backlog', colorClass: 'border-t-muted-foreground/30' },
   { status: 'in_progress', colorClass: 'border-t-blue-500' },
   { status: 'human_review', colorClass: 'border-t-amber-500' },

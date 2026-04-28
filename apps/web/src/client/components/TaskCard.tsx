@@ -119,7 +119,7 @@ function taskCardPropsAreEqual(prevProps: TaskCardProps, nextProps: TaskCardProp
     prevTask.category === nextTask.category &&
     prevTask.labels?.length === nextTask.labels?.length &&
     prevTask.assignees?.length === nextTask.assignees?.length &&
-    prevTask.githubSyncPending === nextTask.githubSyncPending
+    prevTask.githubSyncState?.kind === nextTask.githubSyncState?.kind
   );
 }
 
@@ -278,7 +278,7 @@ export const TaskCard = memo(function TaskCard({
           )}
 
           {/* GitHub sync pending indicator */}
-          {task.githubSyncPending && task.githubRepo && (
+          {(task.githubSyncState?.kind === 'pending' || task.githubSyncState?.kind === 'retrying') && task.githubRepo && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>

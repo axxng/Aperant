@@ -8,9 +8,9 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Trash2, GitPullRequest } from 'lucide-react';
-import type { Task, TaskStatus, TaskPriority, TaskCategory } from '@shared/types/task';
+import type { Task, TaskStatusKey, TaskPriority, TaskCategory } from '@shared/types/task';
 
-const STATUSES: TaskStatus[] = ['backlog', 'queue', 'in_progress', 'human_review', 'done'];
+const STATUSES: TaskStatusKey[] = ['backlog', 'queue', 'in_progress', 'human_review', 'done'];
 const PRIORITIES: TaskPriority[] = ['low', 'medium', 'high', 'urgent'];
 const CATEGORIES: TaskCategory[] = [
   'feature', 'bug_fix', 'refactoring', 'documentation', 'security',
@@ -32,7 +32,7 @@ export function TaskEditDialog({ task, open, onOpenChange, productName, productC
   const { warning } = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [status, setStatus] = useState<TaskStatus>('backlog');
+  const [status, setStatus] = useState<TaskStatusKey>('backlog');
   const [priority, setPriority] = useState<TaskPriority | ''>('');
   const [category, setCategory] = useState<TaskCategory | ''>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -142,7 +142,7 @@ export function TaskEditDialog({ task, open, onOpenChange, productName, productC
             <select
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               value={status}
-              onChange={(e) => setStatus(e.target.value as TaskStatus)}
+              onChange={(e) => setStatus(e.target.value as TaskStatusKey)}
             >
               {STATUSES.map((s) => (
                 <option key={s} value={s}>{t(`tasks:status.${s}`)}</option>

@@ -1,7 +1,9 @@
 {
   "items": {
     "allProducts": "All Products",
+    "allIssues": "All Issues",
     "kanban": "Kanban Board",
+    "kanbanTab": "Kanban",
     "settings": "Settings"
   },
   "sidebar": {

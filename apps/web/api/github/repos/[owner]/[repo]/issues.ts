@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ensureDb } from '../../../../_lib/db/client.js';
 import { authenticateRequest } from '../../../../_lib/auth/middleware.js';
-import { githubFetch, GITHUB_API, mapGitHubIssue } from '../../../../_lib/github.js';
-import { githubIssueQuerySchema } from '../../../../_lib/validation.js';
+import { githubFetch, GITHUB_API, mapGitHubIssue, GitHubRateLimitError } from '../../../../_lib/github.js';
+import { githubIssueQuerySchema, githubOwnerRepoSchema } from '../../../../_lib/validation.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   await ensureDb();
@@ -11,20 +11,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // 1. Parse input — path params (programmer bug if invalid → throws → 500)
+  const { owner, repo } = githubOwnerRepoSchema.parse(req.query);
+
+  // 2. Authorize
   const user = await authenticateRequest(req, res);
   if (!user) return;
 
   try {
-    const owner = req.query.owner as string;
-    const repo = req.query.repo as string;
-
+    // user query params → safeParse + 400 (user-recoverable)
     const queryResult = githubIssueQuerySchema.safeParse(req.query);
     if (!queryResult.success) {
       return res.status(400).json({ error: 'Invalid query parameters' });
     }
 
-    const { state, page, per_page } = queryResult.data;
+    const { state, page, per_page, labels, assignee } = queryResult.data;
     const params = new URLSearchParams({ state, page, per_page, sort: 'updated', direction: 'desc' });
+    if (labels) params.set('labels', labels);
+    if (assignee) params.set('assignee', assignee);
 
     const response = await githubFetch(
       `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues?${params}`
@@ -43,6 +47,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     res.json({ issues: mapped, hasMore });
   } catch (error: any) {
+    if (error instanceof GitHubRateLimitError) {
+      return res.status(429).json({ error: 'rate_limited', retryAfter: error.retryAfter });
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 }

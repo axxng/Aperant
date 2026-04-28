@@ -1,5 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import { getClient } from './client.js';
+import { productDbRowSchema } from '../validation.js';
 import type { Product, CreateProductInput, UpdateProductInput, ProductSource, StatusMapping } from '../../../src/shared/types/product.js';
 import { PRODUCT_COLORS } from '../../../src/shared/types/product.js';
 
@@ -85,17 +86,18 @@ export async function deleteProduct(id: string): Promise<boolean> {
   return result.rowsAffected > 0;
 }
 
-function rowToProduct(row: any): Product {
+export function rowToProduct(row: unknown): Product {
+  const parsed = productDbRowSchema.parse(row);
   return {
-    id: row.id as string,
-    name: row.name as string,
-    description: (row.description as string) || undefined,
-    color: row.color as string,
-    sources: safeJsonParse(row.sources as string, []) as ProductSource[],
-    statusMapping: row.status_mapping
-      ? safeJsonParse<StatusMapping | undefined>(row.status_mapping as string, undefined)
+    id: parsed.id,
+    name: parsed.name,
+    description: parsed.description ?? undefined,
+    color: parsed.color,
+    sources: safeJsonParse(parsed.sources, []) as ProductSource[],
+    statusMapping: parsed.status_mapping
+      ? safeJsonParse<StatusMapping | undefined>(parsed.status_mapping, undefined)
       : undefined,
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
+    createdAt: parsed.created_at,
+    updatedAt: parsed.updated_at,
   };
 }

@@ -3,19 +3,31 @@
  * Extends desktop task types with multi-product and GitHub sync support.
  */
 
-export type TaskStatus = 'backlog' | 'queue' | 'in_progress' | 'ai_review' | 'human_review' | 'done' | 'pr_created' | 'error';
+/** String union of all valid task status keys — use for Record<> keys and string comparisons */
+export type TaskStatusKey = 'backlog' | 'queue' | 'in_progress' | 'ai_review' | 'human_review' | 'done' | 'pr_created' | 'error';
+
+/** Backward-compatible alias — use TaskStatusKey for new code */
+export type TaskStatus = TaskStatusKey;
+
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type TaskCategory = 'feature' | 'bug_fix' | 'refactoring' | 'documentation' | 'security' | 'performance' | 'ui_ux' | 'infrastructure' | 'testing';
 export type ReviewReason = 'completed' | 'errors' | 'qa_rejected' | 'plan_review' | 'stopped';
 
-export interface Task {
+/** GitHub sync state as discriminated union — replaces githubSyncPending/githubSyncRetryCount */
+export type GithubSyncState =
+  | { kind: 'idle' }
+  | { kind: 'pending' }
+  | { kind: 'retrying'; retryCount: number }
+  | { kind: 'failed'; retryCount: number }
+  | { kind: 'complete' };
+
+/** Shared base fields for all task variants */
+type TaskBase = {
   id: string;
   /** Product this task belongs to */
   productId: string;
   title: string;
   description: string;
-  status: TaskStatus;
-  reviewReason?: ReviewReason;
   priority?: TaskPriority;
   category?: TaskCategory;
 
@@ -28,10 +40,8 @@ export interface Task {
   githubRepo?: string;
   /** GitHub Project item ID (for board sync) */
   githubProjectItemId?: string;
-  /** Whether this task has pending changes to sync to GitHub */
-  githubSyncPending?: boolean;
-  /** Number of failed GitHub write-back attempts */
-  githubSyncRetryCount?: number;
+  /** GitHub sync state (replaces githubSyncPending/githubSyncRetryCount) */
+  githubSyncState?: GithubSyncState;
 
   // GitHub issue metadata (synced)
   labels?: Array<{ name: string; color: string }>;
@@ -43,7 +53,18 @@ export interface Task {
 
   createdAt: string;
   updatedAt: string;
-}
+};
+
+/** Discriminated union of all task status variants — illegal states unrepresentable */
+export type Task =
+  | (TaskBase & { status: 'backlog' })
+  | (TaskBase & { status: 'queue' })
+  | (TaskBase & { status: 'in_progress' })
+  | (TaskBase & { status: 'ai_review'; reviewReason: ReviewReason })
+  | (TaskBase & { status: 'human_review'; reviewReason: ReviewReason })
+  | (TaskBase & { status: 'done' })
+  | (TaskBase & { status: 'pr_created'; githubIssueNumber: number; githubIssueUrl: string; githubRepo: string })
+  | (TaskBase & { status: 'error'; reviewReason: ReviewReason });
 
 export interface TaskMetadata {
   sourceType?: 'github' | 'manual';
@@ -59,7 +80,7 @@ export interface CreateTaskInput {
   productId: string;
   title: string;
   description: string;
-  status?: TaskStatus;
+  status?: TaskStatusKey;
   priority?: TaskPriority;
   category?: TaskCategory;
   githubIssueNumber?: number;
@@ -75,21 +96,19 @@ export interface CreateTaskInput {
 export interface UpdateTaskInput {
   title?: string;
   description?: string;
-  status?: TaskStatus;
+  status?: TaskStatusKey;
   priority?: TaskPriority;
   category?: TaskCategory;
   reviewReason?: ReviewReason;
   labels?: Array<{ name: string; color: string }>;
   assignees?: Array<{ login: string; avatarUrl?: string }>;
   metadata?: TaskMetadata;
-  githubSyncPending?: boolean;
-  githubSyncRetryCount?: number;
   /** Optimistic concurrency token — must match server's updatedAt to avoid 409 */
   updatedAt?: string;
 }
 
-/** Per-column task ordering */
-export type TaskOrderState = Record<TaskStatus, string[]>;
+/** Per-column task ordering — keyed by TaskStatusKey string union */
+export type TaskOrderState = Record<TaskStatusKey, string[]>;
 
 /** Ordering scope — either a product ID or 'consolidated' for the unified view */
 export type OrderScope = string;

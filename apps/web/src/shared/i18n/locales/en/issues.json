@@ -1,0 +1,99 @@
+{
+  "tab": {
+    "issues": "Issues"
+  },
+  "filters": {
+    "searchPlaceholder": "Search by title...",
+    "labels": "Labels",
+    "assignee": "Assignee",
+    "allAssignees": "All assignees",
+    "open": "Open",
+    "closed": "Closed",
+    "reset": "Reset Filters",
+    "resetAriaLabel": "Reset Filters"
+  },
+  "list": {
+    "loadMore": "Load More Issues",
+    "issueNumber": "#{{number}}"
+  },
+  "empty": {
+    "openHeading": "No open issues",
+    "closedHeading": "No closed issues",
+    "body": "This repo has no issues matching your filters.",
+    "viewOnGitHub": "View on GitHub"
+  },
+  "error": {
+    "heading": "Could not load issues",
+    "body": "Check your GitHub connection or try again.",
+    "retry": "Try Again",
+    "labelsFetch": "Could not load labels. Filters may be incomplete.",
+    "rateLimit": {
+      "heading": "GitHub rate limit reached",
+      "body": "You can retry after {{retryAfter}}."
+    }
+  },
+  "detail": {
+    "viewOnGitHub": "View on GitHub",
+    "noBody": "No description provided.",
+    "closePanel": "Close panel"
+  },
+  "state": {
+    "open": "Open",
+    "closed": "Closed"
+  },
+  "allIssues": {
+    "heading": "All Issues",
+    "searchPlaceholder": "Search all issues...",
+    "empty": {
+      "openHeading": "No open issues",
+      "closedHeading": "No closed issues",
+      "body": "Issues from all connected repos will appear here."
+    },
+    "error": {
+      "heading": "{{repoName}} — could not load issues",
+      "body": "Check your GitHub connection or try again.",
+      "rateLimit": "{{repoName}} — rate limited, retry in {{retryAfter}}s",
+      "rateLimitUnknown": "{{repoName}} — rate limited",
+      "retry": "Retry load",
+      "dismiss": "Dismiss error for {{repoName}}"
+    },
+    "productBadge": {
+      "tooltip": "From {{productName}}"
+    }
+  },
+  "triage": {
+    "markTriaged": "Mark as Triaged",
+    "markTriagedAriaLabel": "Toggle triaged status",
+    "triaged": "Triaged",
+    "triagedAriaLabel": "Toggle triaged status",
+    "priorityNone": "Priority: None",
+    "prioritySet": "Priority: {{priority}}",
+    "priorityAriaLabel": "Set priority",
+    "priorityClear": "Clear priority",
+    "closedWarning": "This issue is closed. Triage actions are still saved in Currents.",
+    "saveError": "Could not save triage state. Changes have been reverted.",
+    "priority": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    }
+  },
+  "notes": {
+    "sectionLabel": "Add a note",
+    "placeholder": "Write a note to post as a GitHub comment…",
+    "postButton": "Post Note",
+    "sentButton": "Sent",
+    "postSuccess": "Note posted to GitHub",
+    "postError": "Could not post note. Try again."
+  },
+  "promote": {
+    "promoteButton": "Promote to Backlog",
+    "viewInBacklog": "View in Backlog",
+    "successToast": "Issue promoted to backlog.",
+    "errorToast": "Failed to promote issue. Please try again.",
+    "duplicateToast": "This issue is already in the backlog.",
+    "ariaLabel": "Promote issue to Currents backlog",
+    "pendingAriaLabel": "Promoting issue to backlog…"
+  }
+}

@@ -12,16 +12,15 @@ const updateUserSchema = z.object({
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   await ensureDb();
 
+  // 1. Parse input — id is a path param (programmer bug if invalid → throws → 500)
+  const id = z.string().uuid().parse(req.query.id as string);
+
+  // 2. Authorize
   const user = await authenticateRequest(req, res);
   if (!user) return;
 
   if (!hasRole(user, 'admin')) {
     return res.status(403).json({ error: 'Admin access required' });
-  }
-
-  const id = req.query.id as string;
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
-    return res.status(400).json({ error: 'Invalid ID format' });
   }
 
   switch (req.method) {

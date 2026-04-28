@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useProductStore } from '../stores/product-store';
 import { cn } from '../lib/utils';
-import { LayoutDashboard, Plus, Settings, RefreshCw, LogOut } from 'lucide-react';
+import { LayoutDashboard, Plus, Settings, RefreshCw, LogOut, Inbox } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
@@ -64,6 +64,20 @@ export const Sidebar = memo(function Sidebar({ onAddProduct }: SidebarProps) {
       >
         <LayoutDashboard className="h-4 w-4 shrink-0" />
         {!isCollapsed && <span>{t('common:allProducts')}</span>}
+      </NavLink>
+
+      {/* /issues — All Issues unified view (D-01, D-02: Inbox icon, below All Products) */}
+      <NavLink
+        to="/issues"
+        className={({ isActive }) =>
+          cn(
+            'flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-accent/50',
+            isActive && 'bg-accent text-accent-foreground font-medium'
+          )
+        }
+      >
+        <Inbox className="h-4 w-4 shrink-0" />
+        {!isCollapsed && <span>{t('navigation:items.allIssues')}</span>}
       </NavLink>
 
       {/* Product list */}

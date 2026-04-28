@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ensureDb } from '../../../../_lib/db/client.js';
 import { authenticateRequest } from '../../../../_lib/auth/middleware.js';
 import { githubGraphQL, PROJECT_ITEMS_QUERY, PROJECT_ITEMS_QUERY_ORG } from '../../../../_lib/github.js';
+import { githubOwnerNumberSchema } from '../../../../_lib/validation.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   await ensureDb();
@@ -10,12 +11,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // 1. Parse input — path params (programmer bug if invalid → throws → 500)
+  const { owner, number: numberStr } = githubOwnerNumberSchema.parse(req.query);
+  const projectNumber = parseInt(numberStr, 10);
+  const cursor = (req.query.cursor as string) || null;
+
+  // 2. Authorize
   const user = await authenticateRequest(req, res);
   if (!user) return;
-
-  const owner = req.query.owner as string;
-  const projectNumber = parseInt(req.query.number as string, 10);
-  const cursor = (req.query.cursor as string) || null;
 
   try {
     // Try as user first, then as org

@@ -1,8 +1,8 @@
-# Aperant Web
+# Currents Web
 
 A multi-product backlog management platform with consolidated and per-product Kanban views, GitHub issue sync, and OTP authentication — all from the browser.
 
-This is the web version of the [Aperant desktop app](../desktop/), deployed on Vercel with serverless API functions and Turso (cloud SQLite).
+This is the web version of the [Currents desktop app](../desktop/), deployed on Vercel with serverless API functions and Turso (cloud SQLite).
 
 ## Deployment
 
@@ -17,13 +17,13 @@ This is the web version of the [Aperant desktop app](../desktop/), deployed on V
 curl -sSfL https://get.tur.so/install.sh | bash
 
 # Create database
-turso db create aperant
+turso db create currents
 
 # Get connection URL
-turso db show aperant --url
+turso db show currents --url
 
 # Create auth token
-turso db tokens create aperant
+turso db tokens create currents
 ```
 
 ### 2. Connect GitHub to Vercel
@@ -39,7 +39,7 @@ In Vercel Dashboard → Project → Settings → Environment Variables:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `TURSO_DATABASE_URL` | Yes | Turso connection URL (e.g., `libsql://aperant-yourorg.turso.io`) |
+| `TURSO_DATABASE_URL` | Yes | Turso connection URL (e.g., `libsql://currents-yourorg.turso.io`) |
 | `TURSO_AUTH_TOKEN` | Yes | Turso database auth token |
 | `JWT_SECRET` | Yes | Random 32-byte hex for JWT signing. Generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 | `ADMIN_EMAIL` | Yes | Email for the initial admin account (auto-created on first request) |
@@ -68,6 +68,197 @@ React SPA (Vercel Static)  →  /api/*  →  Vercel Serverless Functions  →  T
 - **i18n:** react-i18next with English + French (5 namespaces)
 
 Every push to the linked GitHub branch triggers a Vercel preview deployment. Merging to the production branch deploys to production.
+
+## Local Development
+
+The mock system lets you run the full app locally without Turso credentials, a GitHub OAuth app, or a GitHub PAT. It is gated behind `MOCK_SERVICES=true`. The Express dev server (`scripts/dev-server.ts`) serves all Vercel serverless functions locally on port 3001. A mock middleware layer (`scripts/mocks/github-fixtures.ts`) intercepts GitHub API and OAuth routes before real handlers and returns fixture data. Vite proxies all `/api` requests to port 3001. The local DB is a SQLite file (`dev.db`) via `@libsql/client`.
+
+### How It Works
+
+```
+Vite (port 5173) → /api/* proxy → Express dev server (port 3001)
+                                          ↓
+                               Mock middleware (first-match wins)
+                               github-fixtures.ts intercepts:
+                               - /api/auth/github
+                               - /api/auth/github/callback
+                               - /api/github/repos/:owner/:repo/issues
+                               - /api/github/repos/:owner/:repo/labels
+                               - /api/github/repos/:owner/:repo/issues/:number/comment
+                                          ↓
+                               Real Vercel serverless handlers (file:dev.db)
+                               (includes /api/triage/:owner/:repo via real DB logic)
+```
+
+### Quick Start
+
+Three environment variables are required for mock mode:
+
+| Variable | Value | Purpose |
+|---|---|---|
+| `MOCK_SERVICES` | `true` | Switches DB to `file:dev.db`, registers mock middleware |
+| `VITE_MOCK_SERVICES` | `true` | Exposes mock flag to Vite frontend |
+| `JWT_SECRET` | 32-byte random hex | Stable JWT signing across restarts |
+
+```bash
+# 1. Add mock vars to .env.local (run from apps/web/)
+echo "MOCK_SERVICES=true" >> .env.local
+echo "VITE_MOCK_SERVICES=true" >> .env.local
+echo "JWT_SECRET=$(node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\")" >> .env.local
+
+# 2. Seed local SQLite with fake data
+npx tsx scripts/seed.ts
+
+# 3. Terminal A — start the API dev server (port 3001)
+npx tsx scripts/dev-server.ts
+
+# 4. Terminal B — start the Vite frontend (port 5173)
+npm run dev
+```
+
+> `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, and `GITHUB_TOKEN` are **not needed** in mock mode.
+
+> **Warning:** `MOCK_SERVICES=true` must **never** be set in Vercel/production. It bypasses GitHub OAuth entirely and will throw if the `VERCEL` env is also set.
+
+### Seed Data
+
+`scripts/seed.ts` is idempotent — it deletes and reseeds on every run. Each run creates:
+
+- **1 admin user:** `dev-admin@github.invalid` / `Dev Admin` / `role: 'admin'`
+- **3 products:** org `mock-org`, repos `project-alpha`, `project-beta`, `project-gamma`
+- **8 tasks per product** (one per Kanban status: `backlog`, `queue`, `in_progress`, `ai_review`, `human_review`, `done`, `pr_created`, `error`)
+- **3 `issue_triage` records per product:** issue #1 triaged `priority: high`; issues #2 and #3 untriaged
+
+### Mock Routes
+
+All routes below are intercepted before real handlers (first-match wins). Mock middleware is only registered when `MOCK_SERVICES=true`.
+
+#### 1. `GET /api/auth/github` — OAuth initiate bypass
+
+Redirects immediately to `/api/auth/github/callback` without contacting GitHub. No state parameter, no OAuth round-trip.
+
+**vs. real API:** Real handler generates an `oauth_state` cookie and redirects to `github.com/login/oauth/authorize`.
+
+---
+
+#### 2. `GET /api/auth/github/callback` — Issues JWT for seeded admin user
+
+Upserts the seeded admin to `dev.db` and redirects to `/?token=<jwt>`.
+
+```json
+302 Location: /?token=<signed-jwt>
+```
+
+**vs. real API:** Real handler validates the `code` + `state` params from GitHub, exchanges for an access token, then issues the JWT.
+
+---
+
+#### 3. `GET /api/github/repos/:owner/:repo/issues` — Returns 20 fixture issues
+
+Returns a `PaginatedIssuesResult` shape with 15 open and 5 closed issues. Supports `?state=open|closed|all` filter.
+
+```json
+{
+  "issues": [
+    {
+      "id": 123001,
+      "number": 1,
+      "title": "Fix null pointer exception in auth flow",
+      "body": "Issue body for #1 in mock-org/project-alpha. Describes the problem or feature in detail.",
+      "state": "open",
+      "labels": [
+        { "id": 1, "name": "bug", "color": "d73a4a", "description": "Something is broken" }
+      ],
+      "assignees": [{ "login": "dev-admin", "avatarUrl": "https://github.com/ghost.png" }],
+      "author": { "login": "dev-admin", "avatarUrl": "https://github.com/ghost.png" },
+      "milestone": null,
+      "createdAt": "2026-04-16T02:46:07Z",
+      "updatedAt": "2026-04-23T02:46:07Z",
+      "closedAt": null,
+      "commentsCount": 0,
+      "url": "https://api.github.com/repos/mock-org/project-alpha/issues/1",
+      "htmlUrl": "https://github.com/mock-org/project-alpha/issues/1",
+      "repoFullName": "mock-org/project-alpha"
+    }
+  ],
+  "hasMore": false
+}
+```
+
+**vs. real API:** Real handler fetches from the GitHub REST API with pagination; `hasMore` reflects whether additional pages exist.
+
+---
+
+#### 4. `GET /api/github/repos/:owner/:repo/labels` — Returns same 5 labels for every repo
+
+Returns a `LabelsResult` shape. The same 5 labels are returned regardless of owner/repo.
+
+```json
+{
+  "labels": [
+    { "id": 1, "name": "bug", "color": "d73a4a", "description": "Something is broken" },
+    { "id": 2, "name": "enhancement", "color": "0075ca", "description": "New feature request" },
+    { "id": 3, "name": "documentation", "color": "0075ca", "description": null },
+    { "id": 4, "name": "question", "color": "e4e669", "description": null },
+    { "id": 5, "name": "good first issue", "color": "7057ff", "description": null }
+  ]
+}
+```
+
+**vs. real API:** Real handler fetches all labels from the GitHub repo; label set varies by repo.
+
+---
+
+#### 5. `GET /api/triage/:owner/:repo?numbers=1,2,3` — Reads from dev.db via real DB logic
+
+This route uses the real `getTriageRecordsBatch()` function against `dev.db` — persisted priorities from prior triage actions appear here.
+
+```json
+{
+  "records": [
+    {
+      "githubRepo": "mock-org/project-alpha",
+      "githubIssueNumber": 1,
+      "isTriaged": 1,
+      "triageState": { "status": "prioritized", "priority": "high" },
+      "githubCommentId": null,
+      "commentStatus": null
+    }
+  ]
+}
+```
+
+**vs. real API:** No difference — this route uses real DB logic in both mock and production mode.
+
+---
+
+#### 6. `POST /api/github/repos/:owner/:repo/issues/:number/comment` — Persists to dev.db; returns synthetic comment
+
+Saves an idempotency guard to `dev.db` (via `upsertTriageRecord`) and returns a synthetic comment object with a timestamp-based ID.
+
+```json
+{
+  "id": 1745376367000,
+  "html_url": "https://github.com/mock-org/project-alpha/issues/1#issuecomment-1745376367000",
+  "body": "<the comment body submitted in the request>"
+}
+```
+
+**vs. real API:** Real handler posts to the GitHub API and persists the returned `github_comment_id`. Mock uses `Date.now()` as the synthetic ID.
+
+---
+
+### Troubleshooting
+
+1. **`.env.local` not in `apps/web/`** — The server loads `.env.local` relative to `apps/web/`. If you run `dev-server.ts` from the repo root, `MOCK_SERVICES` is not set and `getClient()` connects to Turso, failing with a missing `TURSO_DATABASE_URL` error. Fix: always run scripts from `apps/web/` or ensure `.env.local` is in that directory.
+
+2. **Seed not run after schema change** — If the `dev.db` was created before a migration added a new column, queries will fail with SQL errors or `dev.db` may not exist at all. Fix: re-run `npx tsx scripts/seed.ts` from `apps/web/` after any schema change.
+
+3. **`JWT_SECRET` not set** — JWTs are signed with `JWT_SECRET`. If it is missing or changes between restarts, all existing tokens become invalid and every request returns 401. Fix: add a stable `JWT_SECRET` to `.env.local` — generate one with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` and reuse the same value across restarts.
+
+4. **Only one terminal running** — Vite proxies `/api/*` to `http://localhost:3001`. If `dev-server.ts` is not running, every API call returns a 404 or connection refused. Fix: open two terminals — `npx tsx scripts/dev-server.ts` in one, `npm run dev` in the other.
+
+5. **`MOCK_SERVICES=true` in production** — The DB client (`api/_lib/db/client.ts`) throws if both `MOCK_SERVICES=true` and the `VERCEL` environment variable are set. This protects against accidentally deploying mock mode. If you see this error in Vercel logs, remove `MOCK_SERVICES` from the project's environment variables immediately — GitHub OAuth is completely bypassed when it is set.
 
 ## Features
 
@@ -162,6 +353,7 @@ apps/web/
 | `npm run typecheck` | Type-check without emitting |
 | `npm run lint` | Run Biome linter |
 | `npm run lint:fix` | Auto-fix lint issues |
+| `npm test` | Run Vitest unit tests |
 
 ## Testing
 
@@ -206,6 +398,7 @@ apps/web/
 ### Automated
 
 ```bash
+npm test            # Vitest unit tests
 npm run typecheck   # TypeScript type checking
 npm run lint        # Biome linting
 ```

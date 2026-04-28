@@ -92,7 +92,6 @@ export const updateTaskSchema = z.object({
   labels: z.array(labelSchema).max(50).optional(),
   assignees: z.array(assigneeSchema).max(50).optional(),
   metadata: taskMetadataSchema,
-  githubSyncPending: z.boolean().optional(),
   updatedAt: z.string().optional(),
 });
 
@@ -110,6 +109,8 @@ export const githubIssueQuerySchema = z.object({
   state: z.enum(['open', 'closed', 'all']).default('open'),
   page: z.string().regex(/^\d+$/).default('1'),
   per_page: z.string().regex(/^\d+$/).default('50'),
+  labels: z.string().optional(),   // comma-separated GitHub label names, passed through as-is
+  assignee: z.string().optional(), // single GitHub login string
 });
 
 export const githubCommentSchema = z.object({
@@ -124,6 +125,13 @@ export const githubUpdateIssueSchema = z.object({
   labels: z.array(z.string().max(100)).max(50).optional(),
   assignees: z.array(z.string().max(100)).max(50).optional(),
 }).refine(data => Object.keys(data).length > 0, { message: 'At least one field is required' });
+
+// Triage batch query row — lightweight schema (only columns used by batch endpoint)
+export const triageBatchRowSchema = z.object({
+  github_issue_number: z.number(),
+  is_triaged: z.number(),
+  priority: z.enum(['critical', 'high', 'medium', 'low']).nullable(),
+});
 
 // Path parameter schemas
 export const githubOwnerRepoSchema = z.object({
@@ -150,4 +158,116 @@ export const githubPRQuerySchema = z.object({
   state: z.enum(['open', 'closed', 'all']).default('open'),
   page: z.string().regex(/^\d+$/).default('1'),
   per_page: z.string().regex(/^\d+$/).default('30'),
+});
+
+// DB row schemas — used for parse-don't-validate at the DB boundary
+
+export const taskDbRowSchema = z.object({
+  id: z.string(),
+  product_id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  status: z.enum(['backlog', 'queue', 'in_progress', 'ai_review', 'human_review', 'done', 'pr_created', 'error']),
+  review_reason: z.enum(['completed', 'errors', 'qa_rejected', 'plan_review', 'stopped']).nullable().optional(),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']).nullable().optional(),
+  category: z.enum(['feature', 'bug_fix', 'refactoring', 'documentation', 'security', 'performance', 'ui_ux', 'infrastructure', 'testing']).nullable().optional(),
+  github_issue_number: z.number().nullable().optional(),
+  github_issue_url: z.string().nullable().optional(),
+  github_repo: z.string().nullable().optional(),
+  github_project_item_id: z.string().nullable().optional(),
+  labels: z.string().nullable().optional(),
+  assignees: z.string().nullable().optional(),
+  milestone: z.string().nullable().optional(),
+  metadata: z.string().nullable().optional(),
+  github_sync_pending: z.number(),
+  github_sync_retry_count: z.number(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export const productDbRowSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  color: z.string(),
+  sources: z.string(),
+  status_mapping: z.string().nullable().optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export const triageDbRowSchema = z.object({
+  github_repo: z.string(),
+  github_issue_number: z.number(),
+  is_triaged: z.number(),
+  priority: z.enum(['critical', 'high', 'medium', 'low']).nullable(),
+  github_comment_id: z.number().nullable(),
+  comment_status: z.enum(['posted', 'failed']).nullable(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+// GitHub API response schemas
+export const gitHubApiIssueSchema = z.object({
+  id: z.number(),
+  number: z.number(),
+  title: z.string(),
+  body: z.string().nullable().optional(),
+  state: z.enum(['open', 'closed']),
+  labels: z.array(z.object({
+    id: z.number(),
+    name: z.string(),
+    color: z.string(),
+    description: z.string().nullable().optional(),
+  })).default([]),
+  assignees: z.array(z.object({
+    login: z.string(),
+    avatar_url: z.string().optional(),
+  })).default([]),
+  user: z.object({ login: z.string(), avatar_url: z.string().optional() }),
+  milestone: z.object({
+    id: z.number(),
+    title: z.string(),
+    state: z.enum(['open', 'closed']),
+  }).nullable().optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  closed_at: z.string().nullable().optional(),
+  comments: z.number().default(0),
+  url: z.string(),
+  html_url: z.string(),
+  pull_request: z.unknown().optional(),
+});
+
+export const gitHubApiPRSchema = z.object({
+  number: z.number(),
+  title: z.string(),
+  body: z.string().nullable().optional(),
+  state: z.enum(['open', 'closed']),
+  merged_at: z.string().nullable().optional(),
+  user: z.object({ login: z.string(), avatar_url: z.string().optional() }).nullable().optional(),
+  head: z.object({ ref: z.string() }),
+  base: z.object({ ref: z.string() }),
+  additions: z.number().default(0),
+  deletions: z.number().default(0),
+  changed_files: z.number().default(0),
+  labels: z.array(z.object({ name: z.string(), color: z.string() })).default([]),
+  assignees: z.array(z.object({ login: z.string() })).default([]),
+  created_at: z.string(),
+  updated_at: z.string(),
+  html_url: z.string(),
+  draft: z.boolean().default(false),
+});
+
+// OAuth response schemas
+export const oauthTokenResponseSchema = z.object({
+  access_token: z.string(),
+  error: z.string().optional(),
+});
+
+export const gitHubUserSchema = z.object({
+  id: z.number(),
+  login: z.string(),
+  email: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
 });

@@ -1,7 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { z } from 'zod';
 import { ensureDb } from '../../../../../../_lib/db/client.js';
 import { authenticateRequest } from '../../../../../../_lib/auth/middleware.js';
 import { githubFetch, GITHUB_API } from '../../../../../../_lib/github.js';
+import { githubOwnerRepoSchema } from '../../../../../../_lib/validation.js';
 import type { PRFile } from '../../../../../../../src/shared/types/pr.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -11,14 +13,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // 1. Parse input — path params (programmer bug if invalid → throws → 500)
+  const { owner, repo } = githubOwnerRepoSchema.parse(req.query);
+  const number = z.string().regex(/^\d+$/).parse(req.query.number as string);
+
+  // 2. Authorize
   const user = await authenticateRequest(req, res);
   if (!user) return;
 
   try {
-    const owner = req.query.owner as string;
-    const repo = req.query.repo as string;
-    const number = req.query.number as string;
-
     const response = await githubFetch(
       `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${encodeURIComponent(number)}/files?per_page=100`
     );
